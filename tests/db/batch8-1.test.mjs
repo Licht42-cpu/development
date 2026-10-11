@@ -38,6 +38,8 @@ const PGURL = process.env.PGURL
 const TABLES_MIGRATION = '20261010120000_batch8_1_inventory_and_rental_sets.sql';
 const RPC_MIGRATION    = '20261010121000_batch8_1_estimate_job_materials.sql';
 const OPS_MIGRATION    = '20261010130000_batch8_1_stock_operations_contract_v1.sql';
+const ACCESS_MIGRATION = '20261010140000_batch8_1_reservations_units_and_crew_access.sql';
+const RESERVE_MIGRATION= '20261010141000_batch8_1_reservation_operations.sql';
 const migration = (file) => readFileSync(join(MIGRATIONS, file), 'utf8');
 
 const results = [];
@@ -88,6 +90,18 @@ async function errorOf(fn) {
     drop function if exists public.ns_touch_updated_at() cascade;
     drop function if exists public.ns_guard_transfer_conserves() cascade;
     drop function if exists public.ns_guard_operation_vehicle() cascade;
+    drop table if exists public.ns_stock_reservations cascade;
+    drop table if exists public.ns_crew_members cascade;
+    drop table if exists public.ns_material_levels cascade;
+    drop function if exists public.reserve_stock(text,uuid,text,numeric,uuid,text,timestamptz);
+    drop function if exists public.release_stock_reservation(text,uuid,text);
+    drop function if exists public.consume_stock_reservation(text,uuid,numeric,text,text);
+    drop function if exists public.ns_reservation_result(uuid,boolean);
+    drop function if exists public.is_owner() cascade;
+    drop function if exists public.current_crew_vehicle() cascade;
+    drop function if exists public.can_see_location(uuid) cascade;
+    drop function if exists public.ns_guard_reservation_available() cascade;
+    drop function if exists public.ns_guard_moves_respect_reservations() cascade;
   `);
 
   await client.query(readFileSync(join(HERE, 'fixture-schema-batch8-1.sql'), 'utf8'));
@@ -112,10 +126,20 @@ async function errorOf(fn) {
     await client.query(migration(OPS_MIGRATION));
   });
 
+  await record('A2c the reservations/units/crew-access migration applies cleanly', async () => {
+    await client.query(migration(ACCESS_MIGRATION));
+  });
+
+  await record('A2d the reservation-operations migration applies cleanly', async () => {
+    await client.query(migration(RESERVE_MIGRATION));
+  });
+
   await record('A3 all migrations are re-runnable without error or duplicate rows', async () => {
     await client.query(migration(TABLES_MIGRATION));
     await client.query(migration(RPC_MIGRATION));
     await client.query(migration(OPS_MIGRATION));
+    await client.query(migration(ACCESS_MIGRATION));
+    await client.query(migration(RESERVE_MIGRATION));
     const { n } = await one(
       `select count(*)::int as n from public.ns_suppliers
         where website = 'https://permanentlightingdirect.ca/diy-kits'`);
@@ -741,6 +765,9 @@ async function errorOf(fn) {
     const { n } = await one(
       `select count(*)::int as n from public.ns_stock_locations where kind='vehicle'`);
     assert.equal(n, 2, 'nothing in the schema hardcodes how many vehicles exist');
+    // Removed again here, and only here: nothing references it yet, and the
+    // cases below assert the seeded set is exactly [base, car_a]. Section R
+    // re-creates it permanently, by which point on delete restrict applies.
     await client.query(`delete from public.ns_stock_locations where code='car_b'`);
   });
 
@@ -977,6 +1004,480 @@ async function errorOf(fn) {
     const res = (await callTransfer('xfer-attributed', id, 10, 'base', 'car_a')).r;
     const car = await one(`select id from public.ns_stock_locations where code='car_a'`);
     assert.equal(res.vehicle_location_id, car.id);
+  });
+
+  // ===================== O. units: litres, kilograms, sticks, levels =====
+
+  await record('O1 the owner\'s full unit list is accepted', async () => {
+    for (const unit of ['litre', 'kilogram', 'stick']) {
+      await newMaterial({ name: `FIXTURE unit ${unit}`, unit, category: 'consumable' });
+    }
+  });
+
+  await record('O2 a level-tracked supply must use the level unit, and vice versa', async () => {
+    // The two have to agree or "Low" ends up averaged into a shortfall as
+    // though it were a number.
+    const a = await errorOf(() => client.query(
+      `insert into public.ns_materials (name, category, unit, tracking_mode)
+       values ('FIXTURE bad level a','consumable','each','level')`));
+    assert.ok(a); assert.equal(a.code, '23514');
+
+    const b = await errorOf(() => client.query(
+      `insert into public.ns_materials (name, category, unit, tracking_mode)
+       values ('FIXTURE bad level b','consumable','level','quantity')`));
+    assert.ok(b); assert.equal(b.code, '23514');
+
+    await client.query(
+      `insert into public.ns_materials (name, category, unit, tracking_mode)
+       values ('FIXTURE rags','consumable','level','level')`);
+  });
+
+  await record('O3 a level-tracked supply cannot be reserved as a quantity', async () => {
+    const id = (await one(
+      `select id from public.ns_materials where name='FIXTURE rags'`)).id;
+    const err = await errorOf(() => one(
+      `select public.reserve_stock('lvl-1',$1,'base',5,null,null,null) as r`, [id]));
+    assert.ok(err, 'Empty/Low/Enough is not a number to promise');
+    assert.equal(err.code, '22023');
+  });
+
+  await record('O4 a level is an observation that REPLACES the last one', async () => {
+    const id = (await one(
+      `select id from public.ns_materials where name='FIXTURE rags'`)).id;
+    const base = (await one(`select id from public.ns_stock_locations where code='base'`)).id;
+    await client.query(
+      `insert into public.ns_material_levels (material_id, location_id, state)
+       values ($1,$2,'low')`, [id, base]);
+    await client.query(
+      `insert into public.ns_material_levels (material_id, location_id, state)
+       values ($1,$2,'enough')
+       on conflict (material_id, location_id) do update set state = excluded.state`,
+      [id, base]);
+    const rows = await all(
+      'select state from public.ns_material_levels where material_id=$1', [id]);
+    assert.equal(rows.length, 1, 'one row per material per location, not a history');
+    assert.equal(rows[0].state, 'enough');
+  });
+
+  await record('O5 an unknown level state is refused', async () => {
+    const id = (await one(
+      `select id from public.ns_materials where name='FIXTURE rags'`)).id;
+    const base = (await one(`select id from public.ns_stock_locations where code='base'`)).id;
+    const err = await errorOf(() => client.query(
+      `insert into public.ns_material_levels (material_id, location_id, state)
+       values ($1,$2,'plenty') on conflict (material_id,location_id) do update set state='plenty'`,
+      [id, base]));
+    assert.ok(err); assert.equal(err.code, '23514');
+  });
+
+  await record('O6 DAMAGED stock is a separate balance, not deleted and not usable', async () => {
+    const id = await newMaterial({ name: 'FIXTURE damaged split' });
+    const base = (await one(`select id from public.ns_stock_locations where code='base'`)).id;
+    const op = (await one(
+      `insert into public.ns_stock_operations (client_operation_id, kind, confirmed_physical)
+       values ('dmg-op','receipt',true) returning id`)).id;
+    await client.query(
+      `insert into public.ns_material_stock_moves
+         (material_id, location_id, operation_id, delta, reason, condition)
+       values ($1,$2,$3, 40,'received','usable'),
+              ($1,$2,$3, 10,'received','damaged')`, [id, base, op]);
+
+    const row = await one(
+      `select on_hand, damaged_on_hand, available from public.ns_material_stock_by_location
+        where material_id=$1 and location_id=$2`, [id, base]);
+    assert.equal(Number(row.on_hand), 40, 'usable only');
+    assert.equal(Number(row.damaged_on_hand), 10, 'still owned, still recorded');
+    assert.equal(Number(row.available), 40,
+      'planning a job around a broken part is the mistake this prevents');
+  });
+
+  await record('O7 an ESTIMATE flags every balance it contributes to', async () => {
+    const id = await newMaterial({ name: 'FIXTURE estimated' });
+    await move(id, 100, 'received');                       // exact by default
+    let row = await one(
+      `select is_estimated from public.ns_material_stock where material_id=$1`, [id]);
+    assert.equal(row.is_estimated, false);
+
+    const base = (await one(`select id from public.ns_stock_locations where code='base'`)).id;
+    const op = (await one(
+      `insert into public.ns_stock_operations (client_operation_id, kind, confirmed_physical)
+       values ('est-op','correction',true) returning id`)).id;
+    await client.query(
+      `insert into public.ns_material_stock_moves
+         (material_id, location_id, operation_id, delta, reason, count_precision)
+       values ($1,$2,$3,-7,'adjustment','estimated')`, [id, base, op]);
+
+    row = await one(
+      `select is_estimated, on_hand from public.ns_material_stock where material_id=$1`, [id]);
+    assert.equal(row.is_estimated, true,
+      'a figure does not become exact by being added to exact numbers');
+    assert.equal(Number(row.on_hand), 93);
+  });
+
+  await record('O8 an unknown condition or precision is refused', async () => {
+    const id = await newMaterial({ name: 'FIXTURE bad enum' });
+    const base = (await one(`select id from public.ns_stock_locations where code='base'`)).id;
+    const op = (await one(
+      `insert into public.ns_stock_operations (client_operation_id, kind, confirmed_physical)
+       values ('enum-op','receipt',true) returning id`)).id;
+    for (const [col, bad] of [['condition', 'soggy'], ['count_precision', 'vibes']]) {
+      const err = await errorOf(() => client.query(
+        `insert into public.ns_material_stock_moves
+           (material_id, location_id, operation_id, delta, reason, ${col})
+         values ($1,$2,$3,5,'received',$4)`, [id, base, op, bad]));
+      assert.ok(err, `${col} must be constrained`);
+      assert.equal(err.code, '23514');
+    }
+  });
+
+  // ========================= P. reservations: available vs on hand =======
+
+  const reserve = (key, materialId, qty, location = 'base', jobId = null) => one(
+    `select public.reserve_stock($1,$2,$3,$4,$5,null,null) as r`,
+    [key, materialId, location, qty, jobId]);
+
+  await record('P1 a reservation reduces AVAILABLE and leaves ON HAND alone', async () => {
+    const id = await newMaterial({ name: 'FIXTURE reservable' });
+    await move(id, 100, 'received');
+    const res = (await reserve('res-1', id, 30)).r;
+
+    assert.equal(res.status, 'held');
+    assert.equal(Number(res.balance.on_hand), 100, 'nothing has physically moved');
+    assert.equal(Number(res.balance.reserved), 30);
+    assert.equal(Number(res.balance.available), 70);
+  });
+
+  await record('P2 TWO claims cannot exceed the stock -- the acceptance criterion', async () => {
+    const id = await newMaterial({ name: 'FIXTURE scarce' });
+    await move(id, 50, 'received');
+    await reserve('scarce-a', id, 40);
+    const err = await errorOf(() => reserve('scarce-b', id, 20));
+    assert.ok(err, 'both crews reserving the same scarce stock is what this stops');
+    assert.match(err.message, /already reserved/);
+
+    const row = await one(
+      `select reserved, available from public.ns_material_stock where material_id=$1`, [id]);
+    assert.equal(Number(row.reserved), 40, 'the refused claim left nothing behind');
+    assert.equal(Number(row.available), 10);
+  });
+
+  await record('P3 reserving exactly what is available is allowed', async () => {
+    const id = await newMaterial({ name: 'FIXTURE exact fit' });
+    await move(id, 25, 'received');
+    await reserve('fit-1', id, 25);
+    const row = await one(
+      `select available from public.ns_material_stock where material_id=$1`, [id]);
+    assert.equal(Number(row.available), 0);
+  });
+
+  await record('P4 DAMAGED stock cannot be reserved', async () => {
+    const id = await newMaterial({ name: 'FIXTURE only damaged' });
+    const base = (await one(`select id from public.ns_stock_locations where code='base'`)).id;
+    const op = (await one(
+      `insert into public.ns_stock_operations (client_operation_id, kind, confirmed_physical)
+       values ('dmg-only','receipt',true) returning id`)).id;
+    await client.query(
+      `insert into public.ns_material_stock_moves
+         (material_id, location_id, operation_id, delta, reason, condition)
+       values ($1,$2,$3,20,'received','damaged')`, [id, base, op]);
+    const err = await errorOf(() => reserve('dmg-res', id, 5));
+    assert.ok(err, 'committing a broken part is the same mistake as committing one that is absent');
+    assert.match(err.message, /already reserved|usable on hand/);
+  });
+
+  await record('P5 a reservation is PER LOCATION, not against the company total', async () => {
+    const id = await newMaterial({ name: 'FIXTURE per location' });
+    await move(id, 60, 'received', { location: 'base' });
+    await client.query(
+      `select public.post_stock_transfer('loc-res-xf',$1,20,'base','car_a',true,null,null)`, [id]);
+    // base 40, car_a 20
+    const err = await errorOf(() => reserve('loc-res-a', id, 50, 'car_a'));
+    assert.ok(err, 'Car A holds 20; the other 40 is at Base and not in the car');
+
+    await reserve('loc-res-b', id, 20, 'car_a');
+    const rows = await all(
+      `select location_code, on_hand, reserved, available
+         from public.ns_material_stock_by_location
+        where material_id=$1 order by location_code`, [id]);
+    assert.deepEqual(rows.map((r) => [r.location_code, Number(r.available)]),
+      [['base', 40], ['car_a', 0]]);
+  });
+
+  await record('P6 a replayed reservation does not commit twice', async () => {
+    const id = await newMaterial({ name: 'FIXTURE replay reserve' });
+    await move(id, 80, 'received');
+    const first = (await reserve('replay-res', id, 30)).r;
+    const again = (await reserve('replay-res', id, 30)).r;
+    assert.equal(again.replayed, true);
+    assert.equal(again.reservation_id, first.reservation_id);
+    const row = await one(
+      `select reserved from public.ns_material_stock where material_id=$1`, [id]);
+    assert.equal(Number(row.reserved), 30, '30, not 60');
+  });
+
+  await record('P7 RELEASING puts the stock back into available', async () => {
+    const id = await newMaterial({ name: 'FIXTURE releasable' });
+    await move(id, 40, 'received');
+    const res = (await reserve('rel-1', id, 40)).r;
+    const out = (await one(
+      `select public.release_stock_reservation('rel-op-1',$1,null) as r`,
+      [res.reservation_id])).r;
+    assert.equal(out.status, 'released');
+    assert.ok(out.closed_at);
+    const row = await one(
+      `select reserved, available from public.ns_material_stock where material_id=$1`, [id]);
+    assert.equal(Number(row.reserved), 0);
+    assert.equal(Number(row.available), 40);
+  });
+
+  await record('P8 a repeated RELEASE is the same outcome, not an error', async () => {
+    const id = await newMaterial({ name: 'FIXTURE double release' });
+    await move(id, 10, 'received');
+    const res = (await reserve('rel-2', id, 10)).r;
+    await client.query(`select public.release_stock_reservation('rel-op-2',$1,null)`,
+      [res.reservation_id]);
+    const out = (await one(
+      `select public.release_stock_reservation('rel-op-3',$1,null) as r`,
+      [res.reservation_id])).r;
+    assert.equal(out.status, 'released',
+      'a retried release must not fail because the first attempt landed');
+  });
+
+  // ======================= Q. no reserve / issue / consume double count ==
+
+  await record('Q1 CONSUMING a reservation posts the movement and closes the claim at once', async () => {
+    const id = await newMaterial({ name: 'FIXTURE consume claim' });
+    await move(id, 100, 'received');
+    const res = (await reserve('cons-res', id, 40)).r;
+
+    const out = (await one(
+      `select public.consume_stock_reservation('cons-op',$1,null,'exact',null) as r`,
+      [res.reservation_id])).r;
+
+    assert.equal(out.kind, 'consumption');
+    assert.equal(out.movements.length, 1);
+    assert.equal(Number(out.movements[0].delta), -40);
+
+    const row = await one(
+      `select on_hand, reserved, available from public.ns_material_stock where material_id=$1`,
+      [id]);
+    assert.equal(Number(row.on_hand), 60, 'the stock actually left');
+    assert.equal(Number(row.reserved), 0, 'and is no longer also promised');
+    assert.equal(Number(row.available), 60,
+      'reserve + issue + consume is the classic triple-count; this is the check');
+  });
+
+  await record('Q2 a PARTIAL consumption releases the remainder rather than holding it', async () => {
+    const id = await newMaterial({ name: 'FIXTURE partial consume' });
+    await move(id, 100, 'received');
+    const res = (await reserve('part-res', id, 50)).r;
+    await client.query(
+      `select public.consume_stock_reservation('part-op',$1,30,'exact',null)`,
+      [res.reservation_id]);
+
+    const row = await one(
+      `select on_hand, reserved, available from public.ns_material_stock where material_id=$1`,
+      [id]);
+    assert.equal(Number(row.on_hand), 70, '30 used');
+    assert.equal(Number(row.reserved), 0,
+      'the unused 20 went back on the shelf; still counting it as promised hides real availability');
+    assert.equal(Number(row.available), 70);
+  });
+
+  await record('Q3 consuming more than was reserved is refused', async () => {
+    const id = await newMaterial({ name: 'FIXTURE over consume' });
+    await move(id, 100, 'received');
+    const res = (await reserve('over-res', id, 10)).r;
+    const err = await errorOf(() => client.query(
+      `select public.consume_stock_reservation('over-op',$1,25,'exact',null)`,
+      [res.reservation_id]));
+    assert.ok(err); assert.equal(err.code, '22023');
+  });
+
+  await record('Q4 a consumed reservation cannot be released or consumed again', async () => {
+    const id = await newMaterial({ name: 'FIXTURE closed claim' });
+    await move(id, 50, 'received');
+    const res = (await reserve('closed-res', id, 20)).r;
+    await client.query(
+      `select public.consume_stock_reservation('closed-op',$1,null,'exact',null)`,
+      [res.reservation_id]);
+
+    const a = await errorOf(() => client.query(
+      `select public.release_stock_reservation('closed-rel',$1,null)`, [res.reservation_id]));
+    assert.ok(a, 'the stock is gone; reporting a release would be a lie');
+    assert.match(a.message, /already consumed/);
+
+    const b = await errorOf(() => client.query(
+      `select public.consume_stock_reservation('closed-cons-2',$1,null,'exact',null)`,
+      [res.reservation_id]));
+    assert.ok(b);
+  });
+
+  await record('Q5 an ESTIMATED consumption flags the balance it leaves behind', async () => {
+    const id = await newMaterial({ name: 'FIXTURE estimated consume' });
+    await move(id, 60, 'received');
+    const res = (await reserve('est-res', id, 20)).r;
+    await client.query(
+      `select public.consume_stock_reservation('est-cons',$1,null,'estimated',null)`,
+      [res.reservation_id]);
+    const row = await one(
+      `select is_estimated from public.ns_material_stock where material_id=$1`, [id]);
+    assert.equal(row.is_estimated, true);
+  });
+
+  await record('Q6 a TRANSFER cannot carry away stock another claim is holding', async () => {
+    const id = await newMaterial({ name: 'FIXTURE held against transfer' });
+    await move(id, 30, 'received', { location: 'base' });
+    await reserve('hold-xf', id, 30);
+    const err = await errorOf(() => client.query(
+      `select public.post_stock_transfer('xf-held',$1,30,'base','car_a',true,null,null)`, [id]));
+    assert.ok(err, 'moving it would leave the promise unbacked');
+    const row = await one(
+      `select on_hand from public.ns_material_stock_by_location
+        where material_id=$1 and location_code='base'`, [id]);
+    assert.equal(Number(row.on_hand), 30, 'and nothing moved');
+  });
+
+  // ============================ R. owner and crew access =================
+
+  const asUser = async (userId, fn) => {
+    await client.query(`select set_config('nova.actor_id',$1,false)`, [userId]);
+    try { return await fn(); }
+    finally { await client.query(`select set_config('nova.actor_id','',false)`); }
+  };
+
+  await record('R1 an admin with NO crew row is an owner, so nothing narrows yet', async () => {
+    const owner = (await one(`insert into auth.users default values returning id`)).id;
+    await asUser(owner, async () => {
+      const { a, b } = await one(
+        'select public.is_owner() as a, public.current_crew_vehicle() as b');
+      assert.equal(a, true, 'this is the state the business is in today');
+      assert.equal(b, null);
+    });
+  });
+
+  /* Car B exists from here on. It is NOT deleted again between cases:
+     once an operation references it, ns_stock_locations' on delete restrict
+     refuses -- which is the behaviour section L asked for, so the teardown
+     was the thing that was wrong. L1 already proved it is unseeded. */
+  await client.query(
+    `insert into public.ns_stock_locations (code,name,kind,sort_order)
+     values ('car_b','Car B','vehicle',2) on conflict do nothing`);
+
+  await record('R2 a crew sees Base and its OWN vehicle, and not the other car', async () => {
+    const crew = (await one(`insert into auth.users default values returning id`)).id;
+    const carA = (await one(`select id from public.ns_stock_locations where code='car_a'`)).id;
+    const carB = (await one(`select id from public.ns_stock_locations where code='car_b'`)).id;
+    const base = (await one(`select id from public.ns_stock_locations where code='base'`)).id;
+    await client.query(
+      `insert into public.ns_crew_members (user_id, role, vehicle_location_id)
+       values ($1,'crew',$2)`, [crew, carA]);
+
+    await asUser(crew, async () => {
+      const row = await one(
+        'select public.is_owner() as owner, public.can_see_location($1) as base, ' +
+        'public.can_see_location($2) as mine, public.can_see_location($3) as theirs',
+        [base, carA, carB]);
+      assert.equal(row.owner, false);
+      assert.equal(row.base, true, 'a crew loads from Base every morning');
+      assert.equal(row.mine, true);
+      assert.equal(row.theirs, false, 'stock belonging to another vehicle stays invisible');
+    });
+  });
+
+  await record('R3 a crew cannot reserve stock in a vehicle it is not assigned to', async () => {
+    const crew = (await one(`insert into auth.users default values returning id`)).id;
+    const carA = (await one(`select id from public.ns_stock_locations where code='car_a'`)).id;
+    await client.query(
+      `insert into public.ns_crew_members (user_id, role, vehicle_location_id)
+       values ($1,'crew',$2)`, [crew, carA]);
+
+    const id = await newMaterial({ name: 'FIXTURE other car stock' });
+    await move(id, 40, 'received', { location: 'base' });
+    await client.query(
+      `select public.post_stock_transfer('other-car-xf',$1,10,'base','car_b',true,null,null)`, [id]);
+
+    await asUser(crew, async () => {
+      const err = await errorOf(() => reserve('crew-other', id, 5, 'car_b'));
+      assert.ok(err, 'a crew committing stock in the other car is the case the field contract forbids');
+      assert.equal(err.code, '42501');
+      // ...and its own vehicle still works.
+      await client.query(
+        `select public.post_stock_transfer('own-car-xf',$1,10,'base','car_a',true,null,null)`, [id]);
+      await reserve('crew-own', id, 5, 'car_a');
+    });
+  });
+
+  await record('R4 a crew cannot reassign itself to the other car', async () => {
+    const crew = (await one(`insert into auth.users default values returning id`)).id;
+    const carA = (await one(`select id from public.ns_stock_locations where code='car_a'`)).id;
+    await client.query(
+      `insert into public.ns_crew_members (user_id, role, vehicle_location_id)
+       values ($1,'crew',$2)`, [crew, carA]);
+
+    await client.query('begin');
+    await client.query(`select set_config('nova.is_admin','on',true)`);
+    await client.query(`select set_config('nova.actor_id',$1,true)`, [crew]);
+    await client.query('set local role authenticated');
+    const err = await errorOf(() => client.query(
+      `update public.ns_crew_members set vehicle_location_id = null, role='owner'
+        where user_id = $1`, [crew]));
+    // RLS makes the row invisible to the UPDATE rather than raising, so the
+    // check is that NOTHING changed -- a silent no-op is the safe failure.
+    await client.query('rollback');
+
+    const row = await one(
+      'select role, vehicle_location_id from public.ns_crew_members where user_id=$1', [crew]);
+    assert.equal(row.role, 'crew');
+    assert.equal(row.vehicle_location_id, carA,
+      'a crew that could edit its own row could promote itself');
+  });
+
+  await record('R5 a crew row must name a vehicle', async () => {
+    const u = (await one(`insert into auth.users default values returning id`)).id;
+    const err = await errorOf(() => client.query(
+      `insert into public.ns_crew_members (user_id, role) values ($1,'crew')`, [u]));
+    assert.ok(err, 'a crew with no vehicle reads as "sees nothing" and gets diagnosed as a bug');
+    assert.equal(err.code, '23514');
+  });
+
+  await record('R6 the ledger is readable only for locations the caller is scoped to', async () => {
+    const crew = (await one(`insert into auth.users default values returning id`)).id;
+    const carA = (await one(`select id from public.ns_stock_locations where code='car_a'`)).id;
+    await client.query(
+      `insert into public.ns_crew_members (user_id, role, vehicle_location_id)
+       values ($1,'crew',$2)`, [crew, carA]);
+    const id = await newMaterial({ name: 'FIXTURE scoped ledger' });
+    await move(id, 30, 'received', { location: 'base' });
+    await client.query(
+      `select public.post_stock_transfer('scoped-xf',$1,10,'base','car_b',true,null,null)`, [id]);
+
+    await client.query('begin');
+    await client.query(`select set_config('nova.is_admin','on',true)`);
+    await client.query(`select set_config('nova.actor_id',$1,true)`, [crew]);
+    await client.query('set local role authenticated');
+    const seen = await all(
+      `select l.code from public.ns_material_stock_moves mv
+         join public.ns_stock_locations l on l.id = mv.location_id
+        where mv.material_id = $1`, [id]);
+    await client.query('rollback');
+
+    const codes = new Set(seen.map((r) => r.code));
+    assert.ok(codes.has('base'), 'Base is shared');
+    assert.ok(!codes.has('car_b'), 'the other car\'s movements are not the crew\'s business');
+  });
+
+  await record('R7 reservations and the crew roster are not directly writable', async () => {
+    // tablePriv is declared further down in section I; queried inline here
+    // rather than hoisted, so the sections stay independently movable.
+    const priv = async (role, t, p) => (await one(
+      'select has_table_privilege($1,$2,$3) as ok', [role, t, p])).ok;
+    for (const p of ['INSERT', 'UPDATE', 'DELETE']) {
+      assert.equal(await priv('authenticated', 'public.ns_stock_reservations', p), false,
+        `direct ${p} would bypass the crew scoping and the replay key`);
+    }
+    assert.equal(await priv('authenticated', 'public.ns_stock_reservations', 'SELECT'), true);
+    assert.equal(await priv('anon', 'public.ns_crew_members', 'SELECT'), false);
   });
 
   // ================================================== H. updated_at ========

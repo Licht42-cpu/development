@@ -523,6 +523,12 @@ create constraint trigger guard_transfer_conserves
    A CROSS JOIN against the location list, so a material that has never
    moved into a location still reports 0 there rather than being absent --
    the same reasoning as the LEFT JOIN below, one level down. */
+-- Dropped before creating, not replaced: a later migration widens this
+-- view, and CREATE OR REPLACE VIEW cannot remove a column. Without the
+-- drop, re-running the migration set in order fails on the second pass.
+drop view if exists public.ns_material_stock cascade;
+drop view if exists public.ns_material_stock_by_location cascade;
+
 create or replace view public.ns_material_stock_by_location as
 select m.id           as material_id,
        m.sku,
