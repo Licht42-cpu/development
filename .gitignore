@@ -38,6 +38,7 @@ mobile/www/
 # standard Capacitor project .gitignore entries.
 android/app/build/
 android/.gradle/
+android/.kotlin/
 android/local.properties
 android/capacitor-cordova-android-plugins/
 ios/App/Pods/

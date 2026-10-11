@@ -64,6 +64,11 @@ The integrator should add **native-packaging** and **native-startup**, plus the 
 
 ## Unverified and still open
 
+**Build status updated 2026-10-11:** [Android qualification](android-build.md)
+now proves debug assembly and real preBuild stale-asset rejection. The SDK/JDK
+gap below records this earlier batch's state; install and physical-device
+checks remain unrun.
+
 There is Java 21 but no Android SDK at the checked locations, and neither `ANDROID_HOME` nor `ANDROID_SDK_ROOT` is configured. Gradle compilation, actual preBuild execution, manifest/resource merge, APK assembly/install and physical-device behavior are **unrun**. Sync/copy and direct execution of the production guard succeeded; those do not establish a native build.
 
 To compile: configure an Android SDK (`local.properties` sdk.dir or the SDK environment variable), install platform android-36 and the Build Tools required by AGP 8.13.0, accept SDK licenses, and make Gradle 8.14.3 plus Google/Maven dependencies available. The Java/toolchain must satisfy Capacitor 8/AGP requirements; Java 21 is available here. Then run `npm ci`, `npm run cap:sync` and `cd android && ./gradlew :app:assembleDebug`. Deliberately stale assets should be rejected by preBuild before packaging.

@@ -1,0 +1,104 @@
+{
+  "apk-badging.txt": {
+    "bytes": 5399,
+    "sha256": "99fbcddbaf320ffac51b6fcd3c70a2a5155c197561452c1b2126bca1b5ee1b32",
+    "raw_stdout_sha256": "99fbcddbaf320ffac51b6fcd3c70a2a5155c197561452c1b2126bca1b5ee1b32",
+    "normalization": "LF line endings, trailing spaces/tabs removed, one final newline"
+  },
+  "apk-signature.txt": {
+    "bytes": 343,
+    "sha256": "b0a1af67205efcd284e5bbae691ebf4a0d296b4fcae02cd28e7e0509d0e0efbc",
+    "raw_stdout_sha256": "b0a1af67205efcd284e5bbae691ebf4a0d296b4fcae02cd28e7e0509d0e0efbc",
+    "normalization": "LF line endings, trailing spaces/tabs removed, one final newline"
+  },
+  "apk.txt": {
+    "bytes": 161,
+    "sha256": "0f5d2e8ebcc3a61da1d33bcdaa8006904e3e92ad3e273f0911f06e065d016b65",
+    "raw_stdout_sha256": "0f5d2e8ebcc3a61da1d33bcdaa8006904e3e92ad3e273f0911f06e065d016b65",
+    "normalization": "LF line endings, trailing spaces/tabs removed, one final newline"
+  },
+  "assemble-configured.txt": {
+    "bytes": 26268,
+    "sha256": "ebb634c9f74d592c15920189722df423b4062c2b135406a30514a63a99efe424",
+    "raw_stdout_sha256": "95a22da8d8a013823f2449a9e01c6714e56a048b3ee1b5d6d63ad604c5885f20",
+    "normalization": "LF line endings, trailing spaces/tabs removed, one final newline"
+  },
+  "assemble-first.txt": {
+    "bytes": 28318,
+    "sha256": "c0b4bd79568208c15d6a0540abbe116d488e2e97a5ed532c1a2888619645b94c",
+    "raw_stdout_sha256": "949db6454c25cf04981853f21853e56c7a6bf6b771d07d63dceacde0c16b2088",
+    "normalization": "LF line endings, trailing spaces/tabs removed, one final newline"
+  },
+  "assemble-jdk.txt": {
+    "bytes": 15761,
+    "sha256": "bac5350863b53deadbdbcf891ace041531ef45dc2faa95184cdf2accbde2d40f",
+    "raw_stdout_sha256": "0a8dc172ff998a1980c48465f1d5b6fd2e20141d10407adfa49da6e8494623a6",
+    "normalization": "LF line endings, trailing spaces/tabs removed, one final newline"
+  },
+  "assemble-restored.txt": {
+    "bytes": 17189,
+    "sha256": "acefa0774a8ac537a5a4bb8792d469e3edd37fc7cb23b4f52d9983ac5bb2cddc",
+    "raw_stdout_sha256": "adc59a9c4f57fd07af1ba7256c0240ebb2a2afcbb3cf12114c37ff65517fca08",
+    "normalization": "LF line endings, trailing spaces/tabs removed, one final newline"
+  },
+  "assemble-stale-expected-failure.txt": {
+    "bytes": 1595,
+    "sha256": "bc87aa11ff23b68ea5052a0e21e7d8d01cb96e22780de3d181f4f095147c6677",
+    "raw_stdout_sha256": "ab4de659389bb4732096effa2b75f127965440b0d94ca2c3b4bafbbf9dce7732",
+    "normalization": "LF line endings, trailing spaces/tabs removed, one final newline"
+  },
+  "gradle.sha256": {
+    "bytes": 64,
+    "sha256": "a73a9fac58a82863833251abb99e0ad053f6668c3d08050a9a76f15da9af1ee9"
+  },
+  "jdk.sha256": {
+    "bytes": 118,
+    "sha256": "c49c22f6dbaf89956247e8785a168fb504d844bd65154d00d502fa4b146cc368"
+  },
+  "native-bundle.txt": {
+    "bytes": 866,
+    "sha256": "ba00c3054d22333e6e2d743e9d599c971f31e1dd51511a01677a48067eb810c1",
+    "raw_stdout_sha256": "ba00c3054d22333e6e2d743e9d599c971f31e1dd51511a01677a48067eb810c1",
+    "normalization": "LF line endings, trailing spaces/tabs removed, one final newline"
+  },
+  "native-packaging.txt": {
+    "bytes": 1086,
+    "sha256": "7de9e3d5da9310b1cc986ba9ef339b56b81399e418bef653f5eab14d9e1e23e6",
+    "raw_stdout_sha256": "7de9e3d5da9310b1cc986ba9ef339b56b81399e418bef653f5eab14d9e1e23e6",
+    "normalization": "LF line endings, trailing spaces/tabs removed, one final newline"
+  },
+  "prebuild-fresh.txt": {
+    "bytes": 1062,
+    "sha256": "6afe5c606dc73bd9c696faca7b964fcbdded6d00a0d5acdb74a7879566b4cc45",
+    "raw_stdout_sha256": "1d72f9d64ddafcca60781f6ddee5ee80ca1aa58a87b48d8b1935e671265299ac",
+    "normalization": "LF line endings, trailing spaces/tabs removed, one final newline"
+  },
+  "qualification-suite.txt": {
+    "bytes": 621,
+    "sha256": "51ec6b44e45c797976d98b4db0279e6634024431c6ec4e584df7196c8f1fd213",
+    "raw_stdout_sha256": "51ec6b44e45c797976d98b4db0279e6634024431c6ec4e584df7196c8f1fd213",
+    "normalization": "LF line endings, trailing spaces/tabs removed, one final newline"
+  },
+  "results.json": {
+    "bytes": 2040,
+    "sha256": "86ea36b6350181015c912e9d7d7bbe6d880dc7b09dd530fb1f568d72840dd4af"
+  },
+  "setup-clean-state.txt": {
+    "bytes": 139121,
+    "sha256": "b9df410ba54b2841949d3bcb818423c5633a1d3e71d388806b8ad3345b3a8b8f",
+    "raw_stdout_sha256": "ac251bc4fa433dddea33dc959e4c6b1384e7b29bf07284415a0ed7966e73775b",
+    "normalization": "LF line endings, trailing spaces/tabs removed, one final newline"
+  },
+  "setup-repeat.txt": {
+    "bytes": 1220,
+    "sha256": "e5dbe60d3140b853f5a78e85ffb4e400c2184e559d8cf7afbe033bbe305f7ca9",
+    "raw_stdout_sha256": "e5dbe60d3140b853f5a78e85ffb4e400c2184e559d8cf7afbe033bbe305f7ca9",
+    "normalization": "LF line endings, trailing spaces/tabs removed, one final newline"
+  },
+  "setup-script.txt": {
+    "bytes": 1220,
+    "sha256": "24be79fdb436820224b35c021fe8362a2a623d766064c16b8699b547b0a62efb",
+    "raw_stdout_sha256": "24be79fdb436820224b35c021fe8362a2a623d766064c16b8699b547b0a62efb",
+    "normalization": "LF line endings, trailing spaces/tabs removed, one final newline"
+  }
+}

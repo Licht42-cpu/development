@@ -1,0 +1,61 @@
+{
+  "base_sha": "27e5ab9d9a7a09b8eb157d4ab5c420613510353a",
+  "branch": "codex/android-build-qualification",
+  "date": "2026-10-11",
+  "sdk_setup": "passed on existing and fresh state",
+  "assemble": {
+    "passed": true,
+    "first_success_seconds": 79.58,
+    "actionable_tasks_executed": 211,
+    "apk_sha256": "69cf4fda1eb6f48e75863f42b03ad7b41a0c4fade3d6cb72356d3829f1debbbd",
+    "bytes": 9334364,
+    "published": false
+  },
+  "suites": {
+    "android-build": {
+      "passed": 3,
+      "total": 3
+    },
+    "native-packaging": {
+      "passed": 19,
+      "total": 19
+    },
+    "native-bundle": {
+      "passed": 10,
+      "total": 10
+    }
+  },
+  "expected_failure": {
+    "task": ":app:verifyNovaAssets",
+    "cause": "stale generated mobile/www/admin/js/field.js",
+    "actionable_tasks": 1,
+    "app_compile_or_package_executed": false
+  },
+  "guard_assets": 142,
+  "apk_matched_staged_files_including_manifest": 143,
+  "protected_files_unchanged": 148,
+  "versions": {
+    "jdk": "Temurin 21.0.12.1+1",
+    "gradle": "8.14.3",
+    "agp": "8.13.0",
+    "sdk_tools": "19.0",
+    "platform": "android-36 revision 2",
+    "build_tools": "35.0.0",
+    "platform_tools": "37.0.1"
+  },
+  "unrun": [
+    "emulator install/first screen",
+    "physical device",
+    "broader browser regression rerun",
+    "production/live database"
+  ],
+  "emulator_unavailable": "no binary or system image; /dev/kvm absent",
+  "adb_host_issue": "Cannot mkdir /home/agent/.android: Read-only file system",
+  "source_hashes": {
+    "scripts/android-build.py": "a03feb7091307d7eabe77af126d5799980c4b1874fb38acc238a2a158d5f93fe",
+    "tests/android-build.test.py": "059a770bd413aaf625418b1544df12d504b6c4fc7c975af282d3ca6cca9c6ee2",
+    "android/app/build.gradle": "92aa89223f197f4202b718d2ba7c28e0bbfed8e9d90e1bbc46c917987322c439",
+    "android/gradle/wrapper/gradle-wrapper.properties": "f004e7f70af822a6441abf79e46cc9ae34419198b5a91988210acf7ebf1d25e8",
+    "package-lock.json": "42a0f4cb2a38e3c9b0cb9c6be5a5c84638429d58efdb5002afacbfe3e56f2b75"
+  }
+}

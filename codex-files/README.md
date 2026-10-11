@@ -33,6 +33,20 @@ Android compile/device, live database and production checks remain unrun.
 The [next load-contract inputs](../docs/plans/batch-10-2-contract-readiness.md)
 are documented without importing Claude's implementation or adding stock writes.
 
+## Android build qualification
+
+Independent branch `codex/android-build-qualification` starts at `27e5ab9`.
+The real debug assemble and preBuild guard now run: three SDK-backed checks
+prove fresh preBuild, stale-staging rejection before compilation/packaging,
+and restored assembly with every staged file present in the APK. Packaging
+19/19 and bundle 10/10 also pass. See [findings](../tests/android-build.md),
+[setup helper](../scripts/android-build.py) and
+[evidence](artifacts/android-build-qualification/). Emulator installation and
+physical-device checks remain unrun. The APK is local and unpublished.
+
+The integrator should select `tests/android-build.test.py` as a separate
+SDK/Gradle job after setup/sync; it is not added to the mocked regression list.
+
 ## Contents
 
 | Folder/file | Purpose |

@@ -1,0 +1,21 @@
+PASS - Every vendor runtime file can be committed despite generic dist ignores
+PASS - Current source, staging and Android copy pass the production build guard
+PASS - A source edit after sync is rejected
+PASS - Stale staged JS is rejected by the actual CLI used by Gradle
+PASS - Stale Android assets cannot pass the build guard
+PASS - A copied bundle with extra obsolete files is rejected
+PASS - Changing packaging configuration requires a new sync
+PASS - Removing a lazy plugin is caught even before it is requested
+PASS - Corrupting a vendor file is rejected by its recorded hash
+PASS - Vendor version drift from the lockfile is rejected
+PASS - Floating runtime versions are rejected
+PASS - Stale native Capacitor configuration is rejected
+PASS - Missing native plugin registration is rejected
+PASS - Missing launcher density asset is rejected
+PASS - Missing splash variant is rejected
+PASS - Empty PNG resources are rejected
+PASS - Unresolved manifest icons are rejected
+PASS - Missing Android manifest is rejected
+PASS - Gradle preBuild depends on the production guard
+
+19/19 passed

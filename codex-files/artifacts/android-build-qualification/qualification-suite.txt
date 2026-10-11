@@ -1,0 +1,11 @@
+test_01_real_prebuild_executes_guard (__main__.AndroidBuildQualification.test_01_real_prebuild_executes_guard) ... prebuild-fresh.txt: exit=0; 9.08s
+ok
+test_02_stale_staging_stops_assemble_at_guard (__main__.AndroidBuildQualification.test_02_stale_staging_stops_assemble_at_guard) ... assemble-stale-expected-failure.txt: exit=1; 10.26s
+ok
+test_03_restored_assemble_contains_current_assets (__main__.AndroidBuildQualification.test_03_restored_assemble_contains_current_assets) ... assemble-restored.txt: exit=0; 13.53s
+ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 32.976s
+
+OK

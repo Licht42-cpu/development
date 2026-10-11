@@ -47,6 +47,11 @@ reset or temporarily changed for these probes.
 
 ### An unresolved dependency outside owned files
 
+Historical baseline: startup continuation resolved the package/bootstrap gaps,
+and [Android build qualification](android-build.md) now proves compilation,
+manifest/resource merge, assembly and real preBuild rejection. Installation
+and physical-device behavior remain unverified.
+
 **A clean `npm ci` fails:** the existing lockfile lacks the App dependency
 already declared in package.json. Package/lockfile changes are outside the
 assigned ownership, so neither was changed. Exact pinned native packages

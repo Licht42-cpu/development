@@ -113,6 +113,10 @@ The full integrator list is **offline-work, native-packaging, native-startup,
 native-bundle, native-readiness, mobile-reliability, field-resilience**.
 `measurement-entry` is already registered on this branch.
 
+The later [Android qualification](android-build.md) adds
+`python3 tests/android-build.test.py` as a separate SDK/Gradle job, not another
+mocked suite. The shared regression runner remains unchanged.
+
 `OFFLINE_EVIDENCE` selects screenshot output. `OFFLINE_ONLY` selects a named
 test. Isolated browser fault probes use `OFFLINE_BASELINE=1` to restore 8.2
 product sources, or `OFFLINE_BREAK=owner` to remove owner filtering from the
@@ -187,7 +191,10 @@ Offline permission revocation is not instantaneous; cached reads expire after
 
 IndexedDB survives the tested Chromium process restart, but browser/OS
 eviction and native Android restart remain unverified. No SDK or physical
-device is available for Android build/install/process tests. Ordinary browser
+device was available for this batch's Android build/install/process tests.
+The later [Android qualification](android-build.md) supplies a real SDK/JDK and
+passing debug assembly/preBuild checks; install/process and physical-device
+storage behavior remain unrun. Ordinary browser
 offline asset loading is not added; browser tests use a local asset origin to
 represent the packaged shell. Existing server photo previews need network;
 pending captured-photo bytes are local. Maps, pricing, status/completion,
