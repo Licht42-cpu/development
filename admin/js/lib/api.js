@@ -1030,6 +1030,130 @@ export async function estimateJobMaterials(jobId, locationCode = null) {
   }));
 }
 
+/* --------------------------------------- daily vehicle load planning ---- */
+
+/* A plan RECOMMENDS; confirming it MOVES. Those are two calls on purpose,
+ * and the quantities on a plan line are readings taken when it was built --
+ * never a balance anything derives from. See docs/daily-load-contract-v1.md. */
+
+export async function buildLoadPlan({ clientOperationId, locationCode, workDate, note }) {
+  return unwrap(await supabase.rpc('build_load_plan', {
+    p_client_operation_id: clientOperationId || newOperationId('plan'),
+    p_location_code: locationCode,
+    p_work_date: workDate,
+    p_note: note || null
+  }));
+}
+
+/** The live plan for a car and day, or null. Read rather than built, so
+ *  opening the screen never creates a revision. */
+export async function getLoadPlan({ locationCode, workDate }) {
+  const rows = unwrap(await supabase.from('ns_load_plan_view')
+    .select('*')
+    .eq('location_code', locationCode)
+    .eq('work_date', workDate)
+    .in('status', ['current', 'confirmed'])
+    .limit(500));
+  if (rows.length === 0) return null;
+  const head = rows[0];
+  return {
+    plan_id: head.plan_id,
+    location_code: head.location_code,
+    location_name: head.location_name,
+    work_date: head.work_date,
+    revision: head.revision,
+    status: head.status,
+    basis_fingerprint: head.basis_fingerprint,
+    generated_at: head.generated_at,
+    confirmed_at: head.confirmed_at,
+    closed_at: head.closed_at,
+    lines: rows.filter((r) => r.line_id).map((r) => ({
+      line_id: r.line_id,
+      line_kind: r.line_kind,
+      action: r.action,
+      material_id: r.material_id,
+      material_name: r.material_name,
+      rental_set_id: r.rental_set_id,
+      set_code: r.set_code,
+      required_qty: r.required_qty,
+      aboard_qty: r.aboard_qty,
+      reserved_qty: r.reserved_qty,
+      available_qty: r.available_qty,
+      damaged_qty: r.damaged_qty,
+      shortage_qty: r.shortage_qty,
+      unit: r.unit,
+      precision: r.precision,
+      level_state: r.level_state,
+      data_state: r.data_state,
+      reason: r.reason,
+      job_ids: r.job_ids || [],
+      manual_keep: r.manual_keep,
+      confirmed_operation: r.confirmed_operation
+    }))
+  };
+}
+
+export async function setManualKeep({
+  clientOperationId, locationCode, workDate, materialId, keep = true, reason
+}) {
+  return unwrap(await supabase.rpc('set_manual_keep', {
+    p_client_operation_id: clientOperationId || newOperationId('keep'),
+    p_location_code: locationCode,
+    p_work_date: workDate,
+    p_material_id: materialId,
+    p_keep: keep,
+    p_reason: reason || null
+  }));
+}
+
+export async function authoriseLoadException({
+  clientOperationId, locationCode, workDate, kind, reason, materialId, rentalSetId
+}) {
+  return unwrap(await supabase.rpc('authorise_load_exception', {
+    p_client_operation_id: clientOperationId || newOperationId('exc'),
+    p_location_code: locationCode,
+    p_work_date: workDate,
+    p_kind: kind,
+    p_reason: reason,
+    p_material_id: materialId || null,
+    p_rental_set_id: rentalSetId || null
+  }));
+}
+
+/** Posts the transfers. Send the revision you were looking at: a stale one,
+ *  or a schedule that moved underneath, is refused with the reason. */
+export async function confirmLoadPlan({
+  clientOperationId, planId, expectedRevision, expectedFingerprint, note
+}) {
+  return unwrap(await supabase.rpc('confirm_load_plan', {
+    p_client_operation_id: clientOperationId || newOperationId('conf'),
+    p_plan_id: planId,
+    p_expected_revision: expectedRevision ?? null,
+    p_expected_fingerprint: expectedFingerprint || null,
+    p_note: note || null
+  }));
+}
+
+export async function reconcileDayEnd({
+  clientOperationId, locationCode, workDate, lines, note
+}) {
+  return unwrap(await supabase.rpc('reconcile_day_end', {
+    p_client_operation_id: clientOperationId || newOperationId('rec'),
+    p_location_code: locationCode,
+    p_work_date: workDate,
+    p_lines: lines,
+    p_note: note || null
+  }));
+}
+
+/** Suggestions only: nothing here reserves, orders or moves anything. */
+export async function nextDaySuggestions({ locationCode, workDate }) {
+  return unwrap(await supabase.rpc('ns_next_day_suggestions', {
+    p_location_code: locationCode,
+    p_work_date: workDate
+  }));
+}
+
 /* ------------------------------- permanent lighting: kits and pieces ---- */
 
 /* Three rules this half of the API exists to keep:

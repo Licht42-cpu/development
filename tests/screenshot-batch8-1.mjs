@@ -219,6 +219,68 @@ const OFFCUTS = [
     ns_stock_locations: { id: 'loc-base', code: 'base', name: 'Base' } }
 ];
 
+/* A realistic day: a Keep, an Add, a Return, a level supply, a named set,
+   a known shortage and a needs-review line -- every state the screen has to
+   tell apart, in one shot. */
+const LOAD_LINE = (over) => ({
+  line_id: 'pl-x', line_kind: 'consumable', action: 'add',
+  material_id: 'mat-x', material_name: 'FIXTURE material',
+  rental_set_id: null, set_code: null,
+  required_qty: null, aboard_qty: null, reserved_qty: null,
+  available_qty: null, damaged_qty: null, shortage_qty: null,
+  unit: null, precision: 'exact', level_state: null, data_state: 'complete',
+  reason: '', job_ids: [], manual_keep: false, confirmed_operation: null,
+  ...over
+});
+
+const LOAD_PLAN = {
+  plan_id: 'pl-1', location_code: 'car_a', location_name: 'Car A',
+  work_date: '2027-04-05', revision: 2, status: 'current',
+  basis_fingerprint: 'abc123', generated_at: '2027-04-05T07:00:00Z',
+  confirmed_at: null, closed_at: null,
+  lines: [
+    LOAD_LINE({ line_id: 'pl-a', line_kind: 'equipment', action: 'keep',
+      material_id: 'mat-washer', material_name: 'FIXTURE pressure washer',
+      required_qty: 1, aboard_qty: 1, available_qty: 1, unit: 'each',
+      reason: 'Needed for Siding Soft Washing' }),
+    LOAD_LINE({ line_id: 'pl-b', material_id: 'mat-prod',
+      material_name: 'FIXTURE soft-wash product',
+      required_qty: 20, aboard_qty: 4, reserved_qty: 6, available_qty: 480,
+      damaged_qty: 0, shortage_qty: 0, unit: 'litre',
+      reason: 'For Siding Soft Washing' }),
+    LOAD_LINE({ line_id: 'pl-c', line_kind: 'equipment', action: 'return',
+      material_id: 'mat-bleach', material_name: 'FIXTURE removable bleach kit',
+      required_qty: 0, aboard_qty: 1, unit: 'each',
+      reason: 'No job today needs it' }),
+    LOAD_LINE({ line_id: 'pl-d', action: 'keep', material_id: 'mat-rinse',
+      material_name: 'FIXTURE rinse aid', level_state: 'low',
+      reason: 'For Siding Soft Washing' }),
+    LOAD_LINE({ line_id: 'pl-e', line_kind: 'seasonal_set', action: 'add',
+      material_id: null, material_name: null,
+      rental_set_id: 'set-1', set_code: 'FIXTURE-SET-01',
+      reason: 'Promised to this customer for 2027' }),
+    LOAD_LINE({ line_id: 'pl-f', material_id: 'mat-scarce',
+      material_name: 'FIXTURE scarce product',
+      required_qty: 90, aboard_qty: 0, available_qty: 10, shortage_qty: 80,
+      unit: 'litre', reason: 'For Siding Soft Washing' }),
+    LOAD_LINE({ line_id: 'pl-g', material_id: 'mat-unknown',
+      material_name: 'FIXTURE unknown allowance',
+      required_qty: null, aboard_qty: 0, available_qty: 0, shortage_qty: null,
+      unit: 'litre', precision: 'estimated', data_state: 'needs_review',
+      reason: 'For Siding — no allowance recorded, so the amount is unknown' })
+  ]
+};
+
+const LOAD_SUGGESTIONS = {
+  location_code: 'car_a', work_date: '2027-04-05',
+  note: 'Suggestions only. Nothing here reserves, orders or moves stock.',
+  shortages: [{ material_id: 'mat-scarce', material_name: 'FIXTURE scarce product',
+                shortage_qty: 80, unit: 'litre' }],
+  baseline_gaps: [{ material_id: 'mat-salt', material_name: 'FIXTURE de-icer',
+                    target_qty: 200, aboard_qty: 40, gap_qty: 160 }],
+  needs_review: []
+};
+
 const SEASONAL_CUSTOMERS = [
   { id: 'cus-1', name: 'A Fixture Customer With A Rather Long Name' },
   { id: 'cus-2', name: 'Another Fixture Customer' }
@@ -364,6 +426,11 @@ const FAKE_API = `
   export async function recordOffcut() { return {}; }
   export async function consumeOffcut() { return {}; }
   export async function scrapOffcut() { return {}; }
+  export async function getLoadPlan() { return clone(${JSON.stringify(LOAD_PLAN)}); }
+  export async function nextDaySuggestions() { return clone(${JSON.stringify(LOAD_SUGGESTIONS)}); }
+  export async function buildLoadPlan() { return {}; }
+  export async function confirmLoadPlan() { return {}; }
+  export async function setManualKeep() { return {}; }
   export async function assignSeasonalSet() { return {}; }
   export async function cancelSeasonalAssignment() { return {}; }
   export async function installSeasonalSet() { return {}; }
@@ -427,7 +494,7 @@ const PROBE = () => {
     await page.goto(`${BASE}/admin/field.html`);
     await page.waitForTimeout(150);
 
-    for (const tab of ['stock', 'purchasing', 'mapping', 'sets', 'kits']) {
+    for (const tab of ['stock', 'purchasing', 'mapping', 'sets', 'kits', 'load']) {
       await page.evaluate(async (t) => {
         const mod = await import('/admin/js/views/inventory.js');
         document.body.innerHTML = '';
@@ -452,9 +519,14 @@ const PROBE = () => {
       // button, so it needs its own opener.
       const expander = tab === 'stock' ? 'Move'
         : tab === 'sets' ? 'seasonal'
-        : tab === 'kits' ? 'kits' : null;
+        : tab === 'kits' ? 'kits'
+        : tab === 'load' ? 'load' : null;
       if (expander) {
         await page.evaluate((label) => {
+          if (label === 'load') {
+            for (const d of document.querySelectorAll('details')) d.open = true;
+            return;
+          }
           if (label === 'kits') {
             for (const b of document.querySelectorAll('button')) {
               if (/^(Start a sheet|Add component|Open a kit)$/.test(b.textContent.trim())) {

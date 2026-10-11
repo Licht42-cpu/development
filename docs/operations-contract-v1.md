@@ -1,13 +1,14 @@
 # Nova Shield operations contract v1 — stock movements
 
-**Status: frozen at v1.1.** This is the snapshot handed to both tracks.
+**Status: frozen at v1.2.** This is the snapshot handed to both tracks.
 Neither side invents a counterpart; a change to this document is a new
 version, agreed before either side implements against it.
 
-**v1.1 is ADDITIVE.** Every v1 request shape, parameter, default, response
-field, error code and grant is unchanged. One operation kind and two
-movement reasons were added for opening a sealed kit; see §13. Anything
-already written against v1 keeps working and needs no change.
+**v1.1 and v1.2 are ADDITIVE.** Every v1 request shape, parameter, default,
+response field, error code and grant is unchanged. v1.1 added one operation
+kind and two movement reasons for opening a sealed kit (§13). v1.2 specifies
+the owner/crew boundary that §11 listed as an open question, changing no code
+(§14). Anything already written against v1 keeps working and needs no change.
 
 **Nothing here has been applied to the live database.** The migrations that
 define it are written and tested against a disposable PostgreSQL only.
@@ -463,13 +464,14 @@ nothing already written against the first freeze breaks.
 
 Named so neither side builds against an assumption:
 
-* **Owner-versus-crew limits on their OWN vehicle.** A crew is kept out of
-  the other car's stock (§8), but what an owner may do that a crew may not,
-  within the locations they can both see, is not yet split.
-* **A daily load response, or any schedule/plan revision operation.**
-  Nothing here answers "what should Car A carry today" or enforces a plan
-  version at confirmation. That is Batch 10.1, and the field track should
-  not infer it from this document.
+* ~~**Owner-versus-crew limits on their OWN vehicle.**~~ **Resolved in v1.2;
+  see §14.** A crew is kept out of the other car's stock (§8); what an owner
+  may do that a crew may not, within locations they can both see, is now
+  specified.
+* ~~**A daily load response, or any schedule/plan revision operation.**~~
+  **Delivered by Batch 10.1**, specified in `docs/daily-load-contract-v1.md`.
+  A load plan recommends; confirming it posts ordinary transfers through
+  this contract. Nothing in this document changed to accommodate it.
 * **Offline queueing of stock operations.** The contract is designed to make
   it safe — that is what the replay key is for — but the field outbox has
   four write types today and adding a fifth needs its own agreed scope.
@@ -566,3 +568,52 @@ asked for; `23505` the key was already used for a different operation kind.
 Kit sheets, offcuts and job material sheets are specified in
 `docs/permanent-lighting-materials-contract-v1.md`. The only part of that
 work that touches **this** contract is the conversion above.
+
+
+---
+
+## 14. Amendment v1.2 — the owner/crew split within a shared location
+
+§11 listed this as unspecified: a crew is kept out of the other car's stock,
+but what an owner may do that a crew may not, **within locations they can
+both see**, was not written down. Specifying it was a named requirement of
+Batch 10.1.
+
+**No code in v1 or v1.1 changed.** `post_stock_movement`,
+`post_stock_transfer`, `reserve_stock`, `release_stock_reservation`,
+`consume_stock_reservation` and `open_sealed_kit` keep exactly the
+authorisation they already had. What follows writes down the principle those
+grants already embodied, and every function added since enforces it.
+
+### The principle
+
+> **A crew records what physically happened and confirms what was asked.
+> An owner decides what the business will do, and what the records mean.**
+
+### The split
+
+| a crew MAY | a crew MAY NOT |
+|---|---|
+| post movements: received, consumed, returned, damaged, adjustment | change the catalogue — materials, suppliers, pack sizes, units |
+| transfer between Base and its own vehicle | set vehicle baselines, service load rules, job overrides or vehicle assignments |
+| reserve, release and consume reservations | open a sealed kit (v1.1 §13) |
+| record, use and scrap offcuts | review a kit sheet or a job material sheet |
+| set and clear a manual Keep | commit stock to a job material sheet |
+| confirm a load plan for its own vehicle | build a load plan |
+| reconcile the day's counts | authorise a load exception |
+| record a seasonal install, recovery or inspection | assign, release, retire or register a seasonal set |
+
+Unchanged from v1: a crew is refused everything outside the locations it can
+see, and `is_owner()` still means "an admin with no active crew row", so a
+business with no crew rows has only owners and nothing narrows.
+
+### Where each half is enforced
+
+| rule | enforced by |
+|---|---|
+| location scope | `can_see_location()` in every RPC, and the RLS read policies |
+| owner-only operations | an `is_owner()` guard at the top of each one |
+| no direct table writes | no write grant and no write policy; the migrations assert this |
+
+Full detail, and the daily-load operations themselves, in
+`docs/daily-load-contract-v1.md` §9.

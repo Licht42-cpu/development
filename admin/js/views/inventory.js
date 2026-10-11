@@ -6,6 +6,7 @@ import { trySave } from '../lib/save.js';
 import { signedDelta, packsToUnits } from '../lib/inventory-math.js';
 import { seasonalSetsPanel } from '../components/seasonal-sets.js';
 import { kitsAndPiecesPanel } from '../components/kit-sheets.js';
+import { loadPlanPanel } from '../components/load-plan.js';
 import {
   materialUnitLabel, quantityWithUnit, LEVEL_STATES, levelLabel,
   levelBadgeClass, precisionNote, MOVEMENT_CONDITIONS, COUNT_PRECISIONS
@@ -51,7 +52,8 @@ const TABS = [
   ['purchasing', 'Purchasing'],
   ['mapping',    'Service parts'],
   ['sets',       'Christmas sets'],
-  ['kits',       'Kits & pieces']
+  ['kits',       'Kits & pieces'],
+  ['load',       'Daily load']
 ];
 
 const CATEGORIES = ['track', 'light', 'controller', 'power_supply', 'connector',
@@ -1185,6 +1187,7 @@ export async function renderInventory(ctx) {
       : tab === 'purchasing' ? purchasingTab()
       : tab === 'mapping'    ? mappingTab()
       : tab === 'kits'       ? kitsAndPiecesPanel()
+      : tab === 'load'       ? loadPlanPanel()
       : setsTab()
     ]);
   }
