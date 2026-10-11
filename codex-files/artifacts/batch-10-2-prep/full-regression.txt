@@ -1,0 +1,582 @@
+(node:887751) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+> nova-shield@1.0.0 test
+> bash tests/run-regression.sh
+
+===== phase2 =====
+(node:887812) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - measurements.js: provisional-pricing badge shows for an unapproved service
+PASS - measurements.js: no badge for an approved service
+PASS - measurements.js: review-flag toggle calls updateMeasurement with review_required + reason
+PASS - review-flag.js: unchecking clears the reason and hides the input
+PASS - quote.js: unapproved line shows a badge, quote-level warning, and strengthens the send confirm
+PASS - signature-pad.js: unapproved-pricing override strengthens the admin accept confirm
+PASS - signature-pad.js: no override clause when every service is approved (default)
+PASS - site/js/pages/quote.js: unapproved line shows the customer-facing estimate note
+PASS - site/js/pages/quote.js: Accept is withheld (not just a failed click) when any line is unapproved; Decline still works
+PASS - site/js/pages/quote.js: Accept renders normally once every line is approved
+PASS - admin quote.js: option-group siblings render grouped under one heading, with a Send Option Group button and no per-option Send Email button
+PASS - admin quote.js: an ordinary (non-grouped) job with no measurements/services passed renders exactly as before, with no option-group builder
+PASS - admin quote.js: the option-group builder creates one create_option_quote call per checked column, skips empty columns
+PASS - admin quote.js: the option-group builder refuses to create a group from only 1 checked column
+PASS - site/js/pages/quote.js: an option-group link shows the sibling list, not the single-quote view
+PASS - site/js/pages/quote.js: viewing one option shows its full detail with a back link; accepting it updates the group and is reflected on return
+PASS - site/js/pages/quote.js: an option with unapproved pricing withholds Accept, same as an ordinary provisional quote
+PASS - site/js/pages/quote.js: an ordinary (non-grouped) quote still renders the single-quote view exactly as before -- no option-list regression
+
+18/18 passed
+
+===== phase3 =====
+(node:888054) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - Single eave run: grouped card, badge shows worst state (unpriced, from the empty-pricing baseline)
+PASS - Mixed elevations: two eave runs on different sections both render with their own elevation hint
+PASS - Section heading shows total footage per group, omitted when the group is empty
+PASS - Add eave section defaults to the last run's elevation instead of resetting to blank
+PASS - Add downspout drop: labeled with the Downspout prefix and routed through offline-aware createMeasurement
+PASS - Valley stepper: + creates with review_required, + again updates quantity, - to 0 deletes
+PASS - Gutter condition dropdown calls setMeasurementModifier with the real configured group
+PASS - Bracket authorization checkbox flags the primary run for review, no price attached
+PASS - No optional pre-winter prep toggle exists (no configured pricing for it)
+PASS - An unrelated service is unaffected by the grouping/specialized-calculator logic
+PASS - Add-a-service dropdown excludes child services entirely
+
+11/11 passed
+
+===== phase4 =====
+(node:888239) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. One 1-storey elevation renders with correct total
+PASS - 2. Front 1-storey + rear 2-storey: both render with their own elevation hint and a combined total
+PASS - 3. Three mixed areas (Front/Rear/Garage) all render as independent sections
+PASS - 4. Front=light/vinyl, Rear=heavy/painted -- each row keeps its own independent modifier selection
+PASS - 5. Minimum charge: card shows "minimum applied" without replacing the visible total
+PASS - 6. No manual-adjustment UI inside the calculator (that stays quote-level, per architecture)
+PASS - 7. Review flag toggles review_required without touching quantity/section
+PASS - 8a. Add section: creates a measurement and applies default modifiers
+PASS - 8b. Remove section: calls deleteMeasurement after confirm
+PASS - 8c. Duplicate section: copies section + quantity + modifier selections, not label/review/notes
+PASS - 9. Save and reopen: re-rendering from the same stored data reproduces identical state
+PASS - 10. Nothing siding-specific is called for quote creation (no bespoke RPC reference anywhere)
+PASS - 11. Siding and heating-wire coexist as two independent cards, each keeps its own data
+PASS - 12. No per-row dollar figure is invented in the DOM (only the card-level total, from pricedRows)
+PASS - 13. Offline add-section: createMeasurement returning null does not throw
+PASS - 14. Heating-wire calculator still renders correctly in the same session as siding
+PASS - 15. Child services still exclude from "Add a service" and group under their own parent, unaffected by siding
+
+17/17 passed
+
+===== phase5 =====
+(node:888420) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - Normal linear calc: total matches the spec example (42+55+24+18=139 ft across 4 sections)
+PASS - Mixed elevation: Front (1 storey) and Rear (2 storey) each show their own hint
+PASS - Oxidation (condition) is independent per row: Front=light, Rear=heavy, each keeps its own selection
+PASS - Scope renders as exactly one job-level control, not a per-row dropdown
+PASS - Changing the job-level Scope control fans out setMeasurementModifier to every existing row
+PASS - Minimum charge: card shows "minimum applied" without replacing the total
+PASS - Review flag toggles review_required without touching quantity/section/label
+PASS - Duplicate: copies section, footage, Oxidation AND Scope -- not review flag/reason/notes
+PASS - Add section: new row picks up the CURRENT visit-wide scope, not scope's own default
+PASS - No child-service behavior: gutter brightening never spawns a second card or extra service rows
+PASS - Multi-service: Gutter Brightening + Siding Washing coexist with correct independent totals
+PASS - Multi-service: Gutter Brightening + Heating Wire (with a valley child) coexist; child stays under its own parent
+PASS - Interaction model is distinct: no steppers, no bracket authorization, no per-row surface/scope duplication
+
+13/13 passed
+
+===== phase6 =====
+(node:888600) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - Count buckets: total matches sum across groups, "windows" not "each"
+PASS - Height is section-driven: Front (1 storey) and Rear (2 storey) each show their own hint
+PASS - Window type is independent per group: Front=standard, Rear=storm
+PASS - Scope renders as exactly one job-level control, not per-row
+PASS - Changing Scope fans out setMeasurementModifier to every existing group
+PASS - Stepper: + increases count via updateMeasurement, never creates/deletes the row
+PASS - Stepper: minus never goes below zero and never deletes the row
+PASS - Minimum charge: card shows "minimum applied" without replacing the total
+PASS - Review flag toggles review_required without touching quantity/section/label
+PASS - No duplicate button anywhere in this calculator (deliberate)
+PASS - Add window group: picks up current visit-wide Scope and Window-type default
+PASS - No child-service behavior: windows never spawns a second card or extra service rows
+PASS - Multi-service: Windows + Siding + Gutter Brightening + Heating Wire all coexist with correct independent totals
+PASS - Interaction model is distinct: uses steppers (unlike Siding/Gutter), has no bracket section or eave/downspout split (unlike Heating Wire)
+
+14/14 passed
+
+===== phase7 =====
+(node:888780) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Single concrete zone renders with correct total
+PASS - 2. Multiple zones: total sums correctly across zones
+PASS - 3. Zone-specific modifiers: each zone keeps its own Surface/Condition/Treatment independently
+PASS - 4. No job-wide control: concrete has no Scope-style single selector (real data has no job-wide group)
+PASS - 5. Mixed conditions: card total still comes from pricedRows, not recomputed client-side
+PASS - 6. Duplicate: copies section, sq ft, and every modifier (Surface/Condition/Treatment) -- not review/reason/notes
+PASS - 7. Remove zone: calls deleteMeasurement after confirm
+PASS - 8. Edit zone: renaming and changing square footage both persist via updateMeasurement
+PASS - 9. Minimum charge: card shows "minimum applied" without replacing the total
+PASS - 10. No manual-adjustment UI inside the calculator (quote-level concept, same as other calculators)
+PASS - 11. Review flag toggles review_required without touching quantity/section/label
+PASS - 12. No bespoke RPC/quote-pathway reference anywhere in the component source
+PASS - 13. No per-row dollar figure is invented in the DOM (only the card-level total, from pricedRows)
+PASS - 14. Multi-service: Concrete + Siding + Gutter + Windows + Heating Wire all coexist with correct independent totals
+PASS - 15. Offline add-zone: createMeasurement returning null does not throw
+PASS - 16. Design test: distinct from Siding -- 3 per-zone modifiers incl. a flat-priced one, no job-wide control, 'zones' not 'walls'
+
+16/16 passed
+
+===== phase8 =====
+(node:888964) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. One roof section renders with correct total
+PASS - 2. Multiple roof sections: total sums correctly
+PASS - 3. Mixed heights: Main roof (2 storey) and Garage (1 storey) each show their own hint
+PASS - 4. Mixed access: Main roof (easy) and Garage (difficult) reflected in their own hints
+PASS - 5. Mixed Coverage condition: each roof section keeps its own independent selection
+PASS - 6. No flat-addon/treatment control exists (real data has none for this service)
+PASS - 7. Duplicate: copies section, sq ft, Coverage + Roof type -- not review/reason/notes
+PASS - 8. Remove roof section: calls deleteMeasurement after confirm
+PASS - 9. Edit roof section: rename and area change both persist
+PASS - 10. Review flag toggles review_required without touching quantity/section/label
+PASS - 11. Minimum charge: card shows "minimum applied" without replacing the total
+PASS - 12. No manual-adjustment UI inside the calculator (quote-level concept)
+PASS - 13. No bespoke RPC/quote-pathway reference anywhere in the component source
+PASS - 14. No per-row dollar figure is invented in the DOM (only the card-level total, from pricedRows)
+PASS - 15. Multi-service: Roof + Siding + Concrete + Gutter + Windows + Heating Wire all coexist with correct independent totals
+PASS - 16. Offline add-section: createMeasurement returning null does not throw
+PASS - 17. Design test: roof-appropriate vocabulary -- 'Roof section'/'roof sections', grid--2 (not a fake 3rd modifier), no job-wide control
+
+17/17 passed
+
+===== phase9 =====
+(node:889150) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Basic deck: one section renders with correct total
+PASS - 2. Multiple deck sections: total sums correctly
+PASS - 3. Mixed Condition: each deck section keeps its own independent selection
+PASS - 4. Mixed access: Main deck (easy) and Upper deck (difficult) reflected via their own section hints
+PASS - 5. No fake stairs/railing/addon/job-wide controls exist (real data has none of these)
+PASS - 6. Duplicate: copies section, sq ft, Condition + Material -- not review/reason/notes
+PASS - 7a. Remove deck section: calls deleteMeasurement after confirm
+PASS - 7b. Edit deck section: rename and area change both persist
+PASS - 9. Minimum charge: card shows "minimum applied" without replacing the total
+PASS - 10. Review flag toggles review_required without touching quantity/section/label
+PASS - 11. No manual-adjustment UI inside the calculator (quote-level concept)
+PASS - 12. No bespoke RPC/quote-pathway reference anywhere in the component source
+PASS - 13. No per-row dollar figure is invented in the DOM (only the card-level total, from pricedRows)
+PASS - 14. Multi-service: Deck + Siding + Concrete + Gutter + Windows + Roof + Heating Wire all coexist with correct independent totals
+PASS - 15. Offline add-section: createMeasurement returning null does not throw
+
+15/15 passed
+
+===== phase10 =====
+(node:889342) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Basic fence: one section renders with correct total
+PASS - 2. Multiple fence sections: total sums correctly
+PASS - 3. Mixed Condition: each fence section keeps its own independent selection
+PASS - 4. No Access control exists (real data has no access group for fence)
+PASS - 5. Mixed Material: each fence section keeps its own independent selection
+PASS - 6a. Sides renders as exactly one job-level control, not per-row
+PASS - 6b. Changing Sides fans out setMeasurementModifier to every existing fence section
+PASS - 7. No flat-addon or gate control exists; Fence height renders as a real per-row control
+PASS - 8. Duplicate: copies section, footage, Condition + Material + Sides -- not review/reason/notes
+PASS - 9a. Remove fence section: calls deleteMeasurement after confirm
+PASS - 9b. Edit fence section: rename and footage change both persist
+PASS - 10. Minimum charge: card shows "minimum applied" without replacing the total
+PASS - 11. Review flag toggles review_required without touching quantity/section/label
+PASS - 12. No manual-adjustment UI inside the calculator (quote-level concept)
+PASS - 13. No bespoke RPC/quote-pathway reference anywhere in the component source
+PASS - 14. No per-row dollar figure is invented in the DOM (only the card-level total, from pricedRows)
+PASS - 15. Multi-service: Fence + Siding + Gutter + Concrete + Deck + Windows + Roof + Heating Wire all coexist with correct independent totals
+PASS - 16. Offline add-section: createMeasurement returning null does not throw
+
+18/18 passed
+
+===== phase10-5 =====
+(node:889524) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Fence height control renders with the overridden label, not the raw DB "Height" label
+PASS - 2. Fence height defaults to Standard and offers Standard/Tall/Very tall
+PASS - 3. Per-row modifier grid uses grid--3 (Condition + Fence height + Material)
+PASS - 4. Mixed Fence height: each row keeps its own independent selection, no bleed
+PASS - 5. Changing Fence height on one row updates only that measurement, not every row
+PASS - 6. Duplicate copies Fence height along with Condition/Material/Sides
+PASS - 7. + Add fence section seeds the new row with the default Fence height
+PASS - 8. Bottom hint no longer claims height is unpriced; mentions only gates
+PASS - 9. Sides remains the single job-wide control, separate from the per-row Fence height controls
+
+9/9 passed
+
+===== phase11 =====
+(node:889701) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Basic Moss: one affected area renders with correct total
+PASS - 2. Multiple affected areas: total sums correctly
+PASS - 3. Mixed Coverage: each affected area keeps its own independent selection
+PASS - 4. Access has no per-row control (section-driven); section hint names it correctly
+PASS - 5. Mixed Surface: each affected area keeps its own independent selection
+PASS - 6. No flat-addon control exists (no kind=flat modifiers configured for Moss)
+PASS - 7a. Follow-up renders as exactly one job-level control, not per-area
+PASS - 7b. Changing Follow-up fans out setMeasurementModifier to every existing affected area
+PASS - 8. Duplicate: copies section, sq ft, Coverage + Surface + Follow-up -- not review/reason/notes
+PASS - 9a. Remove affected area: calls deleteMeasurement after confirm
+PASS - 9b. Edit affected area: rename and area change both persist
+PASS - 10. Minimum charge: card shows "minimum applied" without replacing the total
+PASS - 11. Review flag toggles review_required without touching quantity/section/label
+PASS - 12. No manual-adjustment UI inside the calculator (quote-level concept)
+PASS - 13. No bespoke RPC/quote-pathway reference anywhere in the component source
+PASS - 14. No per-row dollar figure is invented in the DOM (only the card-level total, from pricedRows)
+PASS - 15. Multi-service: Moss + Siding + Gutter + Concrete + Deck + Fence + Windows + Roof + Heating Wire all coexist with correct independent totals
+PASS - 16. Offline add-area: createMeasurement returning null does not throw
+
+18/18 passed
+
+===== phase12 =====
+(node:889883) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Basic Graffiti: one affected area renders with correct total
+PASS - 2. Multiple affected areas: total sums correctly
+PASS - 3. Mixed Difficulty: each affected area keeps its own independent selection
+PASS - 4. Mixed Surface: each affected area keeps its own independent selection
+PASS - 5. Access has no per-row control (section-driven); no Height control anywhere (none configured)
+PASS - 6. No flat-addon control exists (no kind=flat modifiers configured for Graffiti)
+PASS - 7. Duplicate: copies section, sq ft, Difficulty + Surface -- not review/reason/notes
+PASS - 8a. Remove affected area: calls deleteMeasurement after confirm
+PASS - 8b. Edit affected area: rename and area change both persist
+PASS - 9. Minimum charge: card shows "minimum applied" without replacing the total
+PASS - 10. Review flag toggles review_required without touching quantity/section/label
+PASS - 11. No manual-adjustment UI inside the calculator (quote-level concept)
+PASS - 12. No bespoke RPC/quote-pathway reference anywhere in the component source
+PASS - 13. No per-row dollar figure is invented in the DOM (only the card-level total, from pricedRows)
+PASS - 14. Multi-service: Graffiti + Moss + Siding + Gutter + Concrete + Deck + Fence + Windows + Roof + Heating Wire all coexist with correct independent totals
+PASS - 15. Offline add-area: createMeasurement returning null does not throw
+PASS - 16. Design test: no job-wide control exists (real data has no scope group for Graffiti, unlike Moss)
+
+17/17 passed
+
+===== phase13 =====
+(node:890065) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Simple main run (no jump wire): renders with correct total, "+ Add jump wire" shown
+PASS - 2. Multiple main runs: total sums correctly
+PASS - 3. Mixed heights: Front (1 storey) and Rear (2 storeys) each show their own elevation hint
+PASS - 4. No per-row modifier dropdown exists on a main run (only the Elevation picker select)
+PASS - 5. Adding jump wire creates the single child row with quantity 0
+PASS - 6. Jump wire footage input persists via updateMeasurement and shows its own $ amount
+PASS - 7. Jump wire row is not auto-flagged for review (it has a real approved rate)
+PASS - 8. Removing jump wire calls deleteMeasurement, offers "+ Add jump wire" again
+PASS - 9. Card-level total combines main runs AND jump wire into one SERVICE TOTAL
+PASS - 10. Duplicate main run: copies section + footage -- not review/reason/notes
+PASS - 11a. Remove main run: calls deleteMeasurement after confirm
+PASS - 11b. Edit main run: rename and footage change both persist
+PASS - 12. No minimum-applied badge ever shows (real minimum is $0.00 for this service)
+PASS - 13. Review flag on a main run toggles review_required without touching quantity/section/label
+PASS - 14. No bespoke RPC/quote-pathway reference anywhere in the component source
+PASS - 15. Multi-service: Lighting+Jump, Siding, Gutter, Windows, Heating Wire+Valley all coexist -- each parent/child pair rolls up independently, no cross-contamination
+PASS - 16. Offline add-run: createMeasurement returning null does not throw
+
+17/17 passed
+
+===== phase14 =====
+(node:890257) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Basic Christmas Lighting: one run renders with correct total, correct service name
+PASS - 2. Multiple main runs: total sums correctly, pure measurement summary (no pricing in it)
+PASS - 3. Mixed heights: Front (1 storey) and Rear (2 storeys) each show their own elevation hint, no bleed
+PASS - 4. Adding jump wire creates the single child row (section_id=null, quantity 0)
+PASS - 5. Jump wire footage input accepts a combined/larger total and persists it
+PASS - 6. No minimum-applied badge ever shows (real minimum is $0.00 for Christmas Lighting)
+PASS - 7. Review flag on a main run toggles review_required without touching quantity/section/label
+PASS - 8. Duplicate main run: copies section + footage -- not review/reason/notes
+PASS - 9a. Remove main run: calls deleteMeasurement after confirm
+PASS - 9b. Edit main run: rename and footage change both persist
+PASS - 10. No bespoke RPC reference and no invented seasonal/takedown/recurring controls in the component source
+PASS - 11. Multi-service: Christmas Lighting(+jump) + Permanent Lighting(+jump) + Siding + Gutter + Windows all coexist independently
+PASS - 12. Offline add-run: createMeasurement returning null does not throw
+
+13/13 passed
+
+===== phase15 =====
+(node:890448) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Simplest quote: one service area, 4 visits, renders with correct total
+PASS - 2. Every real Scope option is offered with the real labels
+PASS - 3. Mixed Scope/Access: two service areas keep independent selections
+PASS - 4. Salting options show the flat-dollar suffix, same convention as Concrete's flat options
+PASS - 5. Access/Height have no per-row dropdown (section-driven); combined hint names both
+PASS - 6. Visit-count stepper: + increases via updateMeasurement, never creates/deletes the row
+PASS - 7. Provisional-pricing badge and hint show for this service (approval_status=provisional)
+PASS - 8. Minimum charge: card shows "minimum applied" without replacing the total
+PASS - 9. Review flag toggles review_required without touching quantity/section/label
+PASS - 10. Duplicate: copies section, visit count, Scope + Surface + Salting -- not review/reason/notes
+PASS - 11. No manual-adjustment UI; no bespoke RPC; no snow-event/recurring references in the component source
+PASS - 12a. Remove service area: calls deleteMeasurement after confirm
+PASS - 12b. Edit service area: rename persists
+PASS - 13. Multi-service: Winter Property Care + Heating Wire + Permanent Lighting + Siding + Concrete all coexist independently
+PASS - 14. Offline add-area: createMeasurement returning null does not throw
+
+15/15 passed
+
+===== phase16 =====
+(node:890627) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Mobile nav drawer stays on screen when the page is scrolled
+PASS - 2. Desktop nav is still a static horizontal bar, not a floating drawer
+PASS - 3. Admin dashboard has no horizontal overflow at 390px
+PASS - 3. Admin dashboard has no horizontal overflow at 430px
+PASS - 4. A long unbreakable customer email does not widen the page
+PASS - 5. Field console topbar does not overflow at 390px with a queue badge
+PASS - 5. Field console topbar does not overflow at 430px with a queue badge
+PASS - 6. Toast is not capped at half the viewport width
+PASS - 7. attachmentBucket() routes customer uploads and field photos to different buckets
+PASS - 8. trySave() reverts the control and reports the reason when a write fails
+PASS - 9. trySave() reports a refresh failure distinctly from a write failure
+PASS - 10. Concurrent flush() calls replay each queued item exactly once
+PASS - 11. syncState() distinguishes pending sync from a failed sync
+
+13/13 passed
+
+===== phase17 =====
+(node:891778) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Setting a date persists it as an ISO timestamp via scheduleJob
+PASS - 2. An invalid or empty date is rejected before any write
+PASS - 3. Double-clicking Save date fires exactly one write
+PASS - 4. A scheduled job states when it is booked for
+PASS - 5. Mark job complete persists completed_at
+PASS - 6. An already-complete job cannot be completed again
+PASS - 7. Adding a note persists body and visibility
+PASS - 8. An empty note is refused without a write
+PASS - 9. Notes render newest-first with their visibility and attribution
+PASS - 10. A note typed against a ticked inspection flag is persisted
+PASS - 11. No note input is offered for a flag that is not ticked
+PASS - 12. The job shows what the customer originally requested
+PASS - 13. A job with no originating request shows no requested-services card
+PASS - 14. Next-step guidance is derived only from real job data
+PASS - 15. The job page renders the current step as an action prompt
+PASS - 16. The customer page withholds Accept on a quote with no lines
+
+16/16 passed
+
+===== phase18 =====
+(node:893174) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:893174) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/nova-shield/admin/js/components/job-activity.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/nova-shield/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Activity rows are ordered newest-first regardless of input order
+PASS - 2. An event with no timestamp is dropped rather than placed arbitrarily
+PASS - 3. Known kinds get their real label and tone; a loss never reads as a win
+PASS - 4. An unrecognised kind is passed through, not relabelled or dropped
+PASS - 5. scheduled_for is marked as a target date, not as "when it was booked"
+PASS - 6. Supersession appears as context on the quote, not as a dated event
+PASS - 7. An actor uuid never becomes a name
+PASS - 8. Note visibility and body are carried through verbatim
+PASS - 9. Rows group by calendar day and keep the newest-first order
+PASS - 10. Dashboard loads in exactly one round trip
+PASS - 11. Every dashboard count comes from the summary and links to its records
+PASS - 12. Actionable non-zero tiles sort ahead of neutral ones
+PASS - 13. A failed dashboard load shows the error and NO counts
+PASS - 14. A genuinely idle business reads as idle, not as an error
+PASS - 15. Recent activity lists only recorded events, each openable
+PASS - 16. Searching sends the text to the server, debounced to one request
+PASS - 17. Status, schedule-bucket and review filters are all evaluated server-side
+PASS - 18. Sorting is a server-side parameter, not a client-side re-shuffle
+PASS - 19. A dashboard deep link pre-applies its filters on the first request
+PASS - 20. A job row shows its review rollup, and a declined quote is not styled as a win
+PASS - 21. Jobs list distinguishes "no matches" from "no jobs at all"
+PASS - 22. A failed jobs query shows the reason and a retry, never an empty list
+PASS - 23. The job timeline renders recorded events newest-first, grouped by day
+PASS - 24. Internal and customer-visible notes are unmistakably different on screen
+PASS - 25. A failed activity query degrades to an error inside the card, not a blank one
+PASS - 26. An empty timeline says so plainly
+PASS - 27. The review rollup lists every flagged item with its actual reason
+PASS - 28. No review card appears when nothing is flagged, and quoting is never blocked
+PASS - 29. Dashboard has no horizontal overflow at 390px
+PASS - 30. Jobs list has no horizontal overflow at 390px
+PASS - 31. Job timeline has no horizontal overflow at 390px
+PASS - 29. Dashboard has no horizontal overflow at 430px
+PASS - 30. Jobs list has no horizontal overflow at 430px
+PASS - 31. Job timeline has no horizontal overflow at 430px
+PASS - 32. Desktop dashboard lays its tiles out in more than one column
+
+35/35 passed
+
+===== phase19 =====
+(node:895597) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:895597) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/nova-shield/admin/js/lib/navigation.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/nova-shield/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Every inner admin screen has a parent; only the dashboard is root
+PASS - 2. A query string never changes which screen a path is
+PASS - 3. An unknown route falls back to the root rather than nowhere
+PASS - 4. A contextual parent overrides the static map but cannot invent one
+PASS - 5. The field console has its own root and parent graph
+PASS - 6. An open overlay wins over everything else
+PASS - 7. The nav drawer closes before the screen changes
+PASS - 8. The keyboard is dismissed before the screen changes
+PASS - 9. With app history, Back pops one entry
+PASS - 10. A deep-linked inner screen goes to its parent, NEVER exits
+PASS - 11. Only the root screen exits the app
+PASS - 12. The field console exits only from its schedule screen
+PASS - 13. Overlays dismiss newest-first and deregister cleanly
+PASS - 14. A dismiss that deregisters itself does not take the layer below with it
+PASS - 15. pushOverlay refuses a non-function
+PASS - 16. Keyboard detection needs BOTH a focused field and a shrunken viewport
+PASS - 17. installBackHandler is a no-op off-native and never touches the plugin
+PASS - 18. A missing plugin degrades silently instead of breaking startup
+PASS - 19. The native handler performs each decision against a plugin double
+PASS - 20. Each new route gets a history depth stamp; filters do not
+PASS - 21. Navigating to a real screen does increase the depth
+PASS - 22. Going back restores the earlier depth rather than inventing a new one
+PASS - 23. A deep-linked filtered URL still starts at depth 1
+PASS - 24. Escape closes a registered overlay in a real browser
+PASS - 25. External links are marked to open outside the WebView
+
+25/25 passed
+
+===== phase20 =====
+(node:896145) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Customer list renders real counts and links to each customer
+PASS - 2. Searching reaches the server, debounced, and covers addresses
+PASS - 3. Customer list: no-match, empty, and failure are three different screens
+PASS - 4. Customer detail shows only schema-backed fields, and invents no history
+PASS - 5. Customer edit validates before writing, and never writes on a bad value
+PASS - 6. A valid customer edit writes exactly the real columns, once
+PASS - 7. The dedup keys are stated, not silently changed
+PASS - 8. The Passport renders the field console’s existing structure
+PASS - 9. The admin never writes the passport jsonb
+PASS - 10. An empty passport says so rather than rendering blank rows
+PASS - 11. Every history row keeps the job and date it came from
+PASS - 12. Quote status tones: accepted is the only win
+PASS - 13. Empty history sections each say what is missing
+PASS - 14. Photos use signed URLs from the correct private bucket
+PASS - 15. Customer -> property -> job navigation is wired end to end
+PASS - 16. The job screen links to the customer and the passport without copying them
+PASS - 17. A property reached from a customer sets that customer as its Back target
+PASS - 18. A property whose customer was deleted says so instead of showing a blank
+PASS - 19. Customers list has no horizontal overflow at 390px
+PASS - 20. Customer detail has no horizontal overflow at 390px
+PASS - 21. Property Passport has no horizontal overflow at 390px
+PASS - 19. Customers list has no horizontal overflow at 430px
+PASS - 20. Customer detail has no horizontal overflow at 430px
+PASS - 21. Property Passport has no horizontal overflow at 430px
+
+24/24 passed
+
+===== geofence =====
+(node:898463) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+geofence.js: all assertions passed
+(node:898463) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/nova-shield/admin/js/lib/geofence.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/nova-shield/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+===== native-wrapper =====
+(node:898471) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - native.js: isNative() is false by default (plain browser)
+PASS - native.js: setStatusBarTheme() never touches StatusBar plugin off-native
+PASS - native.js: hapticLight() never throws off-native
+PASS - native.js: getDevicePosition() resolves real coords when the plugin succeeds
+PASS - native.js: getDevicePosition() resolves null (never throws) on permission denial
+PASS - native.js: shareOrFallback() runs fallbackFn when Share fails
+PASS - native.js: shareOrFallback() does not call fallbackFn when Share succeeds
+PASS - native.js: persistPhotoLocally() is a no-op (null) off-native
+PASS - photo-markup.js: Skip resolves the original File unchanged
+PASS - photo-markup.js: drawing a mark then "Use this photo" resolves a new PNG File
+PASS - field-photos.js: "+ Add photo" opens the file input on web, never the native camera
+PASS - quote.js: Download PDF / Preview Quote / Copy SMS keep their web behaviour off-native
+PASS - field-schedule.js: no arrival banner when the device position is unavailable
+PASS - field-schedule.js: arrival banner appears when the device is within 100m of the property
+PASS - native.js: isNative() reflects the mocked native platform
+PASS - field-photos.js: "+ Add photo" calls the native camera (not the file input) when native
+PASS - quote.js: Download PDF shares the absolute public URL when native
+PASS - native.js: shareCurrentPage() writes the rendered page to Filesystem then shares it
+PASS - native.js: shareCurrentPage() falls back to false when Share fails
+
+19/19 passed
+
+===== reload-offline =====
+(node:898656) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - field-workspace.js: offline passport save repaints instead of an unhandled rejection
+PASS - field-workspace.js: reload() still surfaces a genuine (non-network) error
+
+2/2 passed
+
+===== measurement-entry =====
+(node:898844) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - Rapid typing coalesces into one save and keeps the focused input mounted
+PASS - A second edit waits for the first write and persists the latest captured value
+PASS - An older failed write cannot revert a newer edit
+PASS - A failed latest save retains the intended quantity and supports explicit retry
+PASS - Blank input is not silently persisted as zero and blocks navigation until resolved
+PASS - An incomplete exponent remains unsaved
+PASS - Negative and fractional each quantities are rejected; explicit zero is saved
+PASS - Blur flushes the debounce immediately, then allows a fresh panel render
+PASS - An old refresh cannot overwrite an edit made after it started
+PASS - A later refresh wins when responses complete in reverse order
+PASS - A refresh started before commit is rejected even if its edit version was current
+PASS - Discarding a failed draft restores the confirmed value without retrying it
+PASS - Delete waits for the pending quantity before its original handler runs
+PASS - Build quote waits for the latest quantity and ignores duplicate clicks while saving
+PASS - A failed quantity prevents quote creation and leaves the draft recoverable
+PASS - Navigation flush waits for pending writes and restores the route for an invalid draft
+PASS - siding specialized footage uses the same ordered save and preserves focus
+PASS - permanent_lighting specialized footage uses the same ordered save and preserves focus
+PASS - windows stepper restores the confirmed count after a failed write
+PASS - winter_property_care stepper restores the confirmed count after a failed write
+PASS - Heating-wire child counts block quote creation while saving and restore failed counts
+PASS - desktop screen flushes quantity before its real Build quote handler
+PASS - desktop screen rejects reversed reload responses after separate saves
+PASS - field screen flushes quantity before its real Build quote handler
+PASS - field screen rejects reversed reload responses after separate saves
+PASS - desktop router waits for the quantity write before changing screens
+PASS - desktop router and sign-out retain invalid input on the current screen
+PASS - field router waits for the quantity write before changing screens
+PASS - field router and sign-out retain invalid input on the current screen
+
+29/29 passed
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

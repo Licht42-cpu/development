@@ -1,0 +1,10 @@
+FAIL - v2 upgrade preserves all four payloads, Blob/File bytes, row keys and unknown fields
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+0 !== 4
+
+    at file:///workspace/nova-shield/tests/load-prep.test.mjs:80:64
+    at async fixture (file:///workspace/nova-shield/tests/load-prep.test.mjs:25:55)
+    at async check (file:///workspace/nova-shield/tests/load-prep.test.mjs:14:9)
+    at async file:///workspace/nova-shield/tests/load-prep.test.mjs:79:1
+0 PASS / 1 FAIL

@@ -73,6 +73,16 @@ remain the actual source. Future changes should update those canonical paths.
 
 ## Implementation commits already pushed
 
+The latest preparation branch is **codex/batch-10-2-prep**, based on
+`e4259466087850a503cd5f6884fe54a22f72ebd1`. Its handoff is
+[tests/load-prep.md](../tests/load-prep.md), with a
+[read-only seasonal review](../docs/reviews/seasonal-contract-abedf0f.md) and
+[new evidence](artifacts/batch-10-2-prep/). It upgrades existing local storage,
+keeps `/load` disabled and provides throwing scenario placeholders. No load
+interface or fifth action ships. The Android status is consolidated in
+[tests/android-build.md](../tests/android-build.md); its setup draft stays
+unpublished. The explicit integrator list now includes **load-prep**.
+
 | Work | Commit | Remote branch |
 | --- | --- | --- |
 | Ordered/recoverable measurement entry | f4cdbe552ebd4289920fe533af10371a1d4c7f0d | codex/measurement-reliability |

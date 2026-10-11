@@ -88,7 +88,10 @@ export async function fieldFixture(browser, { width = 390, hash = '#/', config =
     'export const Geolocation = { getCurrentPosition: async () => { throw new Error("No fixture GPS"); } };');
   await page.goto(`${BASE}/admin/field.html${hash}`);
   await page.waitForFunction(() => __sessions > 0);
-  await page.waitForFunction(async () => !(await import('/admin/js/lib/offline-queue.js')).syncState().syncing);
+  // Playwright's polling predicate must be synchronous: a Promise is truthy
+  // even when its eventual value is false, so importing inside it did not wait.
+  await page.evaluate(async () => { window.__fixtureQueue = await import('/admin/js/lib/offline-queue.js'); });
+  await page.waitForFunction(() => !__fixtureQueue.syncState().syncing);
   return { context, page, errors };
 }
 

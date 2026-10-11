@@ -1,0 +1,70 @@
+{
+  "results": [
+    {
+      "name": "v2 upgrade preserves all four payloads, Blob/File bytes, row keys and unknown fields",
+      "ok": true
+    },
+    {
+      "name": "upgraded queue drains every existing handler once; second flush produces no duplicate",
+      "ok": true
+    },
+    {
+      "name": "v1 ownerless payloads survive unchanged and stay quarantined, never claimed or replayed",
+      "ok": true
+    },
+    {
+      "name": "interrupted upgrade rolls back stores and bytes; retry upgrades the original queue",
+      "ok": true
+    },
+    {
+      "name": "unknown future database version fails closed and leaves unsent writes untouched",
+      "ok": true
+    },
+    {
+      "name": "downgrade cannot open v3 as v2 or discard an unsent row",
+      "ok": true
+    },
+    {
+      "name": "unknown schema marker 99/1 prevents replay without modifying rows",
+      "ok": true
+    },
+    {
+      "name": "unknown schema marker 3/99 prevents replay without modifying rows",
+      "ok": true
+    },
+    {
+      "name": "new states persist separately, no existing handler uses them and no fifth handler is installed",
+      "ok": true
+    },
+    {
+      "name": "schema/upgrade failures stay storage errors in airplane mode",
+      "ok": true
+    },
+    {
+      "name": "upgrade retains auto-increment sequence and concurrent flushes share one replay",
+      "ok": true
+    },
+    {
+      "name": "disabled entry still waits for measurement persistence at 390px",
+      "ok": true
+    },
+    {
+      "name": "disabled load deep links resolve to the real schedule online and offline at 390px",
+      "ok": true
+    },
+    {
+      "name": "disabled entry still waits for measurement persistence at 430px",
+      "ok": true
+    },
+    {
+      "name": "disabled load deep links resolve to the real schedule online and offline at 430px",
+      "ok": true
+    },
+    {
+      "name": "all ten scenario wrappers throw rather than invent a backend fixture",
+      "ok": true
+    }
+  ],
+  "passed": 16,
+  "failed": 0
+}

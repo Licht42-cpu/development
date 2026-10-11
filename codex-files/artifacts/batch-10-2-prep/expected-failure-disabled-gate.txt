@@ -1,0 +1,25 @@
+FAIL - disabled load deep links resolve to the real schedule online and offline at 390px
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
++ '#/load/closing'
+- '#/'
+     ^
+
+    at fixture.width.width (file:///workspace/nova-shield/tests/load-prep.test.mjs:187:98)
+    at async fixture (file:///workspace/nova-shield/tests/load-prep.test.mjs:25:55)
+    at async check (file:///workspace/nova-shield/tests/load-prep.test.mjs:14:9)
+    at async file:///workspace/nova-shield/tests/load-prep.test.mjs:183:3
+FAIL - disabled load deep links resolve to the real schedule online and offline at 430px
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
++ '#/load/closing'
+- '#/'
+     ^
+
+    at fixture.width.width (file:///workspace/nova-shield/tests/load-prep.test.mjs:187:98)
+    at async fixture (file:///workspace/nova-shield/tests/load-prep.test.mjs:25:55)
+    at async check (file:///workspace/nova-shield/tests/load-prep.test.mjs:14:9)
+    at async file:///workspace/nova-shield/tests/load-prep.test.mjs:183:3
+0 PASS / 2 FAIL

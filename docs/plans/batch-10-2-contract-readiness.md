@@ -8,7 +8,7 @@ it does not add stock writes or a second queue.
 ## Verified starting point
 
 Read-only review of Claude's `claude/batch-8-1` at
-`201bf797969176bcf3c3a5d0965aaef2b488f549` confirms that
+`abedf0f6e3eb1fda2fd336c5dd34186f8340b4b0` confirms that
 `docs/operations-contract-v1.md` now documents reservations, releases,
 consumption, owner/crew location scoping, litres/kilograms/sticks/levels,
 and usable/damaged and exact/estimated movements. The API passes both new
@@ -21,16 +21,19 @@ Claude reports 132 database checks and 63 browser checks. The document says
 its migrations remain unapplied to the live database. No Claude code is
 imported here, and Codex's completed 9.2 remains independent.
 
-The document still has an older authorization section saying crew scoping is
-absent, contradicted by section 10b. Its opening migration list also omits the
-later reservation migrations, and reservation signatures, receipts and errors
-are summarized rather than specified in full. Reconcile these in the next
-frozen contract before implementing stock writes; do not infer wire behavior
-from the summary. In particular, location RPCs use **codes**, not database IDs.
+The three earlier stock-document issues were corrected in `19b3c86`: section
+8 is reconciled, all five migrations are listed, and section 4b specifies
+reservation/release signatures, results, enforced rules and errors. Section
+10b is a non-normative changelog. A repeated release succeeds; releasing an
+already-consumed reservation errors. Location RPCs use **codes**, not IDs.
 
 There is still no daily load response or schedule-version confirmation
-operation. Claude's next 9.1 supplies named seasonal-set identity, assignment,
-recovery and release; 10.1 supplies the load contract for 10.2.
+operation. Claude's 9.1 now supplies seasonal-set identity, assignment,
+recovery and release. [The independent review](../reviews/seasonal-contract-abedf0f.md)
+records source issues for Claude, including scoped replay and accounting,
+and why an assignment cannot establish that a set is physically loaded.
+10.1 still needs to supply the load contract for 10.2. No seasonal writes
+were added to the field outbox.
 
 The following is an integration checklist, **not an invented RPC contract**.
 The route must stay unavailable until a real adapter and its frozen contract
@@ -66,10 +69,19 @@ exist. UI-only fixtures do not establish authorization or stock correctness.
    permission, shortage and lost-response examples.
 
 Once supplied, Codex can implement against injected adapters on its own branch
-without waiting for a backend merge or changing `api.js`. Adding precisely
-specified stock operations to the existing outbox requires an explicit local
-schema migration and tests preserving its four existing actions and legacy
-payloads. Pending/review states must remain distinct from accepted movements.
+without waiting for a backend merge or changing `api.js`. 10.2-prep now supplies
+the explicit local **v1/v2 → v3** upgrade: unchanged queue records plus schema
+and lifecycle stores. The latter has queued/accepted/conflict/needs-review
+state vocabulary, unused by current handlers. Future action types fit the
+existing queue envelope without another store migration; their handler,
+payload validation, authorization and receipt rules still require the contract.
+Ownerless v1 rows remain quarantined; v2-owned rows drain after upgrade.
+Unknown/downgrade versions preserve unsent work and refuse opening.
+
+The local `/load` entry point is disabled before online and cached routing;
+measurement exit saves still run first. Ten scenario wrappers live in
+`tests/fixtures/load-contract/`; reading any contract examples throws an
+explicit TODO. They define file layout, not a backend wire shape.
 
 Acceptance will include 390/430px touch and keyboard use, interruption/restart,
 separate vehicle state and duplicate replay prevention. Android physical
@@ -81,7 +93,10 @@ browser acceptance. No live database change, merge or deployment is implied.
 Before a live application window, rehearse the complete pending sequence in
 timestamp order against a disposable Supabase-compatible database, including
 the Batch 5 content freeze, both Batch 7.1 grant migrations and all five Batch
-8.1 migrations. Individual fixture tests do not establish that the sequence
+8.1 migrations and both 9.1 seasonal migrations. Claude reports ten pending
+migrations and a clean disposable rehearsal at `abedf0f`; Codex has not
+independently rerun that rehearsal or queried live migration state.
+Individual fixture tests do not establish that the sequence
 works with the existing schema, Supabase auth/storage objects and grants.
 Record applied versions, final function signatures, privileges and trigger
 state; run owner/crew/anonymous and replay/transfer/reservation checks against

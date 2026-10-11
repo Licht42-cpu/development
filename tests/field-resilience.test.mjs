@@ -242,8 +242,8 @@ await record('Retry sync replays in order and removes actions only after success
     await dialog.getByText('First update', { exact: true }).waitFor();
     assert.match(await dialog.innerText(), /Permission denied/);
     await dialog.getByRole('button', { name: 'Retry sync', exact: true }).click();
-    await page.waitForFunction(async () => (await (await import('/admin/js/lib/offline-queue.js')).count()) === 0);
-    await page.waitForFunction(async () => !(await import('/admin/js/lib/offline-queue.js')).syncState().syncing);
+    await page.waitForFunction(() => __fixtureQueue.syncState().count === 0 && !__fixtureQueue.syncState().syncing);
+    assert.equal(await page.evaluate(async () => (await import('/admin/js/lib/offline-queue.js')).count()), 0);
     const writes = await page.evaluate(() => __writes.map(call => call.args[1].passport.preferences));
     assert.deepEqual(writes, ['First update', 'Second update']);
     await dialog.getByText('Nothing waiting to sync.', { exact: true }).waitFor();

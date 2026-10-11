@@ -1,0 +1,62 @@
+{
+  "base_sha": "e4259466087850a503cd5f6884fe54a22f72ebd1",
+  "branch": "codex/batch-10-2-prep",
+  "reviewed_claude_sha": "abedf0f6e3eb1fda2fd336c5dd34186f8340b4b0",
+  "node": "v24.19.0",
+  "chromium": "Chromium 151.0.7922.173 built on Debian GNU/Linux 13 (trixie)",
+  "suites": {
+    "registered_regression": 391,
+    "offline-work": 47,
+    "mobile-reliability": 22,
+    "field-resilience": 27,
+    "native-readiness": 24,
+    "native-startup": 18,
+    "native-packaging": 19,
+    "native-bundle": 10,
+    "load-prep": 16
+  },
+  "measurement-entry": {
+    "passed": 29,
+    "already_in_registered_count": true
+  },
+  "passed_unique_counted_checks": 574,
+  "geofence": "passed (not included in numeric total)",
+  "failed_current_checks": 0,
+  "skipped_selected_checks": 0,
+  "expected_failures": {
+    "queue_clear_mutant": 1,
+    "disabled_gate_mutant": 2
+  },
+  "android": {
+    "assemble": "passed",
+    "real_asset_guard": "passed; 144 assets",
+    "seconds": 22.48,
+    "tasks_executed": 22,
+    "tasks_up_to_date": 189,
+    "staged_apk_files": 145,
+    "apk_public_files": 147,
+    "debug_v2_signing": "verified; Android Debug certificate",
+    "clean_offline_build": "qualified in earlier e425946 follow-up; not repeated",
+    "manifest_permissions": "inspected without a device"
+  },
+  "unrun": {
+    "emulator": "no emulator/system image or /dev/kvm; read-only adb home; no repeated attempts",
+    "physical_device": "no device; permission dialogs, hardware Back, camera, TalkBack, eviction, restart, cellular deferred",
+    "live_database_and_production": "outside this batch; no credentials/probes used",
+    "claude_database_suites_and_rehearsal": "read-only source review, no independently reproduced backend checks",
+    "release_signing": "debug artifact only"
+  },
+  "environment_draft": "remains unpublished",
+  "source_sha256": {
+    "admin/js/field.js": "1923d90c362518665b03070dc437299ebdbb08b5e429a44e4c9febd63086edeb",
+    "admin/js/lib/offline-queue.js": "cc48f023fcaa19b5d993f3962b9b1ea927bee79cac0934ced614cbd3c198e99a",
+    "admin/js/lib/outbox-schema.js": "8cc384ee1367a10698e97fa04ce3c464f6fa52bf9fa0c021ab369a62005005e2",
+    "admin/js/lib/field-load-gate.js": "4cd6b797b06dd8bf89ee8f9fe9e734b6ca13cade293b17ddffdb400109a78b8e",
+    "tests/load-prep.test.mjs": "b40a7f6019db94a75a65eca46f25ccb3185e55bd4872fee66d6fde67297815ec",
+    "tests/offline-work-fixture.mjs": "b27e5858bcd5f54a58a7fdb35120a05a485fd5ef416ef6dc45660b9762acbdef",
+    "tests/field-resilience-fixture.mjs": "92cfb33eb09507d5fb76fce55f11ce6623d92e1240fd566575c74f8befac86b8",
+    "tests/field-resilience.test.mjs": "07966b55aa977970fc1ee10261d5813f624615d69e435a74efbfb94b587758ef",
+    "tests/android-apk-inspection.py": "302364c08534246c533c4b15cb9f16f6623e0e9f0e0e5884e455e14bfdffc53f"
+  },
+  "claude_owned_boundaries_and_regression_runner": "unchanged from base"
+}

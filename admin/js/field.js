@@ -11,6 +11,7 @@ import { installBackHandler, installEscapeHandler, fieldParentOf, pushOverlay, d
 import { usableSnapshot, forget } from './lib/field-cache.js';
 import { localAccount, accessDenied } from './lib/field-identity.js';
 import { renderOfflineWork } from './views/field-offline.js';
+import { unavailableLoadRoute } from './lib/field-load-gate.js';
 
 setStatusBarTheme();
 
@@ -81,6 +82,12 @@ async function cachedRoute(mount, attempt) {
 async function router() {
   const attempt = ++measurementRouteAttempt;
   if (!await flushMeasurementEdits() || attempt !== measurementRouteAttempt) return;
+  // Gate before both live and cached routing, after the measurement exit guard.
+  // A disabled deep link returns to a real schedule, never a partial screen.
+  if (unavailableLoadRoute(currentPath())) {
+    window.location.replace('#/');
+    return;
+  }
   cachedAccount = null;
   syncNavDepth();
   // Each attempt owns its mount. A late response may finish its detached

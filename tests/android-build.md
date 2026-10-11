@@ -1,5 +1,53 @@
 # Android build qualification
 
+## Current qualification in one place
+
+This table supersedes the historical counts below. Batch 10.2-prep builds
+the current owned assets; no adb/emulator attempt was repeated. Prior build
+and stale-asset evidence remains in its original artifact directories.
+
+| Level/check | Status | Evidence or remaining limit |
+| --- | --- | --- |
+| Capacitor sync and asset guard | Qualified | Staged/configured assets and seven native plugins agree; this is asset preparation |
+| Real Gradle preBuild guard | Qualified | `verifyNovaAssets` executes; the deliberate stale-JS run fails at that task before compilation/packaging |
+| Gradle debug assembly | Qualified | Java/Kotlin, manifest/resources, DEX and debug APK; current prep assets assembled again |
+| Clean offline assembly | Qualified | Prior follow-up: 32.06s, 222 executed tasks with the populated dependency cache; no empty-cache claim |
+| Packaged asset integrity | Qualified without a device | Current APK assets compared byte-for-byte against current staging, including its manifest |
+| Manifest and permissions | Inspected without a device | Binary APK manifest/merged XML, launcher/exported flags, location/network/plugin permissions; no runtime permission-dialog result |
+| Debug signing | Verified without a device | APK v2 signature and debug signer; no release signing configuration or release qualification |
+| Emulator install/first screen | **UNRUN** | No emulator/system image, no `/dev/kvm`; adb also requires the read-only host home; no third attempt |
+| Physical device behaviour | **UNRUN** | No device available: permission dialogs, hardware Back, camera, TalkBack, eviction, restart and cellular remain 13.2 |
+| Live database/integration/production | **UNRUN** | Outside this batch; neither migrations nor live app state were changed |
+
+The saved environment-instructions configuration remains an **unpublished
+draft**. A debug APK stays an ignored local artifact, never a release or
+publication. Current logs and inspection results are in
+`codex-files/artifacts/batch-10-2-prep/`; browser mocks establish no device,
+stock-authorization or production correctness.
+
+Current prep verification: **144** guard assets, **145** staged files including
+the bundle manifest, and **147** APK public files including the two generated
+empty Cordova stubs. Assembly took **22.48s** (22 executed, 189 up-to-date
+tasks); this warm build is separate from the earlier clean offline run.
+The merged/binary manifest reports API 24 minimum / 36 target, an exported
+launcher and a non-exported FileProvider with URI grants. Permissions are
+Internet, coarse/fine location, vibration, network state and the app's
+non-exported-receiver permission. No broad external-storage permission is
+declared. `apksigner` verifies v2 signing by `CN=Android Debug`.
+
+Reproduce device-free inspection after setup, sync and assembly:
+
+```sh
+python3 tests/android-apk-inspection.py
+JAVA_HOME=/workspace/.nova-shield/jdk/jdk-21.0.12.1+1 /workspace/.nova-shield/android-sdk/build-tools/35.0.0/apksigner verify --verbose --print-certs android/app/build/outputs/apk/debug/app-debug.apk
+/workspace/.nova-shield/android-sdk/build-tools/35.0.0/aapt2 dump badging android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Use the configured state directory's tool paths if it differs. Add
+`android-apk-inspection.py` to the separate SDK job after assembly, alongside
+the existing `android-build.test.py`; neither belongs in the mocked-suite
+runner, and neither runs concurrently with sync or asset-mutating tests.
+
 ## Base and outcome
 
 Started from clean `codex/batch-9-2-offline-work` at
@@ -187,13 +235,6 @@ override, mount change or platform-tool modification was used. Installation
 requires a host with a writable adb configuration directory and an actual
 emulator/device; neither requirement is established here.
 
-| Level | Result | What it establishes |
-| --- | --- | --- |
-| Capacitor sync + direct guard | Passed | Staging, copied assets, config, resources and seven plugin registrations agree |
-| Gradle assemble + real guard probe | Passed | Native build graph executes the guard, compiles/merges and produces a debug APK; stale staged JS blocks assembly |
-| Emulator install/start | Unrun | No emulator binary/system image was available; /dev/kvm is absent |
-| Physical device | Unrun | No permission, Back, camera, TalkBack, eviction, restart or cellular result claimed |
-
 Platform-tools installation is not device readiness: this container's adb
 37.0.1 also aborts trying to create `/home/agent/.android`, even with the
 Android-user override. No install was attempted. Diagnose that host tooling
@@ -210,6 +251,8 @@ alongside a concurrent sync/build. It is not a browser/mock suite and requires
 SDK/JDK/dependencies. `tests/run-regression.sh` remains unchanged; database
 integration stays separately selectable too.
 
-All 148 tracked files under admin/, shared/, supabase/ and the regression
+For that Android-only follow-up, all 148 tracked files under admin/, shared/, supabase/ and the regression
 runner are byte-identical to the base. No field/offline/startup feature change,
 live migration, grant/data change, merge, deployment or APK publication occurred.
+The subsequent 10.2-prep changes owned field routing and outbox storage only;
+it preserves Claude-owned paths and the regression runner.

@@ -25,8 +25,8 @@ const authSource = `
   export async function getSession(){if(localStorage.getItem('fixture-offline')==='yes')throw new TypeError('Failed to fetch');return {session:session(),isAdmin:!!session()};}
 `;
 
-export async function offlineFixture(browser, {width=390, jobs=2, open=true, persistentContext=null, realAuth=false}={}) {
-  const context = persistentContext || await browser.newContext({viewport:{width,height:900},serviceWorkers:'block'});
+export async function offlineFixture(browser, {width=390, jobs=2, open=true, persistentContext=null, realAuth=false, hasTouch=false}={}) {
+  const context = persistentContext || await browser.newContext({viewport:{width,height:900},serviceWorkers:'block',hasTouch});
   const errors=[];
   const state={offline:false, denied:false, fail:{}, lost:null, hold:null, calls:[], writes:[], extraPassport:{}, attachments:[], referenceText:'Original reference'};
   const heldRequests = new Set();
@@ -63,13 +63,13 @@ export async function offlineFixture(browser, {width=390, jobs=2, open=true, per
     budget: ['admin/js/lib/field-cache.js', 'const MAX_BYTES = 10 * 1024 * 1024', 'const MAX_BYTES = 200 * 1024 * 1024'],
     commit: ['admin/js/lib/field-storage.js', 'tx.oncomplete = () => resolve(result);', 'queueMicrotask(() => resolve(result));'],
     atomic: ['admin/js/lib/field-cache.js', 'if (accessDenied(error)) await forget(id);', 'await forget(id);'],
-    migration: ['admin/js/lib/offline-queue.js', '// v1 records remain byte-for-byte intact', 'store.clear(); // v1 records remain byte-for-byte intact'],
+    migration: ['admin/js/lib/outbox-schema.js', '// v1 records remain byte-for-byte intact', 'queue.clear(); // v1 records remain byte-for-byte intact'],
     work_migration: ['admin/js/lib/field-cache.js', "if (!db.objectStoreNames.contains('drafts'))", "if (db.objectStoreNames.contains('drafts')) db.deleteObjectStore('drafts'); if (!db.objectStoreNames.contains('drafts'))"],
     uncertain: ['admin/js/lib/offline-queue.js', "if (['sending', 'uncertain'].includes(next.value.state))", 'if (false)'],
     lock: ['admin/js/lib/offline-queue.js', "return navigator.locks.request('ns-field-outbox-replay', runFlush);", 'return runFlush();'],
     reference_reuse: ['admin/js/lib/field-cache.js', "if (!fresh(refs, REFERENCE_AGE_MS) || !Object.hasOwn(refs.data, 'pricingRules'))", 'if (true)'],
     signed_media: ['admin/js/views/field-photos.js', 'if (offline) {', 'if (false) {'],
-    storage_reason: ['admin/js/lib/offline-queue.js', "/indexeddb|device storage|local storage|outbox storage|quota|close other app tabs/i.test(err?.message || '')", 'false'],
+    storage_reason: ['admin/js/lib/offline-queue.js', "/indexeddb|device storage|device outbox|local storage|outbox storage|quota|close other app tabs/i.test(err?.message || '')", 'false'],
     storage_retry: ['admin/js/lib/field-storage.js', 'if (!blocked) opening.delete(key);', ''],
     revoked_view: ['admin/js/lib/offline-queue.js', "'ns-field-access-denied'", "'ns-field-access-notice-unused'"],
     denial_marker: ['admin/js/lib/field-cache.js', 'return deniedAccounts.has(id) || localStorage.getItem(deniedKey(id)) === \'yes\';', 'return false;'],

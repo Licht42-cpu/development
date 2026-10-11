@@ -1,0 +1,17 @@
+PASS - v2 upgrade preserves all four payloads, Blob/File bytes, row keys and unknown fields
+PASS - upgraded queue drains every existing handler once; second flush produces no duplicate
+PASS - v1 ownerless payloads survive unchanged and stay quarantined, never claimed or replayed
+PASS - interrupted upgrade rolls back stores and bytes; retry upgrades the original queue
+PASS - unknown future database version fails closed and leaves unsent writes untouched
+PASS - downgrade cannot open v3 as v2 or discard an unsent row
+PASS - unknown schema marker 99/1 prevents replay without modifying rows
+PASS - unknown schema marker 3/99 prevents replay without modifying rows
+PASS - new states persist separately, no existing handler uses them and no fifth handler is installed
+PASS - schema/upgrade failures stay storage errors in airplane mode
+PASS - upgrade retains auto-increment sequence and concurrent flushes share one replay
+PASS - disabled entry still waits for measurement persistence at 390px
+PASS - disabled load deep links resolve to the real schedule online and offline at 390px
+PASS - disabled entry still waits for measurement persistence at 430px
+PASS - disabled load deep links resolve to the real schedule online and offline at 430px
+PASS - all ten scenario wrappers throw rather than invent a backend fixture
+16 PASS / 0 FAIL

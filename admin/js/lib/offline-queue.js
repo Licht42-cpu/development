@@ -1,6 +1,7 @@
 import * as api from './api.js';
 import { localAccount, accessDenied } from './field-identity.js';
 import { forget } from './field-cache.js';
+import { OUTBOX_VERSION, upgradeOutbox, validateOutbox } from './outbox-schema.js';
 
 /** A bounded, honest offline outbox for the Field Console -- not a general
  *  sync engine. It covers exactly the four action types the field console
@@ -25,7 +26,7 @@ import { forget } from './field-cache.js';
 
 const DB_NAME = 'ns-field-outbox';
 const STORE = 'queue';
-const DB_VERSION = 2;
+const DB_VERSION = OUTBOX_VERSION;
 let storageError = null;
 let opening = null;
 
@@ -34,19 +35,24 @@ function openDb() {
   // that request; waiters must receive its failure instead of hanging forever.
   if (opening) return opening.then(() => openDb());
   let blocked = false;
+  let upgradeError;
   opening = new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
-    req.onupgradeneeded = () => {
-      const store = req.result.objectStoreNames.contains(STORE)
-        ? req.transaction.objectStore(STORE)
-        : req.result.createObjectStore(STORE, { keyPath: 'id', autoIncrement: true });
-      if (!store.indexNames.contains('ownerId')) store.createIndex('ownerId', 'ownerId');
-      // v1 records remain byte-for-byte intact and unowned. Never claim
-      // somebody else's saved payload merely because they signed in next.
+    req.onupgradeneeded = event => {
+      try { upgradeOutbox(req.result, req.transaction, event.oldVersion); }
+      catch (error) { upgradeError = error; req.transaction.abort(); }
     };
-    req.onsuccess = () => { opening = null; if (blocked) { req.result.close(); return; } req.result.onversionchange = () => req.result.close(); resolve(req.result); };
+    req.onsuccess = async () => {
+      const db = req.result;
+      if (blocked) { opening = null; db.close(); return; }
+      db.onversionchange = () => db.close();
+      try { await validateOutbox(db); opening = null; resolve(db); }
+      catch (error) { db.close(); reject(error); }
+    };
     req.onblocked = () => { blocked = true; reject(new Error('Close other app tabs and retry device storage.')); };
-    req.onerror = () => reject(req.error);
+    req.onerror = () => reject(upgradeError || (req.error?.name === 'VersionError'
+      ? new DOMException('Device outbox uses a newer storage version. Update the app; saved actions were kept.', 'VersionError')
+      : req.error));
   }).catch(error => { if (!blocked) opening = null; throw error; });
   return opening;
 }
@@ -246,7 +252,7 @@ export function looksOffline(err) {
   // Airplane mode does not turn a local storage failure into a network
   // failure. Preserve actionable quota/blocked-upgrade errors in the router.
   if (['QuotaExceededError', 'InvalidStateError', 'VersionError'].includes(err?.name) ||
-    /indexeddb|device storage|local storage|outbox storage|quota|close other app tabs/i.test(err?.message || '')) return false;
+    /indexeddb|device storage|device outbox|local storage|outbox storage|quota|close other app tabs/i.test(err?.message || '')) return false;
   if (!navigator.onLine) return true;
   const msg = String(err?.message || err || '').toLowerCase();
   return msg.includes('failed to fetch') || msg.includes('networkerror') ||

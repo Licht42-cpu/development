@@ -1,0 +1,34 @@
+(node:862000) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - Rapid typing coalesces into one save and keeps the focused input mounted
+PASS - A second edit waits for the first write and persists the latest captured value
+PASS - An older failed write cannot revert a newer edit
+PASS - A failed latest save retains the intended quantity and supports explicit retry
+PASS - Blank input is not silently persisted as zero and blocks navigation until resolved
+PASS - An incomplete exponent remains unsaved
+PASS - Negative and fractional each quantities are rejected; explicit zero is saved
+PASS - Blur flushes the debounce immediately, then allows a fresh panel render
+PASS - An old refresh cannot overwrite an edit made after it started
+PASS - A later refresh wins when responses complete in reverse order
+PASS - A refresh started before commit is rejected even if its edit version was current
+PASS - Discarding a failed draft restores the confirmed value without retrying it
+PASS - Delete waits for the pending quantity before its original handler runs
+PASS - Build quote waits for the latest quantity and ignores duplicate clicks while saving
+PASS - A failed quantity prevents quote creation and leaves the draft recoverable
+PASS - Navigation flush waits for pending writes and restores the route for an invalid draft
+PASS - siding specialized footage uses the same ordered save and preserves focus
+PASS - permanent_lighting specialized footage uses the same ordered save and preserves focus
+PASS - windows stepper restores the confirmed count after a failed write
+PASS - winter_property_care stepper restores the confirmed count after a failed write
+PASS - Heating-wire child counts block quote creation while saving and restore failed counts
+PASS - desktop screen flushes quantity before its real Build quote handler
+PASS - desktop screen rejects reversed reload responses after separate saves
+PASS - field screen flushes quantity before its real Build quote handler
+PASS - field screen rejects reversed reload responses after separate saves
+PASS - desktop router waits for the quantity write before changing screens
+PASS - desktop router and sign-out retain invalid input on the current screen
+PASS - field router waits for the quantity write before changing screens
+PASS - field router and sign-out retain invalid input on the current screen
+
+29/29 passed
