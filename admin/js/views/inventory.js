@@ -5,6 +5,7 @@ import { money, qty, num, date, dateTime, unitLabel, humanise } from '../../../s
 import { trySave } from '../lib/save.js';
 import { signedDelta, packsToUnits } from '../lib/inventory-math.js';
 import { seasonalSetsPanel } from '../components/seasonal-sets.js';
+import { kitsAndPiecesPanel } from '../components/kit-sheets.js';
 import {
   materialUnitLabel, quantityWithUnit, LEVEL_STATES, levelLabel,
   levelBadgeClass, precisionNote, MOVEMENT_CONDITIONS, COUNT_PRECISIONS
@@ -49,7 +50,8 @@ const TABS = [
   ['stock',      'Stock'],
   ['purchasing', 'Purchasing'],
   ['mapping',    'Service parts'],
-  ['sets',       'Christmas sets']
+  ['sets',       'Christmas sets'],
+  ['kits',       'Kits & pieces']
 ];
 
 const CATEGORIES = ['track', 'light', 'controller', 'power_supply', 'connector',
@@ -1170,8 +1172,8 @@ export async function renderInventory(ctx) {
         el('div', {}, [
           el('h1', { text: 'Inventory' }),
           el('p', { class: 'hint',
-            text: 'Parts, purchasing and the company-owned Christmas sets. '
-              + 'Nothing here affects quote pricing.' })
+            text: 'Parts, purchasing, permanent-lighting kits and the '
+              + 'company-owned Christmas sets. Nothing here affects quote pricing.' })
         ])
       ]),
       paintTabs(),
@@ -1182,6 +1184,7 @@ export async function renderInventory(ctx) {
       tab === 'stock'      ? stockTab()
       : tab === 'purchasing' ? purchasingTab()
       : tab === 'mapping'    ? mappingTab()
+      : tab === 'kits'       ? kitsAndPiecesPanel()
       : setsTab()
     ]);
   }

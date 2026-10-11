@@ -1030,6 +1030,163 @@ export async function estimateJobMaterials(jobId, locationCode = null) {
   }));
 }
 
+/* ------------------------------- permanent lighting: kits and pieces ---- */
+
+/* Three rules this half of the API exists to keep:
+ *   - a kit and its contents are never both available, so opening one is a
+ *     single RPC and never two browser writes;
+ *   - an offcut is a PIECE, so the screen asks for a length and the backend
+ *     checks it against what the ledger says is there;
+ *   - an unchecked product specification cannot reach a job plan. */
+
+export async function listKitSheets() {
+  return unwrap(await supabase.from('ns_kit_sheets')
+    .select('*, ns_materials(id,name,sku,category,unit,spec_state), '
+            + 'ns_kit_sheet_lines(id,material_id,quantity_per_kit,inclusion,note,'
+            + 'ns_materials(id,name,unit))')
+    .order('created_at', { ascending: false }).limit(200));
+}
+
+export async function createKitSheet(patch) {
+  return unwrap(await supabase.from('ns_kit_sheets').insert(patch).select().single());
+}
+
+export async function updateKitSheet(id, patch) {
+  return unwrap(await supabase.from('ns_kit_sheets')
+    .update(patch).eq('id', id).select().single());
+}
+
+export async function addKitSheetLine(patch) {
+  return unwrap(await supabase.from('ns_kit_sheet_lines').insert(patch).select().single());
+}
+
+export async function deleteKitSheetLine(id) {
+  unwrap(await supabase.from('ns_kit_sheet_lines').delete().eq('id', id));
+}
+
+/** One transaction: the kit leaves stock as its components arrive. */
+export async function openSealedKit({
+  clientOperationId, kitMaterialId, locationCode = 'base', kitCount = 1, note
+}) {
+  return unwrap(await supabase.rpc('open_sealed_kit', {
+    p_client_operation_id: clientOperationId || newOperationId('kit'),
+    p_kit_material_id: kitMaterialId,
+    p_location_code: locationCode,
+    p_kit_count: kitCount,
+    p_note: note || null
+  }));
+}
+
+export async function listOffcuts({ materialId, locationCode, status = 'available' } = {}) {
+  let q = supabase.from('ns_material_offcuts')
+    .select('*, ns_materials(id,name,unit), ns_stock_locations(id,code,name)')
+    .order('length', { ascending: false }).limit(300);
+  if (materialId) q = q.eq('material_id', materialId);
+  if (status) q = q.eq('status', status);
+  const rows = unwrap(await q);
+  return locationCode
+    ? rows.filter((r) => r.ns_stock_locations?.code === locationCode)
+    : rows;
+}
+
+/** Pieces, not just a total. `longest_runnable` is the number that decides
+ *  whether a run can be cut at all; a total cannot answer that. */
+export async function listPieceAvailability({ locationCode, materialId } = {}) {
+  let q = supabase.from('ns_material_piece_availability').order('name').limit(500);
+  if (locationCode) q = q.eq('location_code', locationCode);
+  if (materialId) q = q.eq('material_id', materialId);
+  return unwrap(await q);
+}
+
+export async function recordOffcut({
+  clientOperationId, materialId, locationCode = 'base', length, fromJobId, note
+}) {
+  return unwrap(await supabase.rpc('record_offcut', {
+    p_client_operation_id: clientOperationId || newOperationId('cut'),
+    p_material_id: materialId,
+    p_location_code: locationCode,
+    p_length: length,
+    p_from_job_id: fromJobId || null,
+    p_note: note || null
+  }));
+}
+
+export async function consumeOffcut({ clientOperationId, offcutId, jobId, note }) {
+  return unwrap(await supabase.rpc('consume_offcut', {
+    p_client_operation_id: clientOperationId || newOperationId('use'),
+    p_offcut_id: offcutId,
+    p_job_id: jobId || null,
+    p_note: note || null
+  }));
+}
+
+export async function scrapOffcut({ clientOperationId, offcutId, note }) {
+  return unwrap(await supabase.rpc('scrap_offcut', {
+    p_client_operation_id: clientOperationId || newOperationId('scrap'),
+    p_offcut_id: offcutId,
+    p_note: note || null
+  }));
+}
+
+/* ------------------------------------------- job material sheets ------- */
+
+export async function getJobMaterialSheet(jobId) {
+  const rows = unwrap(await supabase.from('ns_job_material_sheets')
+    .select('*, ns_job_material_sheet_lines(id,material_id,quantity,selected,source,'
+            + 'note,reservation_id,ns_materials(id,name,unit,category,spec_state))')
+    .eq('job_id', jobId)
+    .in('status', ['draft', 'reviewed', 'reserved'])
+    .limit(1));
+  return rows[0] || null;
+}
+
+export async function createJobMaterialSheet(jobId) {
+  return unwrap(await supabase.from('ns_job_material_sheets')
+    .insert({ job_id: jobId, created_by: await currentUserId() }).select().single());
+}
+
+export async function selectJobMaterial({
+  clientOperationId, sheetId, materialId, quantity, selected = true,
+  source = 'selected', serviceId, note
+}) {
+  return unwrap(await supabase.rpc('select_job_material', {
+    p_client_operation_id: clientOperationId || newOperationId('sel'),
+    p_sheet_id: sheetId,
+    p_material_id: materialId,
+    p_quantity: quantity,
+    p_selected: selected,
+    p_source: source,
+    p_service_id: serviceId || null,
+    p_note: note || null
+  }));
+}
+
+export async function reviewJobMaterialSheet({ clientOperationId, sheetId, note }) {
+  return unwrap(await supabase.rpc('review_job_material_sheet', {
+    p_client_operation_id: clientOperationId || newOperationId('rev'),
+    p_sheet_id: sheetId,
+    p_note: note || null
+  }));
+}
+
+/** Reserves the SELECTED lines and only those. */
+export async function reserveJobMaterialSheet({
+  clientOperationId, sheetId, locationCode = 'base', note
+}) {
+  return unwrap(await supabase.rpc('reserve_job_material_sheet', {
+    p_client_operation_id: clientOperationId || newOperationId('res'),
+    p_sheet_id: sheetId,
+    p_location_code: locationCode,
+    p_note: note || null
+  }));
+}
+
+/** Candidates WITH the job's measurements and no ranking: the
+ *  manufacturer's layout decides, not this list. */
+export async function heatingKitCandidates(jobId) {
+  return unwrap(await supabase.rpc('ns_heating_kit_candidates', { p_job_id: jobId }));
+}
+
 /* ------------------------------------- company-owned Christmas sets ----- */
 
 /* A set belongs to Nova Shield. A customer gets seasonal USE of it, which is

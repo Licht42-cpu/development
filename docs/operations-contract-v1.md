@@ -1,8 +1,13 @@
 # Nova Shield operations contract v1 — stock movements
 
-**Status: frozen.** This is the snapshot handed to both tracks. Neither side
-invents a counterpart; a change to this document is a new version, agreed
-before either side implements against it.
+**Status: frozen at v1.1.** This is the snapshot handed to both tracks.
+Neither side invents a counterpart; a change to this document is a new
+version, agreed before either side implements against it.
+
+**v1.1 is ADDITIVE.** Every v1 request shape, parameter, default, response
+field, error code and grant is unchanged. One operation kind and two
+movement reasons were added for opening a sealed kit; see §13. Anything
+already written against v1 keeps working and needs no change.
 
 **Nothing here has been applied to the live database.** The migrations that
 define it are written and tested against a disposable PostgreSQL only.
@@ -474,3 +479,90 @@ Named so neither side builds against an assumption:
   `docs/seasonal-sets-contract-v1.md`. A set is not stock — it has no
   quantity and cannot be reserved through `reserve_stock` — so nothing in
   this document applies to one except the build and strip movements.
+
+---
+
+## 13. Amendment v1.1 — conversions (additive)
+
+Added by the Batch 9.1 corrective, in
+`supabase/migrations/20261011100000_batch9_1_permanent_lighting_materials.sql`
+and `…101000_batch9_1_kit_and_sheet_operations.sql`. Proved by
+`tests/db/batch9-1-lighting.test.mjs`.
+
+### What changed
+
+One operation kind and two movement reasons:
+
+| added | where | meaning |
+|---|---|---|
+| `conversion` | `ns_stock_operations.kind` | one thing became several |
+| `converted_out` | `ns_material_stock_moves.reason` | the thing that left (always negative) |
+| `converted_in` | `ns_material_stock_moves.reason` | each thing that arrived (always positive) |
+
+**Nothing else moved.** `post_stock_movement`, `post_stock_transfer`,
+`reserve_stock`, `release_stock_reservation` and
+`consume_stock_reservation` keep their v1 signatures, defaults, response
+shapes and error codes exactly.
+
+### Why a new kind rather than reusing one
+
+Opening a kit is not a consumption (nothing was used on a job), not a
+receipt (nothing arrived), and not a correction (nothing was miscounted).
+Posting it as any of those makes every report that groups by kind wrong and
+hides the one event that explains why the kit count fell and the component
+count rose.
+
+### The rule it carries
+
+A conversion **conserves identity, not quantity**. One kit legitimately
+becomes 300 ft of channel and twenty connectors. What a deferred constraint
+trigger enforces at COMMIT is the pairing:
+
+* exactly **one** `converted_out` movement;
+* **at least one** `converted_in`;
+* all movements at **one** location;
+* no material converted into itself.
+
+A lone `converted_in` is stock from nowhere and is refused. A
+`converted_out`/`converted_in` attached to any other operation kind is also
+refused.
+
+### How a conversion is posted
+
+**Only through `open_sealed_kit`.** `post_stock_movement` does not accept
+these reasons — its reason→kind map has no entry for them, so it raises
+`22023` — and that is deliberate: a conversion is only correct as a pair,
+and a function that posts one movement cannot make a pair.
+
+```
+open_sealed_kit(
+  p_client_operation_id text,
+  p_kit_material_id     uuid,     -- must be category 'kit'
+  p_location_code       text,
+  p_kit_count           numeric default 1,
+  p_note                text    default null) returns jsonb
+```
+
+Returns the standard v1 `ns_operation_result` shape (§6), with
+`"kind": "conversion"` and the movements listed. Owner-only. Replay-safe on
+`client_operation_id` like every other operation in this contract: a replay
+returns the original with `"replayed": true` and opens nothing.
+
+Refusals: `42501` not the owner or location out of scope; `22023` blank key,
+non-positive count, or a material that is not a kit; `P0002` no such
+material, no component sheet, or unknown location; `23514` the sheet is not
+reviewed, lists nothing included, or there are fewer kits on hand than
+asked for; `23505` the key was already used for a different operation kind.
+
+### What this does NOT add
+
+* No conversion of anything other than a sealed kit with a reviewed sheet.
+* No reverse: a kit cannot be un-opened. Components go back to stock through
+  the ordinary v1 reasons, and the conversion stays in the log.
+* Nothing in the field outbox. These are owner operations on a desk.
+
+### Companion document
+
+Kit sheets, offcuts and job material sheets are specified in
+`docs/permanent-lighting-materials-contract-v1.md`. The only part of that
+work that touches **this** contract is the conversion above.

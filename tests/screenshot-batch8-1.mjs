@@ -36,6 +36,8 @@ const MATERIALS = [
     sku: 'FIXTURE-CHANNEL-150-WHT', category: 'track', unit: 'linear_ft',
     supplier_id: 'sup-1', ns_suppliers: SUPPLIERS[0],
     tracking_mode: 'quantity',
+    // Batch 9.1 corrective: channel is cut to length, so it has offcuts.
+    cuttable: true, stock_length: 150, spec_state: 'reviewed',
     pack_quantity: 150, unit_cost: 2.25, currency: 'CAD',
     reorder_point: 300, reorder_qty: 4, active: true,
     on_hand: -150, needs_reorder: true, last_move_at: '2026-10-01T00:00:00Z' },
@@ -157,6 +159,64 @@ const ASSIGNMENTS = [
     release_cutoff: null, installed_at: '2025-11-02T00:00:00Z',
     removed_at: '2026-01-10T00:00:00Z', released_at: null,
     customers: { id: 'cus-2', name: 'Another Fixture Customer' }, properties: null }
+];
+
+/* Permanent-lighting fixtures. A sheet mid-review and one that is reviewed,
+   because the two states look different and both must read clearly. */
+const KIT_SHEETS = [
+  { id: 'ks-1', material_id: 'mat-kit', model: 'FIXTURE 100 ft model',
+    coverage_ft: 100, review_state: 'draft', source: 'FIXTURE listing note',
+    reviewed_at: null, created_at: '2026-10-01T00:00:00Z',
+    ns_materials: { id: 'mat-kit', name: 'FIXTURE permanent kit', sku: null,
+                    category: 'kit', unit: 'kit', spec_state: 'unverified' },
+    ns_kit_sheet_lines: [
+      { id: 'kl-1', material_id: 'mat-track', quantity_per_kit: 300,
+        inclusion: 'included', note: null,
+        ns_materials: { id: 'mat-track', name: 'FIXTURE channel', unit: 'linear_ft' } },
+      { id: 'kl-2', material_id: 'mat-conn', quantity_per_kit: null,
+        inclusion: 'included', note: 'listing does not give a count',
+        ns_materials: { id: 'mat-conn', name: 'FIXTURE connector', unit: 'each' } },
+      { id: 'kl-3', material_id: 'mat-clip', quantity_per_kit: null,
+        inclusion: 'separately_required', note: null,
+        ns_materials: { id: 'mat-clip', name: 'FIXTURE mounting clip', unit: 'each' } }
+    ] },
+  { id: 'ks-2', material_id: 'mat-kit2', model: 'FIXTURE 50 ft model',
+    coverage_ft: 50, review_state: 'reviewed', source: 'FIXTURE listing note',
+    reviewed_at: '2026-10-05T00:00:00Z', created_at: '2026-10-02T00:00:00Z',
+    ns_materials: { id: 'mat-kit2', name: 'FIXTURE small kit', sku: null,
+                    category: 'kit', unit: 'kit', spec_state: 'reviewed' },
+    ns_kit_sheet_lines: [
+      { id: 'kl-4', material_id: 'mat-track', quantity_per_kit: 150,
+        inclusion: 'included', note: null,
+        ns_materials: { id: 'mat-track', name: 'FIXTURE channel', unit: 'linear_ft' } }
+    ] }
+];
+
+const PIECES = [
+  { material_id: 'mat-track', name: 'FIXTURE channel', category: 'track',
+    unit: 'linear_ft', cuttable: true, stock_length: 150, spec_state: 'reviewed',
+    location_id: 'loc-base', location_code: 'base',
+    on_hand: 156, available: 156, offcut_total: 6, offcut_count: 2,
+    longest_offcut: 4, full_length_total: 150, full_pieces: 1, longest_runnable: 150 },
+  { material_id: 'mat-conn', name: 'FIXTURE connector', category: 'connector',
+    unit: 'each', cuttable: false, stock_length: null, spec_state: 'unverified',
+    location_id: 'loc-base', location_code: 'base',
+    on_hand: 40, available: 40, offcut_total: 0, offcut_count: 0,
+    longest_offcut: null, full_length_total: 40, full_pieces: null,
+    longest_runnable: null }
+];
+
+const OFFCUTS = [
+  { id: 'oc-1', material_id: 'mat-track', location_id: 'loc-base', length: 4,
+    condition: 'usable', status: 'available', note: 'from the Patterson roofline',
+    created_at: '2026-10-04T00:00:00Z',
+    ns_materials: { id: 'mat-track', name: 'FIXTURE channel', unit: 'linear_ft' },
+    ns_stock_locations: { id: 'loc-base', code: 'base', name: 'Base' } },
+  { id: 'oc-2', material_id: 'mat-track', location_id: 'loc-base', length: 2,
+    condition: 'usable', status: 'available', note: null,
+    created_at: '2026-10-05T00:00:00Z',
+    ns_materials: { id: 'mat-track', name: 'FIXTURE channel', unit: 'linear_ft' },
+    ns_stock_locations: { id: 'loc-base', code: 'base', name: 'Base' } }
 ];
 
 const SEASONAL_CUSTOMERS = [
@@ -294,6 +354,16 @@ const FAKE_API = `
   export async function updateServiceMaterialUsage() { return {}; }
   export async function deleteServiceMaterialUsage() { return {}; }
   export async function registerSeasonalSet() { return {}; }
+  export async function listKitSheets() { return clone(${JSON.stringify(KIT_SHEETS)}); }
+  export async function listPieceAvailability() { return clone(${JSON.stringify(PIECES)}); }
+  export async function listOffcuts() { return clone(${JSON.stringify(OFFCUTS)}); }
+  export async function createKitSheet() { return {}; }
+  export async function updateKitSheet() { return {}; }
+  export async function addKitSheetLine() { return {}; }
+  export async function openSealedKit() { return {}; }
+  export async function recordOffcut() { return {}; }
+  export async function consumeOffcut() { return {}; }
+  export async function scrapOffcut() { return {}; }
   export async function assignSeasonalSet() { return {}; }
   export async function cancelSeasonalAssignment() { return {}; }
   export async function installSeasonalSet() { return {}; }
@@ -357,7 +427,7 @@ const PROBE = () => {
     await page.goto(`${BASE}/admin/field.html`);
     await page.waitForTimeout(150);
 
-    for (const tab of ['stock', 'purchasing', 'mapping', 'sets']) {
+    for (const tab of ['stock', 'purchasing', 'mapping', 'sets', 'kits']) {
       await page.evaluate(async (t) => {
         const mod = await import('/admin/js/views/inventory.js');
         document.body.innerHTML = '';
@@ -380,9 +450,20 @@ const PROBE = () => {
       // The sets tab's densest state is an inline action form plus an open
       // history, and its history is a <details>/<summary> rather than a
       // button, so it needs its own opener.
-      const expander = tab === 'stock' ? 'Move' : tab === 'sets' ? 'seasonal' : null;
+      const expander = tab === 'stock' ? 'Move'
+        : tab === 'sets' ? 'seasonal'
+        : tab === 'kits' ? 'kits' : null;
       if (expander) {
         await page.evaluate((label) => {
+          if (label === 'kits') {
+            for (const b of document.querySelectorAll('button')) {
+              if (/^(Start a sheet|Add component|Open a kit)$/.test(b.textContent.trim())) {
+                b.click();
+                break;
+              }
+            }
+            return;
+          }
           if (label === 'seasonal') {
             for (const b of document.querySelectorAll('button')) {
               if (/^(Assign to a customer|Record recovery|Record inspection)$/

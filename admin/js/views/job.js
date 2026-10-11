@@ -8,6 +8,7 @@ import { trySave } from '../lib/save.js';
 import { jobSteps, STEP_DONE, STEP_NOW } from '../components/next-step.js';
 import { activityRows, groupByDay } from '../components/job-activity.js';
 import { createJobMaterialsPanel } from '../components/job-materials.js';
+import { createJobMaterialSheetPanel } from '../components/job-material-sheet.js';
 
 const JOB_STATUSES = ['new','reviewing','estimate_drafted','site_visit_scheduled','assessed',
   'quote_sent','accepted','declined','scheduled','in_progress','completed','invoiced','paid',
@@ -315,6 +316,10 @@ export async function renderJob({ mount }, jobId) {
      panel reaches a customer total. It loads on demand -- see the
      component's own comment for why. */
   const materialsPanel = createJobMaterialsPanel({ jobId: job.id });
+  /* Batch 9.1 corrective. The estimate above says what the templates imply;
+     this says what a person chose, and it is the only thing that reserves
+     stock. The two are deliberately adjacent and deliberately separate. */
+  const materialSheetPanel = createJobMaterialSheetPanel({ jobId: job.id });
   const nextStepHost = el('div', {});
   const requestedHost = el('div', {});
   const notesHost = el('div', {});
@@ -1120,6 +1125,7 @@ export async function renderJob({ mount }, jobId) {
     inspectionHost,
     pricingHost,
     materialsPanel.root,
+    materialSheetPanel.root,
     el('div', { class: 'card' }, [quotePanel.root]),
     notesHost,
     activityHost
