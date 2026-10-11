@@ -7,12 +7,30 @@ it does not add stock writes or a second queue.
 
 ## Verified starting point
 
-Claude's `claude/batch-8-1` at `4c2e9be` has
-`docs/operations-contract-v1.md`: attributed stock movements, locations,
-conserving transfers and caller operation IDs. Base and Car A exist in its
-disposable fixtures; Car B is optional data. That contract explicitly omits
-crew access policies and reservations. It contains no daily load response or
-schedule-version confirmation operation. No Claude code is imported here.
+Read-only review of Claude's `claude/batch-8-1` at
+`201bf797969176bcf3c3a5d0965aaef2b488f549` confirms that
+`docs/operations-contract-v1.md` now documents reservations, releases,
+consumption, owner/crew location scoping, litres/kilograms/sticks/levels,
+and usable/damaged and exact/estimated movements. The API passes both new
+movement parameters and exposes reservation operations. Base and Car A are
+seeded; Car B remains optional data. Reservations reduce availability without
+physically moving stock; level-tracked supplies have no numerical quantity.
+
+These are source observations, not independently reproduced database results.
+Claude reports 132 database checks and 63 browser checks. The document says
+its migrations remain unapplied to the live database. No Claude code is
+imported here, and Codex's completed 9.2 remains independent.
+
+The document still has an older authorization section saying crew scoping is
+absent, contradicted by section 10b. Its opening migration list also omits the
+later reservation migrations, and reservation signatures, receipts and errors
+are summarized rather than specified in full. Reconcile these in the next
+frozen contract before implementing stock writes; do not infer wire behavior
+from the summary. In particular, location RPCs use **codes**, not database IDs.
+
+There is still no daily load response or schedule-version confirmation
+operation. Claude's next 9.1 supplies named seasonal-set identity, assignment,
+recovery and release; 10.1 supplies the load contract for 10.2.
 
 The following is an integration checklist, **not an invented RPC contract**.
 The route must stay unavailable until a real adapter and its frozen contract
@@ -20,7 +38,7 @@ exist. UI-only fixtures do not establish authorization or stock correctness.
 
 ## Inputs the load contract must define
 
-1. A stable vehicle/location ID, work date and authoritative plan/revision ID,
+1. A stable vehicle/location code, work date and authoritative plan/revision ID,
    including whether Car B is available. The interface must not seed Car B,
    infer crew membership or present stock belonging to another vehicle.
 2. Display-ready Keep/Add/Return rows and reason/job references, with required,
@@ -57,3 +75,16 @@ Acceptance will include 390/430px touch and keyboard use, interruption/restart,
 separate vehicle state and duplicate replay prevention. Android physical
 storage/device checks and cross-track integration remain separate from mocked
 browser acceptance. No live database change, merge or deployment is implied.
+
+## Migration integration checkpoint
+
+Before a live application window, rehearse the complete pending sequence in
+timestamp order against a disposable Supabase-compatible database, including
+the Batch 5 content freeze, both Batch 7.1 grant migrations and all five Batch
+8.1 migrations. Individual fixture tests do not establish that the sequence
+works with the existing schema, Supabase auth/storage objects and grants.
+Record applied versions, final function signatures, privileges and trigger
+state; run owner/crew/anonymous and replay/transfer/reservation checks against
+the resulting schema. Keep disposable rehearsal, live application and
+production verification separately reported. This checklist does not
+authorize applying migrations to the live project.
