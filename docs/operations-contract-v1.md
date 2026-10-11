@@ -11,6 +11,8 @@ Defined by:
 
 * `supabase/migrations/20261010120000_batch8_1_inventory_and_rental_sets.sql`
 * `supabase/migrations/20261010130000_batch8_1_stock_operations_contract_v1.sql`
+* `supabase/migrations/20261010140000_batch8_1_reservations_units_and_crew_access.sql`
+* `supabase/migrations/20261010141000_batch8_1_reservation_operations.sql`
 
 Proved by `tests/db/batch8-1.test.mjs` (sections L, M, N) against a real
 PostgreSQL, and exercised from the UI side by `tests/phase23.test.mjs`
@@ -55,7 +57,8 @@ ambiguous.
 
 Codes are matched case- and whitespace-insensitively. **Always address a
 location by `code`, never by `id`** — ids differ between the disposable test
-database and the live project; codes do not.
+database and the live project; codes do not. Every RPC in this contract that
+takes a location takes a `_code`; ids appear only in responses.
 
 ### Availability rule
 
@@ -141,6 +144,106 @@ unbalanced transfer is refused even if it never goes through this function.
 
 The operation is attributed to whichever side is a vehicle; for
 vehicle-to-vehicle, to the receiving car.
+
+---
+
+## 4b. Reservations — `reserve_stock`, `release_…`, `consume_…`
+
+A reservation is a **claim against a balance, not a movement**. Nothing has
+physically moved. It reduces `available` and leaves `on_hand` alone, and it
+ends in exactly one of three ways: released, consumed, or expired.
+
+```
+reserve_stock(
+  p_client_operation_id text,        -- required, unique, caller-generated
+  p_material_id         uuid,
+  p_location_code       text,        -- CODE, never a database id
+  p_quantity            numeric,     -- > 0
+  p_job_id              uuid        default null,
+  p_note                text        default null,
+  p_expires_at          timestamptz default null
+) returns jsonb
+
+release_stock_reservation(
+  p_client_operation_id text,
+  p_reservation_id      uuid,
+  p_note                text default null
+) returns jsonb
+
+consume_stock_reservation(
+  p_client_operation_id text,
+  p_reservation_id      uuid,
+  p_quantity            numeric default null,   -- null = all of it
+  p_count_precision     text    default 'exact',
+  p_note                text    default null
+) returns jsonb        -- an OPERATION result (§6), not a reservation result
+```
+
+### Response: the reservation result
+
+`reserve_stock` and `release_stock_reservation` both return this shape.
+`consume_stock_reservation` returns the **operation** shape from §6 instead,
+because consuming produces a real movement.
+
+```json
+{
+  "reservation_id": "…uuid…",
+  "client_operation_id": "res-9e1c…",
+  "status": "held",
+  "material_id": "…uuid…",
+  "location_id": "…uuid…",
+  "location_code": "car_a",
+  "quantity": 40,
+  "job_id": "…uuid… | null",
+  "vehicle_location_id": "…uuid… | null",
+  "actor_id": "…uuid… | null",
+  "held_at": "2026-10-11T08:14:02.551Z",
+  "expires_at": null,
+  "closed_at": null,
+  "replayed": false,
+  "balance": { "on_hand": 200, "reserved": 60, "available": 140 }
+}
+```
+
+`status` is one of `held`, `released`, `consumed`, `expired`. A closed
+reservation always carries `closed_at`; an open one never does, so "is this
+still committed" is answerable from the row.
+
+### Rules the server enforces
+
+1. **Over-commitment is refused.** Held reservations at a location may never
+   exceed **usable** on-hand there. Damaged stock is excluded: committing a
+   broken part is the same mistake as committing an absent one.
+2. **Per location**, never against the company total. Car A holding 20 does
+   not let you promise 50 because Base has another 40.
+3. **A movement cannot carry away held stock.** A transfer or consumption
+   that would leave a location holding less than it has promised is refused.
+4. **No double count.** `consume_stock_reservation` closes the claim and
+   posts the movement in **one transaction**; there is no window in which
+   the stock is both reserved and issued. A partial consumption **releases
+   the remainder** rather than leaving it committed.
+5. **Level-tracked supplies cannot be reserved** — Empty/Low/Enough is not a
+   quantity to promise.
+
+### Reservation errors
+
+| code | condition |
+|---|---|
+| `42501` | not an admin, **or** a location the caller is not scoped to |
+| `22023` | blank replay key, quantity ≤ 0, consume > reserved, bad precision, level-tracked material |
+| `P0002` | unknown location code, unknown material, unknown reservation |
+| `23514` | over-commitment, or a movement that would strand a reservation |
+
+**Repeating a release is success, not an error** — a retried release must
+not fail because the first attempt landed. Releasing or consuming an already
+**consumed** reservation *is* an error (`23514`): the stock is gone, and
+reporting a release would be a lie.
+
+### Idempotency
+
+Same rule as §5. `reserve_stock` returns the original with `replayed: true`;
+`consume_stock_reservation` keys on `ns_stock_operations`, so a replay comes
+back as an operation result with `replayed: true`.
 
 ---
 
@@ -234,9 +337,27 @@ the revoke took effect and raises if it did not.
 arrive by (direct, `PUBLIC`, inherited) — the Batch 7.1 finding, re-checked
 against these objects rather than assumed.
 
-Per-crew permissions (owner vs assigned crew) are **not in v1**. Today
-everything is admin-only. `actor_id` and `vehicle_location_id` are recorded
-now so that adding crew scoping later is a policy change, not a reshape.
+### Owner and crew scoping
+
+`is_admin()` is the outer gate and still applies to everything. Inside it:
+
+* `ns_crew_members` records a person as `owner` or as the `crew` of one
+  vehicle. **An admin with no row here is an owner**, so nothing narrows
+  until a crew row exists — which is the state the business is in today.
+* `is_owner()`, `current_crew_vehicle()` and `can_see_location(uuid)` are the
+  three helpers; all are `authenticated`-executable.
+* A crew sees **Base and its own vehicle**, and nothing in the other car.
+  `ns_material_stock_moves`, `ns_stock_operations` and
+  `ns_stock_reservations` are all scoped that way by RLS, and the
+  reservation RPCs refuse a location the caller is not scoped to with
+  `42501`.
+* A crew may read the roster but cannot write it — otherwise it could
+  reassign itself to the other car. Only an owner writes `ns_crew_members`.
+
+What is still admin-only, i.e. not yet split by role: posting movements and
+transfers. A crew can be *prevented* from touching the other car's stock,
+but owner-versus-crew limits on what either may do to their own are not in
+this version. See §11.
 
 ---
 
@@ -294,20 +415,18 @@ fixture should ever be mistaken for a real part number, pack size or price.
 
 ---
 
-## 10b. Added after v1 was first frozen
+## 10b. Changelog: what was added after v1 was first frozen
 
-These were listed as "not in v1" and are now implemented. The frozen request
-and response shapes above are unchanged except where noted; nothing already
-written against v1 breaks.
+Everything here is **already specified above** — this section exists so a
+reader who saw the first freeze can see what moved, not as the place to
+learn the wire behaviour. Do not implement from this list; implement from
+§3, §4, §4b, §6, §7 and §8.
 
-* **Reservations.** `reserve_stock`, `release_stock_reservation`,
-  `consume_stock_reservation`, all idempotent on `client_operation_id`.
-  A reservation reduces **available** and leaves **on_hand** alone.
-  `ns_material_stock_by_location` now carries `reserved` and `available`
-  alongside `on_hand`; `available` floors at zero. Consuming closes the
-  claim and posts the movement in one transaction, so stock is never
-  counted as both reserved and issued, and a partial consumption releases
-  the remainder.
+The request and response shapes above are unchanged except where noted;
+nothing already written against the first freeze breaks.
+
+* **Reservations.** Specified in full in §4b below rather than summarised
+  here, so nothing has to be inferred from prose.
 * **Units**: `litre`, `kilogram`, `stick`, `level` joined the list.
   A `level` material has `tracking_mode = 'level'`, no quantity, and its
   Empty/Low/Enough state lives in `ns_material_levels` — outside the ledger,
@@ -330,6 +449,14 @@ written against v1 breaks.
 ## 11. Still not in v1
 
 Named so neither side builds against an assumption:
+
+* **Owner-versus-crew limits on their OWN vehicle.** A crew is kept out of
+  the other car's stock (§8), but what an owner may do that a crew may not,
+  within the locations they can both see, is not yet split.
+* **A daily load response, or any schedule/plan revision operation.**
+  Nothing here answers "what should Car A carry today" or enforces a plan
+  version at confirmation. That is Batch 10.1, and the field track should
+  not infer it from this document.
 * **Offline queueing of stock operations.** The contract is designed to make
   it safe — that is what the replay key is for — but the field outbox has
   four write types today and adding a fifth needs its own agreed scope.
