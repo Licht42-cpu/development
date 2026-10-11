@@ -78,7 +78,9 @@ post_stock_movement(
   p_note                text default null,
   p_job_id              uuid default null,
   p_purchase_order_id   uuid default null,
-  p_vehicle_code        text default null
+  p_vehicle_code        text default null,
+  p_condition           text default 'usable',    -- 'usable' | 'damaged'
+  p_count_precision     text default 'exact'      -- 'exact'  | 'estimated'
 ) returns jsonb
 ```
 
@@ -292,17 +294,42 @@ fixture should ever be mistaken for a real part number, pack size or price.
 
 ---
 
-## 11. Not in v1
+## 10b. Added after v1 was first frozen
+
+These were listed as "not in v1" and are now implemented. The frozen request
+and response shapes above are unchanged except where noted; nothing already
+written against v1 breaks.
+
+* **Reservations.** `reserve_stock`, `release_stock_reservation`,
+  `consume_stock_reservation`, all idempotent on `client_operation_id`.
+  A reservation reduces **available** and leaves **on_hand** alone.
+  `ns_material_stock_by_location` now carries `reserved` and `available`
+  alongside `on_hand`; `available` floors at zero. Consuming closes the
+  claim and posts the movement in one transaction, so stock is never
+  counted as both reserved and issued, and a partial consumption releases
+  the remainder.
+* **Units**: `litre`, `kilogram`, `stick`, `level` joined the list.
+  A `level` material has `tracking_mode = 'level'`, no quantity, and its
+  Empty/Low/Enough state lives in `ns_material_levels` — outside the ledger,
+  because it replaces the previous observation rather than summing.
+  It cannot be reserved.
+* **Condition and precision.** Movements carry `condition`
+  (`usable`/`damaged`) and `count_precision` (`exact`/`estimated`).
+  `post_stock_movement` **gained two trailing parameters** for them, both
+  defaulted — the old nine-argument form is dropped rather than left as an
+  overload, so no caller can silently keep a version that cannot record
+  condition. The location view exposes `damaged_on_hand` and `is_estimated`.
+  Damaged stock is never counted as available.
+* **Owner and crew.** `ns_crew_members`, plus `is_owner()`,
+  `current_crew_vehicle()` and `can_see_location()`. An admin with no crew
+  row is an owner, so nothing narrows until a crew row exists. A crew sees
+  Base and its own vehicle only; the ledger, the operations log and the
+  reservations are all scoped that way, and a crew cannot edit its own
+  roster row.
+
+## 11. Still not in v1
 
 Named so neither side builds against an assumption:
-
-* **Reservations and releases.** Nothing yet prevents two crews committing
-  the same scarce stock. Next in 8.1.
-* **Per-crew permissions.** Admin-only today.
-* **Units beyond each / linear_ft / box / roll / kit / set.** Litres,
-  kilograms, channel sticks with offcuts, and Low/Enough/Empty levels are
-  still to come.
-* **Exact vs estimated**, and **usable vs damaged** counting.
 * **Offline queueing of stock operations.** The contract is designed to make
   it safe — that is what the replay key is for — but the field outbox has
   four write types today and adding a fifth needs its own agreed scope.

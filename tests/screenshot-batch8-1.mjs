@@ -35,16 +35,31 @@ const MATERIALS = [
   { id: 'mat-track', name: 'FIXTURE aluminium mounting channel, 150 ft roll, white',
     sku: 'FIXTURE-CHANNEL-150-WHT', category: 'track', unit: 'linear_ft',
     supplier_id: 'sup-1', ns_suppliers: SUPPLIERS[0],
+    tracking_mode: 'quantity',
     pack_quantity: 150, unit_cost: 2.25, currency: 'CAD',
     reorder_point: 300, reorder_qty: 4, active: true,
     on_hand: -150, needs_reorder: true, last_move_at: '2026-10-01T00:00:00Z' },
   { id: 'mat-wire', name: 'FIXTURE jump wire', sku: null, category: 'wire',
     unit: 'linear_ft', supplier_id: 'sup-1', ns_suppliers: SUPPLIERS[0],
+    tracking_mode: 'quantity',
     pack_quantity: 500, unit_cost: null, currency: 'CAD',
     reorder_point: 50, reorder_qty: 1, active: true,
     on_hand: 10, needs_reorder: true, last_move_at: null },
+  { id: 'mat-salt', name: 'FIXTURE bagged de-icer', sku: 'FIXTURE-SALT-20',
+    category: 'consumable', unit: 'kilogram', tracking_mode: 'quantity',
+    supplier_id: 'sup-1', ns_suppliers: SUPPLIERS[0],
+    pack_quantity: 20, unit_cost: 0.42, currency: 'CAD',
+    reorder_point: 200, reorder_qty: 10, active: true,
+    on_hand: 180, needs_reorder: true, last_move_at: '2026-10-07T00:00:00Z' },
+  { id: 'mat-rags', name: 'FIXTURE shop rags', sku: null,
+    category: 'consumable', unit: 'level', tracking_mode: 'level',
+    supplier_id: 'sup-1', ns_suppliers: SUPPLIERS[0],
+    pack_quantity: 1, unit_cost: null, currency: 'CAD',
+    reorder_point: 0, reorder_qty: 0, active: true,
+    on_hand: 0, needs_reorder: false, last_move_at: null },
   { id: 'mat-ctrl', name: 'FIXTURE controller', sku: 'FIXTURE-CTRL-1',
     category: 'controller', unit: 'each', supplier_id: 'sup-1', ns_suppliers: SUPPLIERS[0],
+    tracking_mode: 'quantity',
     pack_quantity: 1, unit_cost: 189, currency: 'CAD',
     reorder_point: 2, reorder_qty: 2, active: false,
     on_hand: 5, needs_reorder: false, last_move_at: '2026-09-20T00:00:00Z' }
@@ -160,19 +175,49 @@ const FAKE_API = `
     { id: 'loc-base',  code: 'base',  name: 'Base',  kind: 'base',    active: true, sort_order: 0 },
     { id: 'loc-car-a', code: 'car_a', name: 'Car A', kind: 'vehicle', active: true, sort_order: 1 }
   ])}); }
+  export async function listReservations() { return clone(${JSON.stringify([
+    { id: 'res-1', material_id: 'mat-track', location_id: 'loc-base', quantity: 60,
+      status: 'held', job_id: 'job-1', held_at: '2026-10-09T12:00:00Z',
+      ns_stock_locations: { id: 'loc-base', code: 'base', name: 'Base' },
+      ns_materials: { id: 'mat-track', name: 'FIXTURE channel', unit: 'linear_ft' } }
+  ])}); }
+  export async function reserveStock() { return {}; }
+  export async function releaseStockReservation() { return {}; }
+  export async function consumeStockReservation() { return {}; }
+  export async function setMaterialLevel() { return {}; }
   export async function listStockByLocation() { return clone(${JSON.stringify([
     { material_id: 'mat-track', location_id: 'loc-base',  location_code: 'base',
-      location_name: 'Base',  on_hand: -200 },
+      location_name: 'Base',  on_hand: -200, reserved: 0, available: 0,
+      damaged_on_hand: 35, is_estimated: true },
     { material_id: 'mat-track', location_id: 'loc-car-a', location_code: 'car_a',
-      location_name: 'Car A', on_hand: 50 },
+      location_name: 'Car A', on_hand: 50, reserved: 60, available: 0,
+      damaged_on_hand: 0, is_estimated: false },
     { material_id: 'mat-wire',  location_id: 'loc-base',  location_code: 'base',
-      location_name: 'Base',  on_hand: 10 },
+      location_name: 'Base',  on_hand: 10, reserved: 0, available: 10,
+      damaged_on_hand: 0, is_estimated: false },
     { material_id: 'mat-wire',  location_id: 'loc-car-a', location_code: 'car_a',
-      location_name: 'Car A', on_hand: 0 },
+      location_name: 'Car A', on_hand: 0, reserved: 0, available: 0,
+      damaged_on_hand: 0, is_estimated: false },
     { material_id: 'mat-ctrl',  location_id: 'loc-base',  location_code: 'base',
-      location_name: 'Base',  on_hand: 5 },
+      location_name: 'Base',  on_hand: 5, reserved: 0, available: 5,
+      damaged_on_hand: 0, is_estimated: false },
     { material_id: 'mat-ctrl',  location_id: 'loc-car-a', location_code: 'car_a',
-      location_name: 'Car A', on_hand: 0 }
+      location_name: 'Car A', on_hand: 0, reserved: 0, available: 0,
+      damaged_on_hand: 0, is_estimated: false },
+    { material_id: 'mat-salt',  location_id: 'loc-base',  location_code: 'base',
+      location_name: 'Base',  on_hand: 180, reserved: 0, available: 180,
+      damaged_on_hand: 0, is_estimated: true },
+    { material_id: 'mat-salt',  location_id: 'loc-car-a', location_code: 'car_a',
+      location_name: 'Car A', on_hand: 0, reserved: 0, available: 0,
+      damaged_on_hand: 0, is_estimated: false },
+    { material_id: 'mat-rags',  location_id: 'loc-base',  location_code: 'base',
+      location_name: 'Base',  on_hand: 0, reserved: 0, available: 0,
+      damaged_on_hand: 0, is_estimated: false, tracking_mode: 'level',
+      level_state: 'low', level_checked_at: '2026-10-08T00:00:00Z' },
+    { material_id: 'mat-rags',  location_id: 'loc-car-a', location_code: 'car_a',
+      location_name: 'Car A', on_hand: 0, reserved: 0, available: 0,
+      damaged_on_hand: 0, is_estimated: false, tracking_mode: 'level',
+      level_state: null, level_checked_at: null }
   ])}); }
   export function newOperationId(p) { return (p || 'op') + '-shot'; }
   export async function postStockMovement() { return {}; }

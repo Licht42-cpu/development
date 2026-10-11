@@ -84,6 +84,7 @@ async function errorOf(fn) {
     drop function if exists public.estimate_job_materials(uuid, text);
     drop function if exists public.estimate_job_materials(uuid);
     drop function if exists public.post_stock_movement(text,uuid,text,numeric,text,text,uuid,uuid,text);
+    drop function if exists public.post_stock_movement(text,uuid,text,numeric,text,text,uuid,uuid,text,text,text);
     drop function if exists public.post_stock_transfer(text,uuid,numeric,text,text,boolean,text,uuid);
     drop function if exists public.ns_operation_result(uuid,boolean);
     drop function if exists public.ns_location_by_code(text);
@@ -259,7 +260,7 @@ async function errorOf(fn) {
   let opSeq = 0;
   const move = async (materialId, delta, reason, extra = {}) => {
     const { rows } = await client.query(
-      `select public.post_stock_movement($1,$2,$3,$4,$5,$6,$7,null,null) as r`,
+      `select public.post_stock_movement($1,$2,$3,$4,$5,$6,$7,null,null,'usable','exact') as r`,
       [extra.clientOpId ?? `fixture-op-${++opSeq}`, materialId,
        extra.location ?? 'base', delta, reason,
        extra.note ?? null, extra.jobId ?? null]);
@@ -426,7 +427,7 @@ async function errorOf(fn) {
       `insert into public.ns_purchase_orders (supplier_id) values ($1) returning id`,
       [supplierId])).id;
     await client.query(
-      `select public.post_stock_movement($1,$2,'base',10,'received',null,null,$3,null)`,
+      `select public.post_stock_movement($1,$2,'base',10,'received',null,null,$3,null,'usable','exact')`,
       ['po-receipt-1', wireId, tmp]);
     await client.query('delete from public.ns_purchase_orders where id=$1', [tmp]);
     const row = await one(
@@ -815,7 +816,7 @@ async function errorOf(fn) {
   // ================================= M. operations contract v1, replay ====
 
   const callMovement = (clientOpId, materialId, qty, reason, location = 'base') => one(
-    `select public.post_stock_movement($1,$2,$3,$4,$5,null,null,null,null) as r`,
+    `select public.post_stock_movement($1,$2,$3,$4,$5,null,null,null,null,'usable','exact') as r`,
     [clientOpId, materialId, location, qty, reason]);
 
   const callTransfer = (clientOpId, materialId, qty, from, to, confirmed = true) => one(
@@ -1127,6 +1128,32 @@ async function errorOf(fn) {
          values ($1,$2,$3,5,'received',$4)`, [id, base, op, bad]));
       assert.ok(err, `${col} must be constrained`);
       assert.equal(err.code, '23514');
+    }
+  });
+
+  await record('O9 the CONTRACT can record a damaged receipt, not just the table', async () => {
+    // The columns existed before post_stock_movement took them, which meant
+    // the only way to record damage was a direct insert the contract forbids.
+    const id = await newMaterial({ name: 'FIXTURE damaged via contract' });
+    await one(
+      `select public.post_stock_movement($1,$2,'base',12,'received',null,null,null,null,'damaged','exact') as r`,
+      ['dmg-contract', id]);
+    const row = await one(
+      `select on_hand, damaged_on_hand, available from public.ns_material_stock_by_location
+        where material_id=$1 and location_code='base'`, [id]);
+    assert.equal(Number(row.on_hand), 0, 'damaged stock is not usable stock');
+    assert.equal(Number(row.damaged_on_hand), 12);
+    assert.equal(Number(row.available), 0);
+  });
+
+  await record('O10 the contract rejects an unknown condition or precision', async () => {
+    const id = await newMaterial({ name: 'FIXTURE contract enum' });
+    for (const [cond, prec] of [['soggy', 'exact'], ['usable', 'vibes']]) {
+      const err = await errorOf(() => one(
+        `select public.post_stock_movement($1,$2,'base',5,'received',null,null,null,null,$3,$4) as r`,
+        [`enum-${cond}-${prec}`, id, cond, prec]));
+      assert.ok(err, `${cond}/${prec} must be refused`);
+      assert.equal(err.code, '22023');
     }
   });
 
@@ -1539,7 +1566,7 @@ async function errorOf(fn) {
 
   await record('I1c the contract functions are admin-reachable and anon-proof', async () => {
     for (const f of [
-      'public.post_stock_movement(text,uuid,text,numeric,text,text,uuid,uuid,text)',
+      'public.post_stock_movement(text,uuid,text,numeric,text,text,uuid,uuid,text,text,text)',
       'public.post_stock_transfer(text,uuid,numeric,text,text,boolean,text,uuid)'
     ]) {
       const { a, b } = await one(

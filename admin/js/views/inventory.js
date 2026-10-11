@@ -4,6 +4,10 @@ import { fill } from '../lib/admin-dom.js';
 import { money, qty, num, date, dateTime, unitLabel, humanise } from '../../../shared/format.js';
 import { trySave } from '../lib/save.js';
 import { signedDelta, packsToUnits } from '../lib/inventory-math.js';
+import {
+  materialUnitLabel, quantityWithUnit, LEVEL_STATES, levelLabel,
+  levelBadgeClass, precisionNote, MOVEMENT_CONDITIONS, COUNT_PRECISIONS
+} from '../lib/inventory-units.js';
 
 /* Batch 8.1 -- Inventory.
  *
@@ -96,19 +100,30 @@ function stockTab() {
   const host = el('div', {});
 
   async function load() {
-    const [materials, suppliers, locations, byLocation] = await Promise.all([
+    reloadHook.current = load;
+    const [materials, suppliers, locations, byLocation, reservations] = await Promise.all([
       api.listMaterials({ includeInactive: true }),
       api.listSuppliers({ includeInactive: true }),
       api.listStockLocations(),
-      api.listStockByLocation()
+      api.listStockByLocation(),
+      api.listReservations({ status: 'held' })
     ]);
-    const low = materials.filter((m) => m.active && m.needs_reorder);
+    // Level-tracked supplies are excluded: "at or below the reorder point"
+    // is a quantity statement, and they have no quantity. An Empty one shows
+    // on its own row instead.
+    const low = materials.filter(
+      (m) => m.active && m.needs_reorder && m.tracking_mode !== 'level');
 
-    // material id -> [{ location_code, location_name, on_hand }]
+    // material id -> [{ location_code, location_name, on_hand, reserved, ... }]
     const balances = new Map();
     for (const row of byLocation) {
       if (!balances.has(row.material_id)) balances.set(row.material_id, []);
       balances.get(row.material_id).push(row);
+    }
+    const heldBy = new Map();
+    for (const r of reservations) {
+      if (!heldBy.has(r.material_id)) heldBy.set(r.material_id, []);
+      heldBy.get(r.material_id).push(r);
     }
 
     fill(host, [
@@ -126,14 +141,14 @@ function stockTab() {
               el('div', { class: 'row-item__main' }, [
                 el('strong', { text: m.name }),
                 el('span', { class: 'row-item__meta',
-                  text: `${qty(m.on_hand)} ${unitLabel(m.unit)} on hand · reorder at ` +
+                  text: `${quantityWithUnit(qty(m.on_hand), m.unit)} on hand · reorder at ` +
                         `${qty(m.reorder_point)} · ${m.ns_suppliers?.name || 'no supplier'}` })
               ])
             ])))
           ])
         : null,
 
-      materials.length ? catalogueCard(materials, suppliers, locations, balances, load) : null,
+      materials.length ? catalogueCard(materials, suppliers, locations, balances, heldBy, load) : null,
       materials.length ? newMaterialCard(suppliers, load) : null
     ]);
   }
@@ -163,7 +178,7 @@ function emptyCatalogue(suppliers, reload) {
   ]);
 }
 
-function catalogueCard(materials, suppliers, locations, balances, reload) {
+function catalogueCard(materials, suppliers, locations, balances, heldBy, reload) {
   const host = el('div', { class: 'card' });
   const byCategory = new Map();
   for (const m of materials) {
@@ -181,19 +196,21 @@ function catalogueCard(materials, suppliers, locations, balances, reload) {
     ]),
     ...[...byCategory.entries()].map(([category, rows]) => el('div', { class: 'section-box' }, [
       el('div', { class: 'section-box__head', style: 'flex-wrap:wrap' }, [el('strong', { text: humanise(category) })]),
-      ...rows.map((m) => materialRow(m, suppliers, locations, balances.get(m.id) || [], reload))
+      ...rows.map((m) => materialRow(
+        m, suppliers, locations, balances.get(m.id) || [], heldBy.get(m.id) || [], reload))
     ]))
   ]);
   return host;
 }
 
-function materialRow(m, suppliers, locations, balances, reload) {
+function materialRow(m, suppliers, locations, balances, held, reload) {
   const host = el('div', { class: 'section-box', style: 'margin:8px 0' });
   let movesOpen = false;
   /* Collapsed by default. Posting a count is the everyday act; moving stock
      between Base and a car is the morning-and-evening one, and leaving both
      forms open put every card past 6000px at 390px wide. */
   let transferOpen = false;
+  const isLevel = m.tracking_mode === 'level';
 
   function paint() {
     fill(host, [
@@ -201,22 +218,26 @@ function materialRow(m, suppliers, locations, balances, reload) {
         el('div', { style: 'flex:1;min-width:140px' }, [
           el('strong', { text: m.name }),
           el('span', { class: 'row-item__meta',
-            text: [m.sku, m.ns_suppliers?.name, `pack of ${qty(m.pack_quantity)}`]
+            text: [m.sku, m.ns_suppliers?.name,
+                   isLevel ? 'tracked as Empty / Low / Enough'
+                           : `pack of ${qty(m.pack_quantity)}`]
               .filter(Boolean).join(' · ') })
         ]),
-        el('span', {
+        // A level-tracked supply gets no quantity badge. Printing "0 level"
+        // is both meaningless and an invitation to plan against it.
+        isLevel ? null : el('span', {
           class: `badge ${m.needs_reorder ? 'badge--warn' : 'badge--ok'}`,
-          text: `${qty(m.on_hand)} ${unitLabel(m.unit)}`
+          text: quantityWithUnit(qty(m.on_hand), m.unit)
         }),
         m.active ? null : el('span', { class: 'badge badge--muted', text: 'Inactive' }),
-        locations.length > 1
+        locations.length > 1 && !isLevel
           ? el('button', {
               class: 'btn btn--sm', type: 'button',
               text: transferOpen ? 'Hide move' : 'Move',
               onClick: () => { transferOpen = !transferOpen; paint(); }
             })
           : null,
-        el('button', {
+        isLevel ? null : el('button', {
           class: 'btn btn--sm', type: 'button',
           text: movesOpen ? 'Hide movements' : 'Movements',
           onClick: () => { movesOpen = !movesOpen; paint(); }
@@ -232,9 +253,10 @@ function materialRow(m, suppliers, locations, balances, reload) {
             after: () => { m.unit_cost = next; }
           });
         }, { step: '0.01', min: '0', 'aria-label': `${m.name} unit cost` }),
-          m.unit_cost == null ? 'Blank means unknown, not free.' : `${money(m.unit_cost)} per ${unitLabel(m.unit)}`),
+          m.unit_cost == null ? 'Blank means unknown, not free.'
+            : `${money(m.unit_cost)} per ${materialUnitLabel(m.unit) || 'unit'}`),
 
-        labelled('Reorder at', savingNumber(m.reorder_point, async (e) => {
+        isLevel ? null : labelled('Reorder at', savingNumber(m.reorder_point, async (e) => {
           const next = num(e.target.value, 0);
           await trySave(() => api.updateMaterial(m.id, { reorder_point: next }), {
             revert: () => { e.target.value = m.reorder_point; },
@@ -242,7 +264,7 @@ function materialRow(m, suppliers, locations, balances, reload) {
           });
         }, { step: '1', min: '0', 'aria-label': `${m.name} reorder point` })),
 
-        labelled('Pack size', savingNumber(m.pack_quantity, async (e) => {
+        isLevel ? null : labelled('Pack size', savingNumber(m.pack_quantity, async (e) => {
           const next = num(e.target.value, 1);
           if (!(next > 0)) { e.target.value = m.pack_quantity; toast('A pack size must be more than zero.', 'error'); return; }
           await trySave(() => api.updateMaterial(m.id, { pack_quantity: next }), {
@@ -250,12 +272,14 @@ function materialRow(m, suppliers, locations, balances, reload) {
             after: reload
           });
         }, { step: '1', min: '1', 'aria-label': `${m.name} pack size` }),
-          `How many ${unitLabel(m.unit)} the supplier sells in one pack.`)
-      ]),
+          `How many ${materialUnitLabel(m.unit)} the supplier sells in one pack.`)
+      ].filter(Boolean)),
 
       locationBalances(m, balances),
-      movementForm(m, locations, reload),
-      transferOpen ? transferForm(m, locations, balances, reload) : null,
+      m.tracking_mode === 'level' ? null : commitmentsPanel(m, locations, balances, held, reload),
+      m.tracking_mode === 'level' ? null : movementForm(m, locations, reload),
+      m.tracking_mode === 'level' ? null
+        : transferOpen ? transferForm(m, locations, balances, reload) : null,
 
       el('div', { class: 'btn-row', style: 'margin-top:8px' }, [
         el('button', {
@@ -270,7 +294,7 @@ function materialRow(m, suppliers, locations, balances, reload) {
         })
       ]),
 
-      movesOpen ? movementList(m) : null
+      movesOpen && !isLevel ? movementList(m) : null
     ]);
   }
 
@@ -281,14 +305,56 @@ function materialRow(m, suppliers, locations, balances, reload) {
 /* Where the stock actually is. A single total answers "do we own any" and
    never answers "is it in the car", which is the question asked every
    morning. */
+/* Where the stock is, and how much of it may actually be promised.
+   ON HAND answers "what is physically there"; AVAILABLE answers "what can
+   we commit to a job", which is the one a plan needs and the one a single
+   figure silently gets wrong. Reserved and damaged are shown only when
+   non-zero, so an ordinary part stays a single short line. */
 function locationBalances(material, balances) {
   if (!balances.length) return null;
-  return el('p', { class: 'hint', style: 'margin:8px 0 0' }, [
-    el('span', { text: balances
-      .map((b) => `${b.location_name}: ${qty(b.on_hand)} ${unitLabel(material.unit)}`)
-      .join('  ·  ') })
-  ]);
+  if (material.tracking_mode === 'level') return levelLine(material, balances);
+
+  const anyEstimated = balances.some((b) => b.is_estimated);
+  const parts = balances.map((b) => {
+    const bits = [`${b.location_name}: ${quantityWithUnit(qty(b.available), material.unit)} free`];
+    if (Number(b.reserved) > 0) bits.push(`${qty(b.reserved)} reserved`);
+    if (Number(b.on_hand) !== Number(b.available)) bits.push(`${qty(b.on_hand)} on hand`);
+    if (Number(b.damaged_on_hand) > 0) bits.push(`${qty(b.damaged_on_hand)} damaged`);
+    return bits.join(', ');
+  });
+
+  return el('div', { style: 'margin:8px 0 0' }, [
+    el('p', { class: 'hint', style: 'margin:0', text: parts.join('  ·  ') }),
+    anyEstimated
+      ? el('p', { class: 'hint', style: 'margin:2px 0 0', text: precisionNote(true) })
+      : null
+  ].filter(Boolean));
 }
+
+/* Empty / Low / Enough. No number anywhere: the whole point of tracking a
+   supply this way is that counting it is not worth the time, and showing a
+   quantity next to it would invite somebody to plan against one. */
+function levelLine(material, balances) {
+  return el('div', { style: 'margin:8px 0 0' },
+    balances.map((b) => el('div', { class: 'btn-row', style: 'margin:4px 0' }, [
+      el('span', { class: 'row-item__meta', style: 'min-width:70px', text: b.location_name }),
+      el('span', { class: levelBadgeClass(b.level_state), text: levelLabel(b.level_state) }),
+      ...LEVEL_STATES.map((state) => el('button', {
+        class: 'btn btn--sm', type: 'button', text: levelLabel(state),
+        disabled: b.level_state === state,
+        onClick: async () => {
+          await trySave(() => api.setMaterialLevel({
+            materialId: material.id, locationId: b.location_id, state
+          }), { success: `${material.name}: ${levelLabel(state)}`, after: reloadHook.current });
+        }
+      }))
+    ])));
+}
+
+/* The level buttons are built deep inside a render and need the tab's
+   reload. Threading it through four call sites for one control is worse
+   than one holder set once per paint. */
+const reloadHook = { current: () => {} };
 
 function locationSelect(locations, value, onChange, label) {
   return select(
@@ -296,9 +362,93 @@ function locationSelect(locations, value, onChange, label) {
     value, onChange, { 'aria-label': label });
 }
 
+/* Commitments: what is promised and to whom, plus the one control that
+   makes a promise. A reservation is the difference between owning stock and
+   being able to offer it, so this sits directly under the balances it
+   explains rather than on a screen of its own. */
+function commitmentsPanel(material, locations, balances, held, reload) {
+  const amount = numberInput('', null, {
+    step: '1', min: '0', 'aria-label': `Quantity to commit of ${material.name}`
+  });
+  let where = locations[0]?.code || 'base';
+
+  const freeAt = (code) => Number(
+    balances.find((b) => b.location_code === code)?.available ?? 0);
+
+  const freeHint = el('p', { class: 'hint', style: 'margin:4px 0 0' });
+  function describeFree() {
+    freeHint.textContent =
+      `${quantityWithUnit(qty(freeAt(where)), material.unit)} free at ${
+        locations.find((l) => l.code === where)?.name || where}.`;
+  }
+  describeFree();
+
+  return el('div', { style: 'margin-top:10px' }, [
+    el('h4', { style: 'margin:0 0 6px;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)',
+      text: 'Committed to work' }),
+
+    held.length === 0
+      ? el('p', { class: 'hint', style: 'margin:0',
+          text: 'Nothing committed, so everything on hand can be promised.' })
+      : el('div', {}, held.map((r) => el('div', { class: 'row-item' }, [
+          el('div', { class: 'row-item__main' }, [
+            el('strong', { text: quantityWithUnit(qty(r.quantity), material.unit) }),
+            el('span', { class: 'row-item__meta',
+              text: [r.ns_stock_locations?.name, r.job_id ? 'for a job' : 'no job named',
+                     dateTime(r.held_at)].filter(Boolean).join(' · ') })
+          ]),
+          el('button', {
+            class: 'btn btn--sm', type: 'button', text: 'Release',
+            onClick: async () => {
+              if (!confirmAction(
+                `Release ${quantityWithUnit(qty(r.quantity), material.unit)}? ` +
+                'It goes back to available immediately.')) return;
+              await trySave(() => api.releaseStockReservation({
+                clientOperationId: api.newOperationId('rel'),
+                reservationId: r.id
+              }), { success: 'Released', after: reload });
+            }
+          })
+        ]))),
+
+    el('div', { class: 'grid grid--2', style: 'margin-top:8px' }, [
+      labelled('Commit at', locationSelect(locations, where, (e) => {
+        where = e.target.value; describeFree();
+      }, `Commit location for ${material.name}`)),
+      labelled(`Quantity to commit (${materialUnitLabel(material.unit)})`, amount)
+    ]),
+    freeHint,
+    el('p', { class: 'hint', style: 'margin:2px 0 0',
+      text: 'Committing does not move anything. It reserves stock so the other ' +
+            'car cannot promise the same thing.' }),
+    el('div', { class: 'btn-row', style: 'margin-top:8px' }, [
+      el('button', {
+        class: 'btn btn--sm', type: 'button', text: 'Commit',
+        onClick: async () => {
+          const n = num(amount.value, 0);
+          if (!(n > 0)) { toast('Enter how much to commit.', 'error'); return; }
+          if (n > freeAt(where)) {
+            toast(`Only ${quantityWithUnit(qty(freeAt(where)), material.unit)} free there.`, 'error');
+            return;
+          }
+          const ok = await trySave(() => api.reserveStock({
+            clientOperationId: api.newOperationId('res'),
+            materialId: material.id,
+            locationCode: where,
+            quantity: n
+          }), { success: 'Committed' });
+          if (ok) { amount.value = ''; await reload(); }
+        }
+      })
+    ])
+  ]);
+}
+
 function movementForm(material, locations, reload) {
   let reason = MANUAL_REASONS[0][0];
   let location = locations[0]?.code || 'base';
+  let condition = 'usable';
+  let precision = 'exact';
   // No placeholder: a unit word sitting in an empty NUMBER box reads as if
   // it were the value. The caption already carries the unit.
   const amount = numberInput('', null, {
@@ -326,8 +476,18 @@ function movementForm(material, locations, reload) {
         (e) => { location = e.target.value; }, `Location for ${material.name}`))
     ]),
     el('div', { class: 'grid grid--2', style: 'margin-top:8px' }, [
-      labelled(`Quantity (${unitLabel(material.unit)})`, amount),
+      labelled(`Quantity (${materialUnitLabel(material.unit)})`, amount),
       labelled('Note', noteInput)
+    ]),
+    el('div', { class: 'grid grid--2', style: 'margin-top:8px' }, [
+      labelled('Condition', select(
+        MOVEMENT_CONDITIONS.map(([value, label]) => ({ value, label })), condition,
+        (e) => { condition = e.target.value; }, { 'aria-label': `Condition for ${material.name}` }),
+        'Damaged stock stays recorded but is never offered to a job.'),
+      labelled('Count', select(
+        COUNT_PRECISIONS.map(([value, label]) => ({ value, label })), precision,
+        (e) => { precision = e.target.value; }, { 'aria-label': `Count precision for ${material.name}` }),
+        'An estimate flags every balance it touches.')
     ]),
     signHint,
     el('div', { class: 'btn-row', style: 'margin-top:8px' }, [
@@ -361,6 +521,8 @@ function movementForm(material, locations, reload) {
             locationCode: location,
             quantity: reason === 'adjustment' ? preview : Math.abs(entered),
             reason,
+            condition,
+            countPrecision: precision,
             note: noteInput.value.trim() || null
           }), { success: 'Movement posted' });
           if (ok) { amount.value = ''; noteInput.value = ''; await reload(); }

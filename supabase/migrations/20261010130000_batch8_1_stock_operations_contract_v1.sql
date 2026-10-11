@@ -110,7 +110,12 @@ create or replace function public.post_stock_movement(
   p_note                text    default null,
   p_job_id              uuid    default null,
   p_purchase_order_id   uuid    default null,
-  p_vehicle_code        text    default null
+  p_vehicle_code        text    default null,
+  -- Added with items 4-6. Defaulted, so every existing caller keeps working
+  -- and the honest values are the defaults: stock is usable and counted
+  -- until somebody says otherwise.
+  p_condition           text    default 'usable',
+  p_count_precision     text    default 'exact'
 )
 returns jsonb
 language plpgsql
@@ -150,6 +155,15 @@ begin
 
   if p_quantity is null or p_quantity = 0 then
     raise exception 'quantity must be a non-zero number'
+      using errcode = 'invalid_parameter_value';
+  end if;
+
+  if p_condition not in ('usable', 'damaged') then
+    raise exception 'condition must be usable or damaged'
+      using errcode = 'invalid_parameter_value';
+  end if;
+  if p_count_precision not in ('exact', 'estimated') then
+    raise exception 'count_precision must be exact or estimated'
       using errcode = 'invalid_parameter_value';
   end if;
 
@@ -202,10 +216,11 @@ begin
 
   insert into public.ns_material_stock_moves
     (material_id, location_id, operation_id, delta, reason,
-     job_id, purchase_order_id, note, created_by)
+     job_id, purchase_order_id, note, created_by, condition, count_precision)
   values
     (p_material_id, v_location, v_op, v_delta, p_reason,
-     p_job_id, p_purchase_order_id, p_note, auth.uid());
+     p_job_id, p_purchase_order_id, p_note, auth.uid(),
+     p_condition, p_count_precision);
 
   return public.ns_operation_result(v_op, false);
 end
@@ -350,12 +365,17 @@ $$;
 revoke insert, update, delete on public.ns_material_stock_moves from authenticated;
 revoke insert, update, delete on public.ns_stock_operations     from authenticated;
 
+-- Dropped rather than left beside the new one: two overloads would let a
+-- caller keep the version that cannot record condition or precision, which
+-- is exactly the silent downgrade this batch exists to prevent.
+drop function if exists public.post_stock_movement(text,uuid,text,numeric,text,text,uuid,uuid,text);
+
 do $$
 declare
   f text;
 begin
   foreach f in array array[
-    'public.post_stock_movement(text,uuid,text,numeric,text,text,uuid,uuid,text)',
+    'public.post_stock_movement(text,uuid,text,numeric,text,text,uuid,uuid,text,text,text)',
     'public.post_stock_transfer(text,uuid,numeric,text,text,boolean,text,uuid)',
     'public.ns_location_by_code(text)',
     'public.ns_operation_result(uuid,boolean)'
@@ -371,12 +391,17 @@ $$;
 -- Batch 7.1's finding, applied again: a privilege can be held directly,
 -- through PUBLIC, or inherited, and reading the grant list sees only the
 -- first two. Stop loudly rather than report a success we have not achieved.
+-- Dropped rather than left beside the new one: two overloads would let a
+-- caller keep the version that cannot record condition or precision, which
+-- is exactly the silent downgrade this batch exists to prevent.
+drop function if exists public.post_stock_movement(text,uuid,text,numeric,text,text,uuid,uuid,text);
+
 do $$
 declare
   f text;
 begin
   foreach f in array array[
-    'public.post_stock_movement(text,uuid,text,numeric,text,text,uuid,uuid,text)',
+    'public.post_stock_movement(text,uuid,text,numeric,text,text,uuid,uuid,text,text,text)',
     'public.post_stock_transfer(text,uuid,numeric,text,text,boolean,text,uuid)'
   ] loop
     if has_function_privilege('anon', f, 'execute') then
@@ -397,7 +422,7 @@ begin
 end
 $$;
 
-comment on function public.post_stock_movement(text,uuid,text,numeric,text,text,uuid,uuid,text) is
+comment on function public.post_stock_movement(text,uuid,text,numeric,text,text,uuid,uuid,text,text,text) is
   'Operations contract v1. One material at one location. Idempotent on '
   'client_operation_id. See docs/operations-contract-v1.md.';
 

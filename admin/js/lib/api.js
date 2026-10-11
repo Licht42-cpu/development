@@ -821,7 +821,8 @@ export function newOperationId(prefix = 'op') {
  *  because a negative correction has to be enterable at all. */
 export async function postStockMovement({
   clientOperationId, materialId, locationCode = 'base', quantity, reason,
-  note, jobId, purchaseOrderId, vehicleCode
+  note, jobId, purchaseOrderId, vehicleCode,
+  condition = 'usable', countPrecision = 'exact'
 }) {
   return unwrap(await supabase.rpc('post_stock_movement', {
     p_client_operation_id: clientOperationId || newOperationId('mv'),
@@ -832,7 +833,9 @@ export async function postStockMovement({
     p_note: note || null,
     p_job_id: jobId || null,
     p_purchase_order_id: purchaseOrderId || null,
-    p_vehicle_code: vehicleCode || null
+    p_vehicle_code: vehicleCode || null,
+    p_condition: condition,
+    p_count_precision: countPrecision
   }));
 }
 
@@ -853,6 +856,80 @@ export async function postStockTransfer({
     p_note: note || null,
     p_job_id: jobId || null
   }));
+}
+
+/* Reservations. A claim against a balance, not a movement -- see
+   docs/operations-contract-v1.md. These reduce `available` and leave
+   `on_hand` alone, which is why the inventory screens read `available`
+   when asking "can we promise this" and `on_hand` when asking "what is
+   physically there". */
+
+export async function listReservations({ materialId, locationCode, status = 'held' } = {}) {
+  let q = supabase.from('ns_stock_reservations')
+    .select('*, ns_materials(id,name,sku,unit), ns_stock_locations(id,code,name)')
+    .order('held_at', { ascending: false }).limit(200);
+  if (materialId) q = q.eq('material_id', materialId);
+  if (status) q = q.eq('status', status);
+  const rows = unwrap(await q);
+  return locationCode
+    ? rows.filter((r) => r.ns_stock_locations?.code === locationCode)
+    : rows;
+}
+
+export async function reserveStock({
+  clientOperationId, materialId, locationCode = 'base', quantity, jobId, note, expiresAt
+}) {
+  return unwrap(await supabase.rpc('reserve_stock', {
+    p_client_operation_id: clientOperationId || newOperationId('res'),
+    p_material_id: materialId,
+    p_location_code: locationCode,
+    p_quantity: quantity,
+    p_job_id: jobId || null,
+    p_note: note || null,
+    p_expires_at: expiresAt || null
+  }));
+}
+
+export async function releaseStockReservation({ clientOperationId, reservationId, note }) {
+  return unwrap(await supabase.rpc('release_stock_reservation', {
+    p_client_operation_id: clientOperationId || newOperationId('rel'),
+    p_reservation_id: reservationId,
+    p_note: note || null
+  }));
+}
+
+/** Closes the claim and posts the movement in ONE transaction, so stock is
+ *  never counted as both reserved and issued. A partial consumption releases
+ *  the remainder rather than leaving it committed. */
+export async function consumeStockReservation({
+  clientOperationId, reservationId, quantity, countPrecision = 'exact', note
+}) {
+  return unwrap(await supabase.rpc('consume_stock_reservation', {
+    p_client_operation_id: clientOperationId || newOperationId('use'),
+    p_reservation_id: reservationId,
+    p_quantity: quantity ?? null,
+    p_count_precision: countPrecision,
+    p_note: note || null
+  }));
+}
+
+/* Empty / Low / Enough, for supplies not worth counting. An observation
+   that REPLACES the previous one, which is why this upserts rather than
+   appending -- it is deliberately not in the movement ledger. */
+export async function setMaterialLevel({ materialId, locationId, state, note }) {
+  return unwrap(await supabase.from('ns_material_levels').upsert({
+    material_id: materialId,
+    location_id: locationId,
+    state,
+    note: note || null,
+    checked_at: new Date().toISOString(),
+    checked_by: await currentUserId()
+  }, { onConflict: 'material_id,location_id' }).select().single());
+}
+
+export async function listCrewMembers() {
+  return unwrap(await supabase.from('ns_crew_members')
+    .select('*, ns_stock_locations(id,code,name)').order('role'));
 }
 
 export async function listStockLocations({ includeInactive = false } = {}) {

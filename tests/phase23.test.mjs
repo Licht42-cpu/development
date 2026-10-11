@@ -71,6 +71,11 @@ const FAKE_API = `
   export async function postStockTransfer(args) { push('postStockTransfer', args); await maybeFail(); return {}; }
   export async function listStockLocations() { return clone(globalThis.__LOCATIONS); }
   export async function listStockByLocation() { return clone(globalThis.__BALANCES); }
+  export async function listReservations() { return clone(globalThis.__RESERVATIONS); }
+  export async function reserveStock(args) { push('reserveStock', args); await maybeFail(); return {}; }
+  export async function releaseStockReservation(args) { push('releaseStockReservation', args); return {}; }
+  export async function consumeStockReservation(args) { push('consumeStockReservation', args); return {}; }
+  export async function setMaterialLevel(args) { push('setMaterialLevel', args); await maybeFail(); return {}; }
   export async function createMaterial(p)    { push('createMaterial', { patch: clone(p) }); await maybeFail(); return {}; }
   export async function updateMaterial(id, p){ push('updateMaterial', { id, patch: clone(p) }); await maybeFail(); return {}; }
   export async function createSupplier(p)    { push('createSupplier', { patch: clone(p) }); return {}; }
@@ -129,6 +134,11 @@ const MATERIALS = [
     unit: 'linear_ft', supplier_id: 'sup-1', ns_suppliers: { id: 'sup-1', name: 'Permanent Lighting Direct' },
     pack_quantity: 150, unit_cost: 2, currency: 'CAD', reorder_point: 100, reorder_qty: 2,
     active: true, on_hand: 250, needs_reorder: false, last_move_at: '2026-10-01T00:00:00Z' },
+  { id: 'mat-rags', name: 'FIXTURE rags', sku: null, category: 'consumable',
+    unit: 'level', tracking_mode: 'level', supplier_id: 'sup-1',
+    ns_suppliers: { id: 'sup-1', name: 'Permanent Lighting Direct' },
+    pack_quantity: 1, unit_cost: null, currency: 'CAD', reorder_point: 0,
+    reorder_qty: 0, active: true, on_hand: 0, needs_reorder: false, last_move_at: null },
   { id: 'mat-wire', name: 'FIXTURE wire', sku: null, category: 'wire',
     unit: 'linear_ft', supplier_id: 'sup-1', ns_suppliers: { id: 'sup-1', name: 'Permanent Lighting Direct' },
     pack_quantity: 500, unit_cost: null, currency: 'CAD', reorder_point: 50, reorder_qty: 1,
@@ -143,14 +153,31 @@ const LOCATIONS = [
 /* Deliberately split across two locations, so a test that only ever looked
    at a total would pass while the per-location figure was wrong. */
 const BALANCES = [
+  // Deliberately: track has a live commitment and some damage at Base, so a
+  // screen that only ever printed on_hand would look right and be wrong.
   { material_id: 'mat-track', location_id: 'loc-base',  location_code: 'base',
-    location_name: 'Base',  on_hand: 200, unit: 'linear_ft' },
+    location_name: 'Base',  on_hand: 200, reserved: 60, available: 140,
+    damaged_on_hand: 15, is_estimated: false, unit: 'linear_ft' },
   { material_id: 'mat-track', location_id: 'loc-car-a', location_code: 'car_a',
-    location_name: 'Car A', on_hand: 50,  unit: 'linear_ft' },
+    location_name: 'Car A', on_hand: 50,  reserved: 0, available: 50,
+    damaged_on_hand: 0, is_estimated: true, unit: 'linear_ft' },
   { material_id: 'mat-wire',  location_id: 'loc-base',  location_code: 'base',
-    location_name: 'Base',  on_hand: 10,  unit: 'linear_ft' },
+    location_name: 'Base',  on_hand: 10,  reserved: 0, available: 10,
+    damaged_on_hand: 0, is_estimated: false, unit: 'linear_ft' },
   { material_id: 'mat-wire',  location_id: 'loc-car-a', location_code: 'car_a',
-    location_name: 'Car A', on_hand: 0,   unit: 'linear_ft' }
+    location_name: 'Car A', on_hand: 0,   reserved: 0, available: 0,
+    damaged_on_hand: 0, is_estimated: false, unit: 'linear_ft' },
+  { material_id: 'mat-rags',  location_id: 'loc-base',  location_code: 'base',
+    location_name: 'Base',  on_hand: 0, reserved: 0, available: 0,
+    damaged_on_hand: 0, is_estimated: false, unit: 'level',
+    tracking_mode: 'level', level_state: 'low', level_checked_at: '2026-10-08T00:00:00Z' }
+];
+
+const RESERVATIONS = [
+  { id: 'res-1', material_id: 'mat-track', location_id: 'loc-base',
+    quantity: 60, status: 'held', job_id: 'job-1', held_at: '2026-10-09T12:00:00Z',
+    ns_stock_locations: { id: 'loc-base', code: 'base', name: 'Base' },
+    ns_materials: { id: 'mat-track', name: 'FIXTURE channel', unit: 'linear_ft' } }
 ];
 
 const SERVICES = [
@@ -288,7 +315,8 @@ async function launch() {
         __MOVES: opts.moves || [],
         __SET_EVENTS: opts.setEvents || [],
         __LOCATIONS: opts.locations || LOCATIONS,
-        __BALANCES: opts.balances || BALANCES
+        __BALANCES: opts.balances || BALANCES,
+        __RESERVATIONS: opts.reservations || RESERVATIONS
       },
       options: opts,
       bodySrc: body.toString(),
@@ -948,16 +976,139 @@ async function launch() {
 
   /* ------------------------------------------- locations and transfers -- */
 
-  await record('J1 per-location balances are shown, not just a total', async () => {
+  await record('J1 per-location balances lead with AVAILABLE, not on hand', async () => {
     const { out } = await withInventory({}, async ({ mount, h }) => {
       await h.settle(150);
       const box = [...mount.querySelectorAll('.section-box')]
         .find((b) => (b.textContent || '').includes('FIXTURE channel'));
       return box.textContent;
     });
-    assert.match(out, /Base: 200 linear ft/);
-    assert.match(out, /Car A: 50 linear ft/,
-      'a single total answers "do we own any" and never answers "is it in the car"');
+    // 200 on hand, 60 committed, 15 damaged. A screen that printed on_hand
+    // would say 200 and be wrong about what can be promised.
+    assert.match(out, /Base: 140 linear ft free/,
+      '"what can we commit" is the question a plan asks; a single total gets it wrong');
+    assert.match(out, /60 reserved/);
+    assert.match(out, /200 on hand/, 'the physical figure is still there, just not the headline');
+    assert.match(out, /15 damaged/, 'damaged stock is owned and recorded, never offered');
+    assert.match(out, /Car A: 50 linear ft free/,
+      'a single total never answers "is it in the car"');
+  });
+
+  await record('J1b a balance an ESTIMATE touched says so', async () => {
+    const { out } = await withInventory({}, async ({ mount, h }) => {
+      await h.settle(150);
+      const box = [...mount.querySelectorAll('.section-box')]
+        .find((b) => (b.textContent || '').includes('FIXTURE channel'));
+      return box.textContent;
+    });
+    assert.match(out, /estimated count, so treat this as approximate/);
+  });
+
+  await record('J1c a level-tracked supply shows Empty/Low/Enough and NO number', async () => {
+    const { out } = await withInventory({}, async ({ mount, h }) => {
+      await h.settle(150);
+      const box = [...mount.querySelectorAll('.section-box')]
+        .find((b) => (b.textContent || '').includes('FIXTURE rags'));
+      return { text: box.textContent, buttons: h.buttonTexts(box) };
+    });
+    assert.match(out.text, /Low/);
+    // Tightened after a false positive: the first version matched the word
+    // "free" in the unit-cost hint ("Blank means unknown, not free"), not a
+    // quantity. What must be absent is a BALANCE, so look for the shapes a
+    // balance actually takes.
+    for (const forbidden of [/\d+\s+(linear ft|each|L|kg|sticks?)\s+free/,
+                             /\d+\s+on hand/, /\d+\s+reserved/, /\d+\s+damaged/,
+                             /Reorder at/, /Pack size/]) {
+      assert.ok(!forbidden.test(out.text),
+        `showing ${forbidden} would invite somebody to plan against a number: ${out.text.slice(0, 120)}`);
+    }
+    for (const b of ['Empty', 'Low', 'Enough']) assert.ok(out.buttons.includes(b));
+    assert.ok(!out.buttons.includes('Post movement'),
+      'a level-tracked supply has no quantity to move');
+  });
+
+  await record('J1d setting a level records the observation', async () => {
+    const { calls } = await withInventory({}, async ({ mount, h }) => {
+      await h.settle(150);
+      const box = [...mount.querySelectorAll('.section-box')]
+        .find((b) => (b.textContent || '').includes('FIXTURE rags'));
+      h.button(box, 'Empty').click();
+      await h.settle(200);
+    });
+    const call = calls.find((c) => c.name === 'setMaterialLevel');
+    assert.ok(call);
+    assert.equal(call.state, 'empty');
+    assert.equal(call.locationId, 'loc-base');
+  });
+
+  await record('J1e committing stock reserves it rather than moving it', async () => {
+    const { calls } = await withInventory({}, async ({ mount, h }) => {
+      await h.settle(150);
+      const box = [...mount.querySelectorAll('.section-box')]
+        .find((b) => (b.textContent || '').includes('FIXTURE channel'));
+      h.labelled(box, 'Quantity to commit (linear ft)').value = '40';
+      h.button(box, 'Commit').click();
+      await h.settle(200);
+    });
+    const call = calls.find((c) => c.name === 'reserveStock');
+    assert.ok(call, 'the commitment must be sent');
+    assert.equal(call.quantity, 40);
+    assert.equal(call.locationCode, 'base');
+    assert.ok(call.clientOperationId, 'a commitment is replay-safe like every other operation');
+    assert.equal(calls.filter((c) => c.name === 'postStockMovement').length, 0,
+      'committing is not a movement -- nothing has physically moved');
+  });
+
+  await record('J1f committing more than is FREE is refused before the round trip', async () => {
+    const { calls, out } = await withInventory({}, async ({ mount, h }) => {
+      await h.settle(150);
+      const box = [...mount.querySelectorAll('.section-box')]
+        .find((b) => (b.textContent || '').includes('FIXTURE channel'));
+      // 140 free at Base, not 200: 60 is already committed.
+      h.labelled(box, 'Quantity to commit (linear ft)').value = '180';
+      h.button(box, 'Commit').click();
+      await h.settle(200);
+      const toast = document.getElementById('toast');
+      return toast ? toast.textContent : null;
+    });
+    assert.equal(calls.filter((c) => c.name === 'reserveStock').length, 0);
+    assert.match(String(out), /Only 140 linear ft free/);
+  });
+
+  await record('J1g an existing commitment is listed and can be released', async () => {
+    const { calls, out } = await withInventory({}, async ({ mount, h }) => {
+      await h.settle(150);
+      const box = [...mount.querySelectorAll('.section-box')]
+        .find((b) => (b.textContent || '').includes('FIXTURE channel'));
+      const text = box.textContent;
+      h.button(box, 'Release').click();
+      await h.settle(200);
+      return text;
+    });
+    assert.match(out, /60 linear ft/);
+    const call = calls.find((c) => c.name === 'releaseStockReservation');
+    assert.ok(call);
+    assert.equal(call.reservationId, 'res-1');
+  });
+
+  await record('J1h a movement can be posted as damaged or estimated', async () => {
+    const { calls } = await withInventory({}, async ({ mount, h }) => {
+      await h.settle(150);
+      const box = [...mount.querySelectorAll('.section-box')]
+        .find((b) => (b.textContent || '').includes('FIXTURE channel'));
+      const cond = h.labelled(box, 'Condition');
+      cond.value = 'damaged';
+      cond.dispatchEvent(new Event('change', { bubbles: true }));
+      const prec = h.labelled(box, 'Count');
+      prec.value = 'estimated';
+      prec.dispatchEvent(new Event('change', { bubbles: true }));
+      h.labelled(box, 'Quantity (linear ft)').value = '12';
+      h.button(box, 'Post movement').click();
+      await h.settle(200);
+    });
+    const move = postedMove(calls)[0];
+    assert.equal(move.condition, 'damaged');
+    assert.equal(move.countPrecision, 'estimated');
   });
 
   await record('J2 a movement names WHERE it happened', async () => {
