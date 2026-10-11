@@ -21,6 +21,7 @@ cd "$(dirname "$0")/../.."
 SUITES=(
   tests/db/batch7-1.test.mjs
   tests/db/batch8-1.test.mjs
+  tests/db/batch9-1.test.mjs
 )
 
 failed=0

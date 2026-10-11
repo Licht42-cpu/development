@@ -1030,24 +1030,39 @@ export async function estimateJobMaterials(jobId, locationCode = null) {
   }));
 }
 
-/* ----------------------------------------------- Christmas rental sets -- */
+/* ------------------------------------- company-owned Christmas sets ----- */
 
-export async function listRentalSets({ status, seasonYear } = {}) {
-  let q = supabase.from('ns_rental_sets')
-    .select('*, customers(id,name), properties(id,address_line1,city)')
-    .order('set_code').limit(500);
+/* A set belongs to Nova Shield. A customer gets seasonal USE of it, which is
+ * an assignment -- temporary, and kept afterwards as history. So nothing
+ * here writes ns_rental_sets or ns_seasonal_assignments directly: every
+ * change goes through a seasonal RPC that moves the set and its assignment
+ * together, under a replay key, with the conflict and inspection rules
+ * enforced in the database. A direct write would walk past all of it, and
+ * the grants are set up so that it cannot. */
+
+/** Availability, with the reason it is unavailable. Reads the view rather
+ *  than the table so the screen and the RPCs agree on what "available"
+ *  means -- there is one definition and this is it. */
+export async function listSeasonalSets({ status, availableOnly } = {}) {
+  let q = supabase.from('ns_seasonal_set_availability').order('set_code').limit(500);
   if (status) q = q.eq('status', status);
-  if (seasonYear) q = q.eq('season_year', seasonYear);
+  if (availableOnly) q = q.eq('available_for_reuse', true);
   return unwrap(await q);
 }
 
-export async function createRentalSet(patch) {
-  return unwrap(await supabase.from('ns_rental_sets').insert(patch).select().single());
-}
-
-export async function updateRentalSet(id, patch) {
-  return unwrap(await supabase.from('ns_rental_sets')
-    .update(patch).eq('id', id).select().single());
+/** The assignment rows for a set, newest season first. This is the history
+ *  the business runs on: who had it, when it went up, what came back. */
+export async function listSeasonalAssignments({ setId, openOnly } = {}) {
+  let q = supabase.from('ns_seasonal_assignments')
+    .select('*, customers(id,name), properties(id,address_line1,city)')
+    .order('season_year', { ascending: false }).limit(500);
+  if (setId) q = q.eq('set_id', setId);
+  // OPEN, not active: an assignment still holds the set after the crew has
+  // taken it down, because release is what finishes a season. A screen that
+  // only fetched 'assigned' and 'installed' would show a recovered set with
+  // no assignment and no way to release it.
+  if (openOnly) q = q.in('status', ['assigned', 'installed', 'removed']);
+  return unwrap(await q);
 }
 
 export async function listRentalSetEvents(rentalSetId, limit = 50) {
@@ -1056,20 +1071,110 @@ export async function listRentalSetEvents(rentalSetId, limit = 50) {
     .order('occurred_at', { ascending: false }).limit(limit));
 }
 
-/** A status change and its log entry are written as a pair: the status says
- *  where the set is now, the event says how it got there, and a damage or
- *  missing-set dispute turns on the second one. The event is written FIRST
- *  so a failure leaves a logged event with a stale status (a visible
- *  inconsistency) rather than a silent status change with no history. */
-export async function moveRentalSet(set, { event, status, patch = {}, note, jobId } = {}) {
-  await supabase.from('ns_rental_set_events').insert({
-    rental_set_id: set.id,
-    event,
-    customer_id: patch.customer_id ?? set.customer_id ?? null,
-    job_id: jobId || null,
-    note: note || null,
-    created_by: await currentUserId()
-  }).then(unwrap);
+export async function registerSeasonalSet({
+  clientOperationId, setCode, runType, colour, linearFt, locationCode,
+  materialId, buildQuantity, note
+}) {
+  return unwrap(await supabase.rpc('register_seasonal_set', {
+    p_client_operation_id: clientOperationId || newOperationId('set'),
+    p_set_code: setCode,
+    p_run_type: runType || null,
+    p_colour: colour || null,
+    p_linear_ft: linearFt ?? null,
+    p_location_code: locationCode || null,
+    p_material_id: materialId || null,
+    p_build_quantity: buildQuantity ?? null,
+    p_note: note || null
+  }));
+}
 
-  return updateRentalSet(set.id, { ...(status ? { status } : {}), ...patch });
+export async function assignSeasonalSet({
+  clientOperationId, setId, customerId, seasonYear, propertyId, jobId, note
+}) {
+  return unwrap(await supabase.rpc('assign_seasonal_set', {
+    p_client_operation_id: clientOperationId || newOperationId('asg'),
+    p_set_id: setId,
+    p_customer_id: customerId,
+    p_season_year: seasonYear,
+    p_property_id: propertyId || null,
+    p_job_id: jobId || null,
+    p_note: note || null
+  }));
+}
+
+export async function cancelSeasonalAssignment({ clientOperationId, assignmentId, note }) {
+  return unwrap(await supabase.rpc('cancel_seasonal_assignment', {
+    p_client_operation_id: clientOperationId || newOperationId('cxl'),
+    p_assignment_id: assignmentId,
+    p_note: note || null
+  }));
+}
+
+export async function installSeasonalSet({
+  clientOperationId, assignmentId, installedAt, jobId, note
+}) {
+  return unwrap(await supabase.rpc('install_seasonal_set', {
+    p_client_operation_id: clientOperationId || newOperationId('ins'),
+    p_assignment_id: assignmentId,
+    p_installed_at: installedAt || null,
+    p_job_id: jobId || null,
+    p_note: note || null
+  }));
+}
+
+/** `recoveryCondition` is what the crew SAW, not a verdict: the set goes
+ *  back to uninspected whatever they report, so last season's inspection
+ *  can never make this season's return look offerable. */
+export async function recoverSeasonalSet({
+  clientOperationId, assignmentId, recoveryCondition, locationCode, removedAt, note
+}) {
+  return unwrap(await supabase.rpc('recover_seasonal_set', {
+    p_client_operation_id: clientOperationId || newOperationId('rec'),
+    p_assignment_id: assignmentId,
+    p_recovery_condition: recoveryCondition,
+    p_location_code: locationCode || null,
+    p_removed_at: removedAt || null,
+    p_note: note || null
+  }));
+}
+
+export async function inspectSeasonalSet({ clientOperationId, setId, condition, note }) {
+  return unwrap(await supabase.rpc('inspect_seasonal_set', {
+    p_client_operation_id: clientOperationId || newOperationId('insp'),
+    p_set_id: setId,
+    p_condition: condition,
+    p_note: note || null
+  }));
+}
+
+export async function releaseSeasonalSet({ clientOperationId, assignmentId, note }) {
+  return unwrap(await supabase.rpc('release_seasonal_set', {
+    p_client_operation_id: clientOperationId || newOperationId('rel'),
+    p_assignment_id: assignmentId,
+    p_note: note || null
+  }));
+}
+
+export async function recordSetRenewal({
+  clientOperationId, assignmentId, renewalState, note
+}) {
+  return unwrap(await supabase.rpc('record_set_renewal', {
+    p_client_operation_id: clientOperationId || newOperationId('ren'),
+    p_assignment_id: assignmentId,
+    p_renewal_state: renewalState,
+    p_note: note || null
+  }));
+}
+
+export async function retireSeasonalSet({
+  clientOperationId, setId, stripMaterialId, stripQuantity, locationCode, note
+}) {
+  return unwrap(await supabase.rpc('retire_seasonal_set', {
+    p_client_operation_id: clientOperationId || newOperationId('ret'),
+    p_set_id: setId,
+    p_strip_material_id: stripMaterialId || null,
+    p_strip_quantity: stripQuantity ?? null,
+    p_location_code: locationCode || null,
+    p_note: note || null
+  }));
 }

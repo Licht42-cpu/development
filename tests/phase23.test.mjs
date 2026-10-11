@@ -58,7 +58,8 @@ const FAKE_API = `
   export async function listServices()    { return clone(globalThis.__SERVICES); }
   export async function listPurchaseOrders() { return clone(globalThis.__ORDERS); }
   export async function listServiceMaterialUsage() { return clone(globalThis.__USAGE); }
-  export async function listRentalSets()  { return clone(globalThis.__SETS); }
+  export async function listSeasonalSets() { return clone(globalThis.__SETS || []); }
+  export async function listSeasonalAssignments() { return clone(globalThis.__ASSIGNMENTS || []); }
   export async function listStockMoves()  { return clone(globalThis.__MOVES || []); }
   export async function listRentalSetEvents() { return clone(globalThis.__SET_EVENTS || []); }
 
@@ -88,12 +89,7 @@ const FAKE_API = `
   export async function setServiceMaterialUsage(p){ push('setServiceMaterialUsage', { patch: clone(p) }); return {}; }
   export async function updateServiceMaterialUsage(id,p){ push('updateServiceMaterialUsage', { id, patch: clone(p) }); return {}; }
   export async function deleteServiceMaterialUsage(id){ push('deleteServiceMaterialUsage', { id }); }
-  export async function createRentalSet(p)   { push('createRentalSet', { patch: clone(p) }); return {}; }
-  export async function updateRentalSet(id,p){ push('updateRentalSet', { id, patch: clone(p) }); return {}; }
-  export async function moveRentalSet(set, opts) {
-    push('moveRentalSet', { setId: set.id, opts: clone(opts || {}) });
-    return {};
-  }
+  export async function registerSeasonalSet(a) { push('registerSeasonalSet', a); return {}; }
   export async function currentUserId() { return 'admin-1'; }
   export async function estimateJobMaterials(jobId, locationCode) {
     push('estimateJobMaterials', { jobId, locationCode: locationCode ?? null });
@@ -386,10 +382,10 @@ async function launch() {
       await h.settle();
       return {
         pressed: [...mount.querySelectorAll('button[aria-pressed="true"]')].map((b) => b.textContent.trim()),
-        text: mount.textContent.includes('Christmas rental sets')
+        text: mount.textContent.includes('Christmas lighting sets')
       };
     });
-    assert.deepEqual(out.pressed, ['Rental sets']);
+    assert.deepEqual(out.pressed, ['Christmas sets']);
     assert.equal(out.text, true);
   });
 
@@ -679,129 +675,12 @@ async function launch() {
     assert.match(out, /Jump Wire/);
   });
 
-  /* ------------------------------------------------------- rental sets -- */
+  /* The seasonal-set section that used to live here has moved to
+     tests/phase24.test.mjs, with its cases rewritten for the Batch 9.1
+     model. They were not simply ported: they asserted a status field that
+     mixed "where is the set" with "who has it", and browser writes that no
+     longer exist. */
 
-  await record('F1 an UNASSIGNED set is not offered "Mark installed"', async () => {
-    const { out } = await withInventory({ query: 'tab=sets' }, async ({ mount, h }) => {
-      await h.settle(120);
-      const box = [...mount.querySelectorAll('.section-box')]
-        .find((b) => (b.textContent || '').includes('FIXTURE-A'));
-      return h.buttonTexts(box);
-    });
-    assert.ok(!out.includes('Mark installed'),
-      'the database refuses installed with a null customer; the button would read as a bug');
-    assert.ok(out.includes('Send for repair'));
-  });
-
-  await record('F2 an ASSIGNED set IS offered "Mark installed", with a date', async () => {
-    const { out, calls } = await withInventory({ query: 'tab=sets' }, async ({ mount, h }) => {
-      await h.settle(120);
-      const box = [...mount.querySelectorAll('.section-box')]
-        .find((b) => (b.textContent || '').includes('FIXTURE-B'));
-      const texts = h.buttonTexts(box);
-      h.button(box, 'Mark installed').click();
-      await h.settle(150);
-      return texts;
-    });
-    assert.ok(out.includes('Mark installed'));
-    const call = calls.find((c) => c.name === 'moveRentalSet');
-    assert.ok(call);
-    assert.equal(call.opts.status, 'installed');
-    assert.equal(call.opts.event, 'installed');
-    assert.ok(call.opts.patch.installed_at,
-      'the database refuses installed without a date');
-  });
-
-  await record('F2b a LOST or RETIRED set is not offered install, repair or unassign', async () => {
-    const odd = [
-      { ...SETS[1], id: 'set-lost', set_code: 'FIXTURE-LOST', status: 'lost' },
-      { ...SETS[1], id: 'set-retired', set_code: 'FIXTURE-RETIRED', status: 'retired' }
-    ];
-    const { out } = await withInventory({ query: 'tab=sets', sets: odd }, async ({ mount, h }) => {
-      await h.settle(120);
-      const pick = (code) => h.buttonTexts([...mount.querySelectorAll('.section-box')]
-        .find((b) => (b.textContent || '').includes(code)));
-      return { lost: pick('FIXTURE-LOST'), retired: pick('FIXTURE-RETIRED') };
-    });
-    for (const [label, texts] of Object.entries(out)) {
-      for (const forbidden of ['Mark installed', 'Send for repair', 'Unassign']) {
-        assert.ok(!texts.includes(forbidden),
-          `a ${label} set must not offer "${forbidden}" -- it is at nobody's house`);
-      }
-    }
-    assert.ok(out.lost.includes('Found — back in storage'),
-      'a lost set needs exactly one way back, logged as its own event');
-    assert.ok(!out.lost.includes('Mark lost'), 'it is already lost');
-  });
-
-  await record('F2c an IN REPAIR set is not offered install until it is back', async () => {
-    const repairing = [{ ...SETS[1], status: 'in_repair' }];
-    const { out } = await withInventory({ query: 'tab=sets', sets: repairing },
-      async ({ mount, h }) => {
-        await h.settle(120);
-        return h.buttonTexts([...mount.querySelectorAll('.section-box')]
-          .find((b) => (b.textContent || '').includes('FIXTURE-B')));
-      });
-    assert.ok(!out.includes('Mark installed'), 'it is at the shop, not on a roof');
-    assert.ok(out.includes('Back in storage'));
-  });
-
-  await record('F3 removing a set puts it back in storage and logs the removal', async () => {
-    const installed = [{ ...SETS[1], status: 'installed', installed_at: '2026-11-01T00:00:00Z' }];
-    const { calls } = await withInventory({ query: 'tab=sets', sets: installed },
-      async ({ mount, h }) => {
-        await h.settle(120);
-        const box = [...mount.querySelectorAll('.section-box')]
-          .find((b) => (b.textContent || '').includes('FIXTURE-B'));
-        h.button(box, 'Mark removed').click();
-        await h.settle(150);
-      });
-    const call = calls.find((c) => c.name === 'moveRentalSet');
-    assert.equal(call.opts.status, 'in_storage');
-    assert.equal(call.opts.event, 'removed');
-    assert.ok(call.opts.patch.removed_at);
-  });
-
-  await record('F4 unassigning clears the property as well as the customer', async () => {
-    const { calls } = await withInventory({ query: 'tab=sets' }, async ({ mount, h }) => {
-      await h.settle(120);
-      const box = [...mount.querySelectorAll('.section-box')]
-        .find((b) => (b.textContent || '').includes('FIXTURE-B'));
-      h.button(box, 'Unassign').click();
-      await h.settle(150);
-    });
-    const call = calls.find((c) => c.name === 'moveRentalSet');
-    assert.equal(call.opts.patch.customer_id, null);
-    assert.equal(call.opts.patch.property_id, null,
-      'leaving the property behind would point the set at an address nobody rents it for');
-  });
-
-  await record('F5 a new set is created in storage and unassigned', async () => {
-    const { calls } = await withInventory({ query: 'tab=sets' }, async ({ mount, h }) => {
-      await h.settle(120);
-      const card = h.cardTitled(mount, 'Add a rental set');
-      h.labelled(card, 'Set code').value = 'FIXTURE-NEW';
-      h.labelled(card, 'Linear feet').value = '140';
-      h.button(card, 'Add set').click();
-      await h.settle(150);
-    });
-    const call = calls.find((c) => c.name === 'createRentalSet');
-    assert.ok(call);
-    assert.equal(call.patch.set_code, 'FIXTURE-NEW');
-    assert.equal(call.patch.linear_ft, 140);
-    assert.ok(!('status' in call.patch) || call.patch.status === 'in_storage');
-    assert.ok(!('customer_id' in call.patch) || call.patch.customer_id === null);
-  });
-
-  await record('F6 a set with no code is refused without a write', async () => {
-    const { calls } = await withInventory({ query: 'tab=sets' }, async ({ mount, h }) => {
-      await h.settle(120);
-      const card = h.cardTitled(mount, 'Add a rental set');
-      h.button(card, 'Add set').click();
-      await h.settle(150);
-    });
-    assert.equal(calls.filter((c) => c.name === 'createRentalSet').length, 0);
-  });
 
   /* ------------------------------------------------- job materials panel -- */
 

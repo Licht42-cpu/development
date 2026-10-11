@@ -4,6 +4,7 @@ import { fill } from '../lib/admin-dom.js';
 import { money, qty, num, date, dateTime, unitLabel, humanise } from '../../../shared/format.js';
 import { trySave } from '../lib/save.js';
 import { signedDelta, packsToUnits } from '../lib/inventory-math.js';
+import { seasonalSetsPanel } from '../components/seasonal-sets.js';
 import {
   materialUnitLabel, quantityWithUnit, LEVEL_STATES, levelLabel,
   levelBadgeClass, precisionNote, MOVEMENT_CONDITIONS, COUNT_PRECISIONS
@@ -48,13 +49,12 @@ const TABS = [
   ['stock',      'Stock'],
   ['purchasing', 'Purchasing'],
   ['mapping',    'Service parts'],
-  ['sets',       'Rental sets']
+  ['sets',       'Christmas sets']
 ];
 
 const CATEGORIES = ['track', 'light', 'controller', 'power_supply', 'connector',
                     'clip', 'wire', 'rental_set', 'consumable', 'tool', 'other'];
 const UNITS = ['each', 'linear_ft', 'box', 'roll', 'kit', 'set'];
-const SET_STATUSES = ['in_storage', 'assigned', 'installed', 'in_repair', 'retired', 'lost'];
 const PO_STATUSES = ['draft', 'ordered', 'partial', 'received', 'cancelled'];
 
 /* Which movement reasons an operator may post by hand, and the sign each
@@ -1119,230 +1119,23 @@ function addUsageCard(services, materials, reload) {
   ]);
 }
 
-/* ----------------------------------------------------------- rental sets -- */
+/* ------------------------------------------- company-owned Christmas sets -- */
+
+/* The 8.1 version of this tab is gone, not adapted. It read a status field
+   that mixed "where is the set" with "who has it" and wrote the set and its
+   event log as two statements from the browser; Batch 9.1 split those into
+   a set plus an assignment and moved every write behind an RPC, so there was
+   nothing left of the old screen that was still true. The panel lives in its
+   own module because this file is already long and the seasonal lifecycle is
+   a screen in its own right, not a variation on a stock list. */
 
 function setsTab() {
-  const host = el('div', {});
-  let statusFilter = '';
-
-  async function load() {
-    const sets = await api.listRentalSets(statusFilter ? { status: statusFilter } : {});
-    const counts = new Map();
-    for (const s of sets) counts.set(s.status, (counts.get(s.status) || 0) + 1);
-
-    fill(host, [
-      el('div', { class: 'card' }, [
-        el('div', { class: 'card__head' }, [
-          el('div', {}, [
-            el('h2', { text: 'Christmas rental sets' }),
-            el('p', { text: 'Sets are owned by the business and rented out, with storage included, ' +
-                            'so each one is tracked as a physical asset rather than a stock count.' })
-          ]),
-          labelled('Status', select(
-            [{ value: '', label: 'All statuses' },
-             ...SET_STATUSES.map((s) => ({ value: s, label: humanise(s) }))],
-            statusFilter, async (e) => { statusFilter = e.target.value; await load(); }))
-        ]),
-        sets.length === 0
-          ? el('p', { class: 'hint',
-              text: statusFilter
-                ? 'No sets with that status.'
-                : 'No sets recorded yet. Add one for each physical set in storage.' })
-          : el('div', {}, sets.map((s) => rentalSetRow(s, load)))
-      ]),
-      newRentalSetCard(load)
-    ]);
-  }
-
-  load();
-  return host;
+  // No onChanged hook: building or stripping a set does post a real stock
+  // movement, and the Stock tab is rebuilt from scratch every time it is
+  // selected, so it cannot show a balance from before the build.
+  return seasonalSetsPanel();
 }
 
-function rentalSetRow(set, reload) {
-  const host = el('div', { class: 'section-box', style: 'margin:8px 0' });
-  let historyOpen = false;
-
-  function paint() {
-    fill(host, [
-      el('div', { class: 'section-box__head', style: 'flex-wrap:wrap' }, [
-        el('div', { style: 'flex:1;min-width:140px' }, [
-          el('strong', { text: set.set_code }),
-          el('span', { class: 'row-item__meta',
-            text: [set.customers?.name,
-                   set.properties?.address_line1,
-                   set.linear_ft ? `${qty(set.linear_ft)} ft` : null,
-                   set.season_year ? `season ${set.season_year}` : null,
-                   set.storage_location].filter(Boolean).join(' · ') || 'unassigned' })
-        ]),
-        el('span', {
-          class: `badge ${set.status === 'installed' ? 'badge--ok'
-            : set.status === 'lost' || set.status === 'in_repair' ? 'badge--warn' : 'badge--muted'}`,
-          text: humanise(set.status)
-        }),
-        el('button', {
-          class: 'btn btn--sm', type: 'button',
-          text: historyOpen ? 'Hide history' : 'History',
-          onClick: () => { historyOpen = !historyOpen; paint(); }
-        })
-      ]),
-
-      el('div', { class: 'btn-row', style: 'margin-top:8px' }, transitionButtons(set, reload)),
-
-      set.condition_note
-        ? el('p', { class: 'hint', style: 'margin:6px 0 0', text: `Condition: ${set.condition_note}` })
-        : null,
-
-      historyOpen ? setHistory(set) : null
-    ]);
-  }
-
-  paint();
-  return host;
-}
-
-/* Only the transitions that make sense FROM the set's current status are
-   offered, driven by an explicit table rather than a pile of negations.
- *
- * Two different reasons a button must not appear:
- *
- *   1. The database would refuse it. "Installed" requires a customer and a
- *      date, "assigned" requires a customer, so neither belongs on an
- *      unassigned set -- the click would raise a CHECK violation that reads
- *      to the operator as a bug in the app.
- *
- *   2. It is nonsense even though the database would accept it. A set
- *      recorded as LOST or RETIRED is not something to install at a
- *      customer's house, and one at the repair shop is not either. The first
- *      version of this function tested `set.customer_id && status !==
- *      'installed'`, which offered "Mark installed" on a lost set -- caught
- *      by looking at a screenshot, not by any assertion, because every
- *      individual condition in it was true.
- *
- * A lost set gets one way back ("Found") rather than the full set, because
- * recovering one is a specific event worth logging as such. */
-const CAN_INSTALL = new Set(['in_storage', 'assigned']);
-const CAN_REPAIR  = new Set(['in_storage', 'assigned', 'installed']);
-const CAN_UNASSIGN = new Set(['in_storage', 'assigned', 'in_repair']);
-
-function transitionButtons(set, reload) {
-  const buttons = [];
-  const go = (label, { event, status, patch, note }) => el('button', {
-    class: 'btn btn--sm', type: 'button', text: label,
-    onClick: async () => {
-      await trySave(() => api.moveRentalSet(set, { event, status, patch, note }), {
-        success: `${set.set_code} — ${label.toLowerCase()}`, after: reload
-      });
-    }
-  });
-
-  if (set.customer_id && CAN_INSTALL.has(set.status)) {
-    buttons.push(go('Mark installed', {
-      event: 'installed', status: 'installed',
-      patch: { installed_at: new Date().toISOString(), removed_at: null }
-    }));
-  }
-  if (set.status === 'installed') {
-    buttons.push(go('Mark removed', {
-      event: 'removed', status: 'in_storage',
-      patch: { removed_at: new Date().toISOString() }
-    }));
-  }
-  if (CAN_REPAIR.has(set.status)) {
-    buttons.push(go('Send for repair', { event: 'repaired', status: 'in_repair' }));
-  }
-  if (set.status === 'in_repair') {
-    buttons.push(go('Back in storage', { event: 'stored', status: 'in_storage' }));
-  }
-  if (set.status === 'lost') {
-    buttons.push(go('Found — back in storage', { event: 'received', status: 'in_storage' }));
-  }
-  if (set.status !== 'lost' && set.status !== 'retired') {
-    buttons.push(el('button', {
-      class: 'btn btn--sm btn--danger', type: 'button', text: 'Mark lost',
-      onClick: async () => {
-        if (!confirmAction(`Mark ${set.set_code} lost? Record what happened in the note.`)) return;
-        const note = window.prompt('What happened to it?') || null;
-        await trySave(() => api.moveRentalSet(set, { event: 'lost', status: 'lost', note }), {
-          success: `${set.set_code} marked lost`, after: reload
-        });
-      }
-    }));
-  }
-  if (set.customer_id && CAN_UNASSIGN.has(set.status)) {
-    buttons.push(el('button', {
-      class: 'btn btn--sm', type: 'button', text: 'Unassign',
-      onClick: async () => {
-        if (!confirmAction(`Release ${set.set_code} from ${set.customers?.name || 'this customer'}?`)) return;
-        await trySave(() => api.moveRentalSet(set, {
-          event: 'unassigned', status: 'in_storage',
-          patch: { customer_id: null, property_id: null }
-        }), { success: 'Set released', after: reload });
-      }
-    }));
-  }
-  return buttons;
-}
-
-function setHistory(set) {
-  const host = el('div', { style: 'margin-top:10px' },
-    [el('p', { class: 'hint', text: 'Loading history…' })]);
-
-  api.listRentalSetEvents(set.id).then((events) => {
-    fill(host, [
-      el('h3', { style: 'margin:0 0 6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)',
-        text: 'History' }),
-      events.length === 0
-        ? el('p', { class: 'hint', text: 'Nothing logged for this set yet.' })
-        : el('div', {}, events.map((ev) => el('div', { class: 'row-item' }, [
-            el('div', { class: 'row-item__main' }, [
-              el('strong', { text: humanise(ev.event) }),
-              el('span', { class: 'row-item__meta',
-                text: [dateTime(ev.occurred_at), ev.note].filter(Boolean).join(' · ') })
-            ])
-          ])))
-    ]);
-  }).catch((err) => {
-    fill(host, [el('p', { class: 'error-text', text: err.message })]);
-  });
-
-  return host;
-}
-
-function newRentalSetCard(reload) {
-  const code = el('input', { placeholder: 'e.g. SET-014', 'aria-label': 'Set code' });
-  const linearFt = numberInput('', null, { step: '1', min: '1', 'aria-label': 'Linear feet' });
-  const location = el('input', { placeholder: 'e.g. Bay 3, shelf 2', 'aria-label': 'Storage location' });
-
-  return el('div', { class: 'card' }, [
-    el('div', { class: 'card__head' }, [
-      el('div', {}, [
-        el('h2', { text: 'Add a rental set' }),
-        el('p', { text: 'A new set starts in storage and unassigned. Assign it to a customer from their job.' })
-      ])
-    ]),
-    el('div', { class: 'grid grid--3' }, [
-      labelled('Set code', code, 'Must be unique.'),
-      labelled('Linear feet', linearFt, 'Leave blank if not measured yet.'),
-      labelled('Storage location', location)
-    ]),
-    el('div', { class: 'btn-row', style: 'margin-top:10px' }, [
-      el('button', {
-        class: 'btn btn--primary', type: 'button', text: 'Add set',
-        onClick: async () => {
-          if (!code.value.trim()) { toast('A set needs a code.', 'error'); return; }
-          const ft = linearFt.value.trim() === '' ? null : num(linearFt.value, 0);
-          if (ft !== null && !(ft > 0)) { toast('Linear feet must be more than zero.', 'error'); return; }
-          const ok = await trySave(() => api.createRentalSet({
-            set_code: code.value.trim(),
-            linear_ft: ft,
-            storage_location: location.value.trim() || null
-          }), { success: 'Set added' });
-          if (ok) { code.value = ''; linearFt.value = ''; location.value = ''; await reload(); }
-        }
-      })
-    ])
-  ]);
-}
 
 /* ------------------------------------------------------------------ view -- */
 
@@ -1377,7 +1170,8 @@ export async function renderInventory(ctx) {
         el('div', {}, [
           el('h1', { text: 'Inventory' }),
           el('p', { class: 'hint',
-            text: 'Parts, purchasing and Christmas rental sets. Nothing here affects quote pricing.' })
+            text: 'Parts, purchasing and the company-owned Christmas sets. '
+              + 'Nothing here affects quote pricing.' })
         ])
       ]),
       paintTabs(),

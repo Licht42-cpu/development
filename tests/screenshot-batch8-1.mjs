@@ -102,22 +102,66 @@ const ORDERS = [
     ns_purchase_order_lines: [] }
 ];
 
+/* Availability-view rows, as the Batch 9.1 panel reads them. The long
+   customer name and the long run description are deliberate: the widest
+   realistic content is the only content worth measuring. */
 const SETS = [
-  { id: 'set-a', set_code: 'FIXTURE-SET-A', status: 'in_storage', customer_id: null,
-    customers: null, properties: null, linear_ft: 180, season_year: null,
-    storage_location: 'Bay 3, shelf 2', condition_note: null,
-    installed_at: null, removed_at: null },
-  { id: 'set-b', set_code: 'FIXTURE-SET-B', status: 'installed', customer_id: 'cus-1',
+  { set_id: 'set-a', set_code: 'FIXTURE-SET-A', status: 'in_storage',
+    condition: 'usable', run_type: 'roofline and two gables', colour: 'warm white',
+    linear_ft: 180, storage_location: 'Bay 3, shelf 2', location_id: 'loc-base',
+    location_code: 'base', inspected_at: '2026-01-20T10:00:00Z',
+    active_assignment_id: null, active_customer_id: null, active_season_year: null,
+    active_assignment_status: null, has_active_assignment: false,
+    awaiting_release: false, needs_inspection: false, needs_repair_or_search: false,
+    out_of_service: false, at_the_repair_bench: false, available_for_reuse: true },
+  { set_id: 'set-b', set_code: 'FIXTURE-SET-B', status: 'deployed',
+    condition: 'usable', run_type: 'roofline', colour: 'warm white',
+    linear_ft: 240, storage_location: null, location_id: null, location_code: null,
+    inspected_at: '2025-10-30T10:00:00Z',
+    active_assignment_id: 'asg-b', active_customer_id: 'cus-1',
+    active_season_year: 2026, active_assignment_status: 'installed',
+    has_active_assignment: true, awaiting_release: false, needs_inspection: false,
+    needs_repair_or_search: false, out_of_service: false,
+    at_the_repair_bench: false, available_for_reuse: false },
+  { set_id: 'set-c', set_code: 'FIXTURE-SET-C', status: 'in_storage',
+    condition: 'uninspected', run_type: 'tree wrap', colour: 'multicolour',
+    linear_ft: 60, storage_location: null, location_id: 'loc-car-a',
+    location_code: 'car_a', inspected_at: null,
+    active_assignment_id: 'asg-c', active_customer_id: 'cus-2',
+    active_season_year: 2026, active_assignment_status: 'removed',
+    has_active_assignment: true, awaiting_release: true, needs_inspection: true,
+    needs_repair_or_search: false, out_of_service: false,
+    at_the_repair_bench: false, available_for_reuse: false },
+  { set_id: 'set-d', set_code: 'FIXTURE-SET-D', status: 'lost',
+    condition: 'missing', run_type: null, colour: null, linear_ft: null,
+    storage_location: null, location_id: null, location_code: null,
+    inspected_at: '2026-01-11T10:00:00Z',
+    active_assignment_id: null, active_customer_id: null, active_season_year: null,
+    active_assignment_status: null, has_active_assignment: false,
+    awaiting_release: false, needs_inspection: false, needs_repair_or_search: true,
+    out_of_service: true, at_the_repair_bench: false, available_for_reuse: false }
+];
+
+const ASSIGNMENTS = [
+  { id: 'asg-b', set_id: 'set-b', customer_id: 'cus-1', property_id: 'prop-1',
+    job_id: null, season_year: 2026, status: 'installed',
+    renewal_state: 'not_renewed', recovery_condition: null,
+    release_cutoff: '2026-01-15', installed_at: '2025-11-01T00:00:00Z',
+    removed_at: null, released_at: null,
     customers: { id: 'cus-1', name: 'A Fixture Customer With A Rather Long Name' },
     properties: { id: 'prop-1', address_line1: '1234 Fixture Concession Road East',
-                  city: 'Sault Ste. Marie' },
-    linear_ft: 240, season_year: 2026, storage_location: null,
-    condition_note: 'Two clips replaced after the 2025 season; check the north run.',
-    installed_at: '2026-11-01T00:00:00Z', removed_at: null },
-  { id: 'set-c', set_code: 'FIXTURE-SET-C', status: 'lost', customer_id: 'cus-2',
-    customers: { id: 'cus-2', name: 'Another Fixture Customer' }, properties: null,
-    linear_ft: null, season_year: 2025, storage_location: null,
-    condition_note: null, installed_at: null, removed_at: null }
+                  city: 'Sault Ste. Marie' } },
+  { id: 'asg-c', set_id: 'set-c', customer_id: 'cus-2', property_id: null,
+    job_id: null, season_year: 2026, status: 'removed',
+    renewal_state: 'pending', recovery_condition: 'uninspected',
+    release_cutoff: null, installed_at: '2025-11-02T00:00:00Z',
+    removed_at: '2026-01-10T00:00:00Z', released_at: null,
+    customers: { id: 'cus-2', name: 'Another Fixture Customer' }, properties: null }
+];
+
+const SEASONAL_CUSTOMERS = [
+  { id: 'cus-1', name: 'A Fixture Customer With A Rather Long Name' },
+  { id: 'cus-2', name: 'Another Fixture Customer' }
 ];
 
 const ESTIMATE = {
@@ -219,14 +263,21 @@ const FAKE_API = `
       damaged_on_hand: 0, is_estimated: false, tracking_mode: 'level',
       level_state: null, level_checked_at: null }
   ])}); }
-  export function newOperationId(p) { return (p || 'op') + '-shot'; }
   export async function postStockMovement() { return {}; }
   export async function postStockTransfer() { return {}; }
   export async function listMaterials()   { return clone(${JSON.stringify(MATERIALS)}); }
   export async function listServices()    { return clone(${JSON.stringify(SERVICES)}); }
   export async function listServiceMaterialUsage() { return clone(${JSON.stringify(USAGE)}); }
   export async function listPurchaseOrders() { return clone(${JSON.stringify(ORDERS)}); }
-  export async function listRentalSets()  { return clone(${JSON.stringify(SETS)}); }
+  export async function listSeasonalSets() { return clone(${JSON.stringify(SETS)}); }
+  export async function listSeasonalAssignments(o) {
+    const all = clone(${JSON.stringify(ASSIGNMENTS)});
+    if (o && o.openOnly) return all.filter((a) => a.status !== 'released' && a.status !== 'cancelled');
+    if (o && o.setId) return all.filter((a) => a.set_id === o.setId);
+    return all;
+  }
+  export async function searchCustomers() { return clone(${JSON.stringify(SEASONAL_CUSTOMERS)}); }
+  export function newOperationId(p) { return (p || 'op') + '-shot'; }
   export async function listStockMoves()  { return clone(${JSON.stringify(MOVES)}); }
   export async function listRentalSetEvents() { return clone(${JSON.stringify(SET_EVENTS)}); }
   export async function estimateJobMaterials() { return clone(${JSON.stringify(ESTIMATE)}); }
@@ -242,9 +293,15 @@ const FAKE_API = `
   export async function setServiceMaterialUsage() { return {}; }
   export async function updateServiceMaterialUsage() { return {}; }
   export async function deleteServiceMaterialUsage() { return {}; }
-  export async function createRentalSet() { return {}; }
-  export async function updateRentalSet() { return {}; }
-  export async function moveRentalSet()   { return {}; }
+  export async function registerSeasonalSet() { return {}; }
+  export async function assignSeasonalSet() { return {}; }
+  export async function cancelSeasonalAssignment() { return {}; }
+  export async function installSeasonalSet() { return {}; }
+  export async function recoverSeasonalSet() { return {}; }
+  export async function inspectSeasonalSet() { return {}; }
+  export async function releaseSeasonalSet() { return {}; }
+  export async function recordSetRenewal() { return {}; }
+  export async function retireSeasonalSet() { return {}; }
 `;
 
 const SIZES = [
@@ -320,9 +377,20 @@ const PROBE = () => {
       // The expanded ledger and the expanded set history are the densest
       // things on these screens, so they get their own pass rather than
       // being assumed to fit.
-      const expander = tab === 'stock' ? 'Move' : tab === 'sets' ? 'History' : null;
+      // The sets tab's densest state is an inline action form plus an open
+      // history, and its history is a <details>/<summary> rather than a
+      // button, so it needs its own opener.
+      const expander = tab === 'stock' ? 'Move' : tab === 'sets' ? 'seasonal' : null;
       if (expander) {
         await page.evaluate((label) => {
+          if (label === 'seasonal') {
+            for (const b of document.querySelectorAll('button')) {
+              if (/^(Assign to a customer|Record recovery|Record inspection)$/
+                  .test(b.textContent.trim())) b.click();
+            }
+            for (const d of document.querySelectorAll('details')) d.open = true;
+            return;
+          }
           const btn = [...document.querySelectorAll('button')]
             .find((b) => b.textContent.trim() === label);
           if (btn) btn.click();

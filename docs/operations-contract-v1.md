@@ -18,6 +18,14 @@ Proved by `tests/db/batch8-1.test.mjs` (sections L, M, N) against a real
 PostgreSQL, and exercised from the UI side by `tests/phase23.test.mjs`
 (sections C, D, J).
 
+**Companion document, added by Batch 9.1:**
+`docs/seasonal-sets-contract-v1.md` specifies the company-owned Christmas
+sets and their seasonal assignments. It is a separate family of operations,
+not a revision of this one — Batch 9.1 changed no shape, parameter, error
+code or grant defined here. The one place the two meet is building and
+stripping a set, which post ordinary `consumed` and `returned` movements
+through this contract; see §7 of that document for the accounting rule.
+
 ---
 
 ## 1. The model in one paragraph
@@ -462,3 +470,7 @@ Named so neither side builds against an assumption:
   four write types today and adding a fifth needs its own agreed scope.
 * **Loading plans, reservations against a day's work, end-of-day
   reconciliation.** Batch 10.
+* **Christmas sets.** Not a gap any more: specified in
+  `docs/seasonal-sets-contract-v1.md`. A set is not stock — it has no
+  quantity and cannot be reserved through `reserve_stock` — so nothing in
+  this document applies to one except the build and strip movements.
