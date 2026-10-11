@@ -1,0 +1,31 @@
+{
+  "base_sha": "cb743f4c6947ae45c19588ae89b011a5aaa4fced",
+  "branch": "codex/android-build-qualification",
+  "qualification_checks": {
+    "passed": 6,
+    "total": 6
+  },
+  "clean_offline_assemble": {
+    "passed": true,
+    "seconds": 32.06,
+    "tasks_executed": 222,
+    "gradle_offline": true
+  },
+  "asset_guard": {
+    "fresh_and_restored_build_pass": true,
+    "stale_assemble_rejected_before_app_tasks": true
+  },
+  "adb": {
+    "directory_write_permission_granted": true,
+    "mkdir_observed_error": "Read-only file system",
+    "host_mount_still_blocks_configuration": true,
+    "wrapper_refuses_before_binary_start": true,
+    "HOME_preserved": true
+  },
+  "device_and_emulator": "unrun",
+  "protected_files_unchanged": 148,
+  "source_sha256": {
+    "scripts/android-build.py": "4b0757837c07ad334ee54b98c1a4e2b136445024f3e94e48b5fb9f999a32ff79",
+    "tests/android-build.test.py": "dfcc82aafcc3471b0bee29ec3f86781f7137844538d3fe1e43d941159f8f0548"
+  }
+}

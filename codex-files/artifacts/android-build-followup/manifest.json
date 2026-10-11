@@ -1,0 +1,56 @@
+{
+  "assemble-clean-offline-followup.txt": {
+    "sha256": "a1cb0963944058b752b76af01669b18f5ddcddef46b104d84fa172ef05bfe419",
+    "bytes": 15601,
+    "raw_stdout_sha256": "1268f79b8c94e9d46773ab53631b16e36231d3d7dd3dd24a5aa1525d552892a5",
+    "normalization": "LF line endings, trailing whitespace removed, one final newline"
+  },
+  "qualification-followup-final.txt": {
+    "sha256": "84dbf6a0e81c032119c75af6fc3decf075828991effeccc9c49911f752388e97",
+    "bytes": 1071,
+    "raw_stdout_sha256": "84dbf6a0e81c032119c75af6fc3decf075828991effeccc9c49911f752388e97",
+    "normalization": "LF line endings, trailing whitespace removed, one final newline"
+  },
+  "apk.txt": {
+    "sha256": "0f5d2e8ebcc3a61da1d33bcdaa8006904e3e92ad3e273f0911f06e065d016b65",
+    "bytes": 161,
+    "raw_stdout_sha256": "0f5d2e8ebcc3a61da1d33bcdaa8006904e3e92ad3e273f0911f06e065d016b65",
+    "normalization": "LF line endings, trailing whitespace removed, one final newline"
+  },
+  "assemble-restored.txt": {
+    "sha256": "e8c482de5eb185bab9e00a4f58f321fdbe0b4b137f6e728b9588dbfb8af1af5e",
+    "bytes": 17189,
+    "raw_stdout_sha256": "eeaab43e6017bffb00cf5384d57234ece785984cf9b15649be2a31ebdeb48f5e",
+    "normalization": "LF line endings, trailing whitespace removed, one final newline"
+  },
+  "assemble-stale-expected-failure.txt": {
+    "sha256": "064364fe6c36e90e3516927c56c28e19f42f0e645a784c1610609140abbe874c",
+    "bytes": 1596,
+    "raw_stdout_sha256": "7f0bb2656562c359e69d24edde688922ea3d4a401da45c7679474d02d359fe82",
+    "normalization": "LF line endings, trailing whitespace removed, one final newline"
+  },
+  "prebuild-fresh.txt": {
+    "sha256": "b62c5fc2c2bd4716c030b2646973178f600ff9bfc247ca7bb60be522c64e53ff",
+    "bytes": 1062,
+    "raw_stdout_sha256": "993695f5fab61b95091fc91097762cf588b43766be65c5093b0dbcc2b7a3e084",
+    "normalization": "LF line endings, trailing whitespace removed, one final newline"
+  },
+  "setup-runtime-recovery.txt": {
+    "sha256": "084d40e8b667c2cfe19ea0407bd4b694258be9ec4757c8f468088637007e8eea",
+    "bytes": 1220,
+    "raw_stdout_sha256": "084d40e8b667c2cfe19ea0407bd4b694258be9ec4757c8f468088637007e8eea",
+    "normalization": "LF line endings, trailing whitespace removed, one final newline"
+  },
+  "adb-preflight.json": {
+    "sha256": "b950968457be5b8f83cdf9db68d5dd64ce29174c2b5c17e3939f4bd83fc0ab97",
+    "bytes": 228
+  },
+  "doctor.json": {
+    "sha256": "fe60e81f1d2e6e0b1afc7c8994e2e2729c060fa870a5c659e2e62182da779d1f",
+    "bytes": 683
+  },
+  "results.json": {
+    "sha256": "453f18c32682f4364769f61f8d3d8ea1b4f186227f7a4ae5c6fa90051c7d0a95",
+    "bytes": 968
+  }
+}

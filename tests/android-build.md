@@ -148,6 +148,45 @@ this run, not a promise of identical APK bytes across machines/debug keys.
 
 ## Levels reached and integrator handoff
 
+### Follow-up from cb743f4
+
+The helper now exposes `doctor`, an adb command wrapper and Gradle `--offline`:
+
+```sh
+python3 scripts/android-build.py doctor
+python3 scripts/android-build.py --offline gradle clean :app:assembleDebug
+# Only on a host with a writable real-home .android directory:
+# Create ~/.android there first if it does not exist.
+python3 scripts/android-build.py adb -- devices -l
+```
+
+Doctor reports actual compiler/SDK/asset readiness separately from adb and
+emulator availability; it does not install or launch an app. Setup recovers
+from an inherited runtime-only JAVA_HOME using the verified pinned JDK.
+An explicit `--java-home` lacking java/javac is rejected before Gradle rather
+than quietly using a compiler elsewhere on PATH. The adb wrapper refuses an
+unwritable configuration directory before starting the crashing binary.
+
+A **clean offline assemble** succeeded in 32.06 seconds with all **222
+actionable tasks executed**, including the asset guard. This proves this
+populated cache can rebuild the current project with Gradle `--offline`;
+it does not make an empty cache or future dependency changes offline-ready.
+
+The expanded qualification suite passes **6/6** checks, adding diagnostics
+and inherited/explicit JRE selection checks to the original build/guard tests.
+Doctor also rejects a selected Java home without its own compiler, even if
+another compiler might be found on PATH. Follow-up logs have their
+own manifest under `codex-files/artifacts/android-build-followup/`; initial
+qualification evidence remains unchanged.
+
+The adb directory issue was investigated directly. Scoped write permission
+for `/home/agent/.android` was granted, but `mkdir -p /home/agent/.android`
+still failed with **Read-only file system**. This is a mounted-filesystem
+constraint, not a missing permission that another approval would fix. No HOME
+override, mount change or platform-tool modification was used. Installation
+requires a host with a writable adb configuration directory and an actual
+emulator/device; neither requirement is established here.
+
 | Level | Result | What it establishes |
 | --- | --- | --- |
 | Capacitor sync + direct guard | Passed | Staging, copied assets, config, resources and seven plugin registrations agree |
@@ -158,7 +197,7 @@ this run, not a promise of identical APK bytes across machines/debug keys.
 Platform-tools installation is not device readiness: this container's adb
 37.0.1 also aborts trying to create `/home/agent/.android`, even with the
 Android-user override. No install was attempted. Diagnose that host tooling
-issue when an emulator/device is actually provided; do not count adb or APK
+issue on a writable host when an emulator/device is actually provided; do not count adb or APK
 compilation as an application first-screen result. The cheap emulator bonus
 was unavailable, and physical checks remain 13.2.
 

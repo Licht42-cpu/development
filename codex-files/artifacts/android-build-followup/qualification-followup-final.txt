@@ -1,0 +1,14 @@
+test_00_doctor_separates_build_and_device_readiness (__main__.AndroidBuildQualification.test_00_doctor_separates_build_and_device_readiness) ... ok
+test_00_explicit_runtime_only_home_is_rejected_before_gradle (__main__.AndroidBuildQualification.test_00_explicit_runtime_only_home_is_rejected_before_gradle) ... ok
+test_00_setup_recovers_runtime_only_java_home (__main__.AndroidBuildQualification.test_00_setup_recovers_runtime_only_java_home) ... ok
+test_01_real_prebuild_executes_guard (__main__.AndroidBuildQualification.test_01_real_prebuild_executes_guard) ... prebuild-fresh.txt: exit=0; 9.43s
+ok
+test_02_stale_staging_stops_assemble_at_guard (__main__.AndroidBuildQualification.test_02_stale_staging_stops_assemble_at_guard) ... assemble-stale-expected-failure.txt: exit=1; 11.05s
+ok
+test_03_restored_assemble_contains_current_assets (__main__.AndroidBuildQualification.test_03_restored_assemble_contains_current_assets) ... assemble-restored.txt: exit=0; 12.06s
+ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 35.829s
+
+OK

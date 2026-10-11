@@ -1,0 +1,6 @@
+{
+  "exit": 1,
+  "stdout": "",
+  "stderr": "adb requires writable /home/agent/.android; this host may mount home read-only. Provide that directory on a writable host. HOME will not be overridden.\n",
+  "binary_started": false
+}

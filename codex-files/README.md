@@ -47,6 +47,12 @@ physical-device checks remain unrun. The APK is local and unpublished.
 The integrator should select `tests/android-build.test.py` as a separate
 SDK/Gradle job after setup/sync; it is not added to the mocked regression list.
 
+The [follow-up evidence](artifacts/android-build-followup/) adds a clean
+offline assemble (222 tasks executed), readiness diagnostics and JDK selection
+checks, with 6/6 qualification tests passing. adb remains blocked by the
+read-only home mount; this is distinct
+from the passing native build and is explained in the findings.
+
 ## Contents
 
 | Folder/file | Purpose |

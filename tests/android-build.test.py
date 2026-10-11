@@ -5,11 +5,13 @@ Run alone: temporarily corrupts only generated staging, restores it in finally,
 and invokes the real Android Gradle project (not a stand-in Exec task).
 """
 import hashlib
+import json
 import os
 from pathlib import Path
 import subprocess
 import sys
 import time
+import tempfile
 import unittest
 import zipfile
 
@@ -30,6 +32,57 @@ def gradle(action, log_name, *tasks):
 
 
 class AndroidBuildQualification(unittest.TestCase):
+    def test_00_explicit_runtime_only_home_is_rejected_before_gradle(self):
+        with tempfile.TemporaryDirectory(prefix='nova-explicit-jre-') as directory:
+            runtime = Path(directory)
+            (runtime / 'bin').mkdir()
+            (runtime / 'bin/java').symlink_to('/usr/bin/java')
+            result = subprocess.run([sys.executable, 'scripts/android-build.py',
+                                     'build', '--java-home', str(runtime)], cwd=REPO,
+                                    capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('Selected Java home is not a full JDK', result.stderr)
+            self.assertNotIn('> Task', result.stdout)
+            doctor = subprocess.run([sys.executable, 'scripts/android-build.py',
+                                     'doctor', '--java-home', str(runtime)], cwd=REPO,
+                                    capture_output=True, text=True)
+            self.assertEqual(doctor.returncode, 1)
+            report = json.loads(doctor.stdout)
+            self.assertFalse(report['java_home_has_compiler'])
+            self.assertFalse(report['build_prerequisites_ready'])
+
+    def test_00_doctor_separates_build_and_device_readiness(self):
+        result = subprocess.run([sys.executable, 'scripts/android-build.py', 'doctor'],
+                                cwd=REPO, capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        report = json.loads(result.stdout)
+        self.assertTrue(report['build_prerequisites_ready'])
+        self.assertGreaterEqual(report['javac_major'], 21)
+        self.assertEqual(report['missing_sdk_files'], [])
+        self.assertIn('unrun', report['device_validation'])
+        if not report['adb_configuration_writable']:
+            self.assertIn('HOME is preserved', report['adb_blocker'])
+        EVIDENCE.mkdir(parents=True, exist_ok=True)
+        (EVIDENCE / 'doctor.json').write_text(result.stdout)
+
+    def test_00_setup_recovers_runtime_only_java_home(self):
+        with tempfile.TemporaryDirectory(prefix='nova-jre-') as directory:
+            # A configured Java home without a compiler must not win over the
+            # pinned cached JDK merely because another javac is on PATH.
+            runtime = Path(directory)
+            (runtime / 'bin').mkdir()
+            (runtime / 'bin/java').symlink_to('/usr/bin/java')
+            env = os.environ.copy()
+            env['JAVA_HOME'] = str(runtime)
+            result = subprocess.run([sys.executable, 'scripts/android-build.py',
+                                     'setup', '--accept-licenses'], cwd=REPO,
+                                    env=env, capture_output=True, text=True)
+            EVIDENCE.mkdir(parents=True, exist_ok=True)
+            (EVIDENCE / 'setup-runtime-recovery.txt').write_text(result.stdout + result.stderr)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertNotIn('Daemon JVM: ' + str(runtime), result.stdout)
+            self.assertIn('21.0.12.1', result.stdout)
+
     def test_01_real_prebuild_executes_guard(self):
         code, output = gradle('gradle', 'prebuild-fresh.txt', ':app:preBuild')
         self.assertEqual(code, 0, output)
