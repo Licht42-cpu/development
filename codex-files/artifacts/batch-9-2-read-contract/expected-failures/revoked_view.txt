@@ -1,0 +1,11 @@
+FAIL - Denied replay immediately hides an already-open cached visit and retains its unsent work
+locator.waitFor: Timeout 7000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('heading', { name: 'Saved access no longer available' }) to be visible[22m
+
+    at /workspace/nova-shield/tests/offline-work.test.mjs:93:79
+    at async fixture (/workspace/nova-shield/tests/offline-work.test.mjs:12:86)
+    at async check (/workspace/nova-shield/tests/offline-work.test.mjs:11:112)
+    at async file:///workspace/nova-shield/tests/offline-work.test.mjs:87:1
+
+0/1 passed

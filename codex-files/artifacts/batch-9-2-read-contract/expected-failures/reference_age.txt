@@ -1,0 +1,104 @@
+FAIL - Expired references keep saved visit facts readable but stop new measurement entry
+AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Reference data expired or unavailable/. Input:
+
+'Showing saved work — not current server data\n' +
+  '\n' +
+  'Saved 10/11/2026, 2:38:23 AM. Access must be checked again within 24 hours. Reconnect to check assignment, send notes, change status or calculate prices. Maps need a connection.\n' +
+  '\n' +
+  'Reference data saved 10/3/2026, 2:38:23 AM; usable for seven days. Prices require the server.\n' +
+  '\n' +
+  'Retry connection\n' +
+  '← Saved schedule\n' +
+  'Saved Customer A\n' +
+  '\n' +
+  '123 Saved Street, Test City\n' +
+  '\n' +
+  'Call\n' +
+  'Text\n' +
+  '\n' +
+  'Saved status: In progress. Status and completion need a connection.\n' +
+  '\n' +
+  'Property Passport\n' +
+  '\n' +
+  'Persists on this property across every future visit and quote.\n' +
+  '\n' +
+  'SIDING\n' +
+  'MATERIAL\n' +
+  'COLOUR\n' +
+  'ELEVATION HEIGHTS\n' +
+  'HEAVY ALGAE SIDES\n' +
+  'ROOF\n' +
+  'SHINGLE TYPE\n' +
+  'PITCH\n' +
+  'MOSS SEVERITY\n' +
+  'ACCESS & UTILITIES\n' +
+  'WATER TAP LOCATION\n' +
+  'ELECTRICAL RECEPTACLE\n' +
+  'GATE WIDTH\n' +
+  'LADDER ACCESS RESTRICTIONS\n' +
+  'CUSTOMER PREFERENCES\n' +
+  'Save passport\n' +
+  '\n' +
+  'On-site checklist\n' +
+  '\n' +
+  'Taps save instantly.\n' +
+  '\n' +
+  'Water spigot located\n' +
+  'Electrical outlet located\n' +
+  'Property access confirmed\n' +
+  'Hazards / flowerbeds identified\n' +
+  'Saved measurements\n' +
+  '\n' +
+  'Front area: 7 Linear ft\n' +
+  '\n' +
+  'SERVICE\n' +
+  'Saved service\n' +
+  'NEW MEASUREMENT QUANTITY\n' +
+  'Save new measurement locally\n' +
+  '\n' +
+  'Saved inspection flags\n' +
+  '\n' +
+  'Difficult access: Keep the side gate clear\n' +
+  '\n' +
+  'Read-only saved observations. Updating flags requires a connection.\n' +
+  '\n' +
+  'Photos\n' +
+  '\n' +
+  'None yet — tap to add one.\n' +
+  '\n' +
+  'TAG\n' +
+  'Before\n' +
+  'After\n' +
+  'Damage / Issue\n' +
+  'Measurement / Scope\n' +
+  'General\n' +
+  'ELEVATION\n' +
+  '+ Add photo\n' +
+  '\n' +
+  'Private to staff by default. Tap a photo to remove it.\n' +
+  '\n' +
+  'Notes\n' +
+  '\n' +
+  'You can keep a draft here. Sending a note requires a connection.\n' +
+  '\n' +
+  'Internal\n' +
+  '\n' +
+  'Watch the garden hose\n' +
+  '\n' +
+  'NOTE DRAFT\n' +
+  'WHO CAN SEE IT\n' +
+  'Internal — staff only\n' +
+  'Customer-visible\n' +
+  '\n' +
+  'Saved quote references\n' +
+  '\n' +
+  'Version 1: Draft\n' +
+  '\n' +
+  'Reconnect to review current prices, accept a quote or capture a new signature. Previously saved signatures remain in the outbox.'
+
+    at file:///workspace/nova-shield/tests/offline-work.test.mjs:211:10
+    at async fixture (file:///workspace/nova-shield/tests/offline-work.test.mjs:12:86)
+    at async check (file:///workspace/nova-shield/tests/offline-work.test.mjs:11:112)
+    at async file:///workspace/nova-shield/tests/offline-work.test.mjs:207:1
+
+0/1 passed

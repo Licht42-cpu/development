@@ -1,0 +1,11 @@
+FAIL - A blocked work-store upgrade reports failure and recovers when its old tab closes
+AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Close other app tabs/. Input:
+
+'Could not load this screen\n\nNo connection — reconnect and retry.\n\nRetry'
+
+    at fixture.open (file:///workspace/nova-shield/tests/offline-work.test.mjs:274:10)
+    at async fixture (file:///workspace/nova-shield/tests/offline-work.test.mjs:12:86)
+    at async check (file:///workspace/nova-shield/tests/offline-work.test.mjs:11:112)
+    at async file:///workspace/nova-shield/tests/offline-work.test.mjs:269:1
+
+0/1 passed

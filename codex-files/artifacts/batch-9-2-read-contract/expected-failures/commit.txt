@@ -1,0 +1,11 @@
+FAIL - An aborted write transaction cannot announce that work was saved
+locator.waitFor: Timeout 7000ms exceeded.
+Call log:
+[2m  - waiting for getByText(/Work not saved:/) to be visible[22m
+
+    at /workspace/nova-shield/tests/offline-work.test.mjs:240:45
+    at async fixture (/workspace/nova-shield/tests/offline-work.test.mjs:12:86)
+    at async check (/workspace/nova-shield/tests/offline-work.test.mjs:11:112)
+    at async file:///workspace/nova-shield/tests/offline-work.test.mjs:237:1
+
+0/1 passed

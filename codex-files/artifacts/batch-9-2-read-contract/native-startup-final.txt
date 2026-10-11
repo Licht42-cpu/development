@@ -1,0 +1,20 @@
+PASS - Cold /admin/field.html loads offline without any external request
+PASS - Cold /mobile/www/admin/field.html loads offline without any external request
+PASS - A plain desktop browser still reaches sign in using the real local SDK
+PASS - Source, staged and query alias paths share one actual Supabase client/auth instance
+PASS - Public-site API keeps its anonymous SDK query behavior
+PASS - The real SDK preserves authenticated getSession and admin RPC behavior
+PASS - A failed access RPC with a saved session shows Retry rather than an authorization verdict
+PASS - All seven local lazy plugin graphs import with network blocked
+PASS - Native platform detection uses the locally packaged bridge
+PASS - A missing module shows recovery; Retry reloads it and preserves full queued payloads
+PASS - Missing bootstrap itself has a working fallback Retry
+PASS - Real outbox storage-open failure is recoverable without deleting records
+PASS - A device module initialization exception is identified and recoverable
+PASS - Offline startup at 390px light fits and exposes keyboard outbox access
+PASS - Offline startup at 390px dark fits and exposes keyboard outbox access
+PASS - Offline startup at 430px light fits and exposes keyboard outbox access
+PASS - Offline startup at 430px dark fits and exposes keyboard outbox access
+PASS - Long section headers with a badge and action wrap at phone widths
+
+18/18 passed

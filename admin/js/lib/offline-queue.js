@@ -27,10 +27,14 @@ const DB_NAME = 'ns-field-outbox';
 const STORE = 'queue';
 const DB_VERSION = 2;
 let storageError = null;
+let opening = null;
 
 function openDb() {
-  return new Promise((resolve, reject) => {
-    let blocked = false;
+  // Do not queue more IDB opens behind a blocked upgrade. IDB cannot cancel
+  // that request; waiters must receive its failure instead of hanging forever.
+  if (opening) return opening.then(() => openDb());
+  let blocked = false;
+  opening = new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
     req.onupgradeneeded = () => {
       const store = req.result.objectStoreNames.contains(STORE)
@@ -40,10 +44,11 @@ function openDb() {
       // v1 records remain byte-for-byte intact and unowned. Never claim
       // somebody else's saved payload merely because they signed in next.
     };
-    req.onsuccess = () => { if (blocked) { req.result.close(); return; } req.result.onversionchange = () => req.result.close(); resolve(req.result); };
+    req.onsuccess = () => { opening = null; if (blocked) { req.result.close(); return; } req.result.onversionchange = () => req.result.close(); resolve(req.result); };
     req.onblocked = () => { blocked = true; reject(new Error('Close other app tabs and retry device storage.')); };
     req.onerror = () => reject(req.error);
-  });
+  }).catch(error => { if (!blocked) opening = null; throw error; });
+  return opening;
 }
 
 async function withStore(mode, fn) {
@@ -238,6 +243,10 @@ function mutateWhenIdle(work) {
  *  than inventing a second classifier that could disagree with this one. */
 export function looksOffline(err) {
   if (accessDenied(err)) return false;
+  // Airplane mode does not turn a local storage failure into a network
+  // failure. Preserve actionable quota/blocked-upgrade errors in the router.
+  if (['QuotaExceededError', 'InvalidStateError', 'VersionError'].includes(err?.name) ||
+    /indexeddb|device storage|local storage|outbox storage|quota|close other app tabs/i.test(err?.message || '')) return false;
   if (!navigator.onLine) return true;
   const msg = String(err?.message || err || '').toLowerCase();
   return msg.includes('failed to fetch') || msg.includes('networkerror') ||
@@ -348,7 +357,10 @@ async function runFlush() {
       // the badge renders as text, and an Error object there both reads as
       // "[object Error]" and serialises to {}.
       lastError = err?.message || String(err);
-      if (accessDenied(err)) await forget(owner).catch(() => {});
+      if (accessDenied(err)) {
+        await forget(owner).catch(() => {});
+        window.dispatchEvent(new CustomEvent('ns-field-access-denied', { detail: { ownerId: owner } }));
+      }
       failedId = next.id; cause = err;
       const sending = await withStore('readonly', store => reqToPromise(store.get(next.id)));
       await withStore('readwrite', store => store.put({ ...next.value,

@@ -67,10 +67,12 @@ function showMessage(title, body, action, mount = viewEl) {
 }
 
 let measurementRouteAttempt = 0;
+let cachedAccount = null;
 async function cachedRoute(mount, attempt) {
   const data = await usableSnapshot();
   if (attempt !== measurementRouteAttempt) return true;
   if (!data) return false;
+  cachedAccount = data.id;
   const path = currentPath();
   const id = path.match(/^\/visit\/([0-9a-f-]+)$/)?.[1];
   await renderOfflineWork({ mount, navigate, retry: router }, data, id);
@@ -79,6 +81,7 @@ async function cachedRoute(mount, attempt) {
 async function router() {
   const attempt = ++measurementRouteAttempt;
   if (!await flushMeasurementEdits() || attempt !== measurementRouteAttempt) return;
+  cachedAccount = null;
   syncNavDepth();
   // Each attempt owns its mount. A late response may finish its detached
   // view, but cannot clear or replace a newer route's visible controls.
@@ -155,6 +158,17 @@ async function signOut() {
   router();
 }
 document.getElementById('signOut')?.addEventListener('click', signOut);
+// A denied replay retires the stored snapshot. Also hide a cached screen
+// already on display; deleting IDB alone cannot remove its private DOM.
+window.addEventListener('ns-field-access-denied', event => {
+  if (!cachedAccount || cachedAccount !== event.detail?.ownerId) return;
+  cachedAccount = null;
+  measurementRouteAttempt++;
+  while (dismissTopOverlay()) { /* Close cached private controls. */ }
+  showMessage('Saved access no longer available',
+    'The server refused access to saved work. Your unsent actions and drafts remain on this device. Check the schedule for current work.',
+    el('button', { class: 'btn', text: 'Check current work', onClick: () => navigate('/') }));
+});
 // Auth events may arrive from another tab. Clear private controls immediately;
 // do not await a Supabase call from inside its auth callback/lock.
 let observedAccount;

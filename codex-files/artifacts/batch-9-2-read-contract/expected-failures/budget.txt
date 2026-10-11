@@ -1,0 +1,11 @@
+FAIL - The ten-megabyte bound counts references and visit facts together
+locator.waitFor: Timeout 7000ms exceeded.
+Call log:
+[2m  - waiting for getByText('Work not saved: Work exceeds the 10 MB offline limit. Reduce the selected schedule.', { exact: true }) to be visible[22m
+
+    at fixture.jobs (/workspace/nova-shield/tests/offline-work.test.mjs:233:126)
+    at async fixture (/workspace/nova-shield/tests/offline-work.test.mjs:12:86)
+    at async check (/workspace/nova-shield/tests/offline-work.test.mjs:11:112)
+    at async file:///workspace/nova-shield/tests/offline-work.test.mjs:230:1
+
+0/1 passed

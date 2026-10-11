@@ -1,0 +1,11 @@
+FAIL - Preparation never stores expiring signed URLs and online photo views re-sign
+locator.waitFor: Timeout 7000ms exceeded.
+Call log:
+[2m  - waiting for getByText('Server photo — preview needs a connection', { exact: true }) to be visible[22m
+
+    at /workspace/nova-shield/tests/offline-work.test.mjs:289:84
+    at async fixture (/workspace/nova-shield/tests/offline-work.test.mjs:12:86)
+    at async check (/workspace/nova-shield/tests/offline-work.test.mjs:11:112)
+    at async file:///workspace/nova-shield/tests/offline-work.test.mjs:285:1
+
+0/1 passed

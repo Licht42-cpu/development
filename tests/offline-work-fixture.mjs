@@ -14,8 +14,7 @@ export const apiSource = `
     'listAttachments','listNotes','listTodaysVisits','listUpcomingVisits','updateProperty','createMeasurement',
     'uploadJobPhoto','uploadSignature','saveQuoteSignature','updateJob','completeJob','createSection','updateSection',
     'deleteSection','updateMeasurement','deleteMeasurement','addMeasurementAddon','deleteMeasurementAddon',
-    'setMeasurementModifier','addNote','deleteAttachment'].map(name=>`export const ${name}=(...args)=>call('${name}',args);`).join('\n')}
-  export const signedPhotoUrl=async()=>'';
+    'setMeasurementModifier','addNote','deleteAttachment','signedPhotoUrl'].map(name=>`export const ${name}=(...args)=>call('${name}',args);`).join('\n')}
 `;
 const authSource = `
   const callbacks=[];
@@ -29,7 +28,8 @@ const authSource = `
 export async function offlineFixture(browser, {width=390, jobs=2, open=true, persistentContext=null, realAuth=false}={}) {
   const context = persistentContext || await browser.newContext({viewport:{width,height:900},serviceWorkers:'block'});
   const errors=[];
-  const state={offline:false, denied:false, fail:{}, lost:null, hold:null, calls:[], writes:[], extraPassport:{}};
+  const state={offline:false, denied:false, fail:{}, lost:null, hold:null, calls:[], writes:[], extraPassport:{}, attachments:[], referenceText:'Original reference'};
+  const heldRequests = new Set();
   const makeJob=id=>({id,status:'in_progress',scheduled_for:new Date().toISOString(),
     customers:{name:id===JOB?'Saved Customer A':'Saved Customer B',phone:'5550100'},
     properties:{id:'property-'+id,address_line1:'123 Saved Street',city:'Test City',passport:{
@@ -56,6 +56,39 @@ export async function offlineFixture(browser, {width=390, jobs=2, open=true, per
       .replace('.filter(i => !i.ownerId || i.ownerId === owner)', '');
     await context.route('**/admin/js/lib/offline-queue.js',route=>route.fulfill({contentType:'application/javascript',body}));
   }
+  const breaks = {
+    references: ['admin/js/lib/field-cache.js', "['pricingRules', 'listPricingRules'],", ''],
+    reference_age: ['admin/js/lib/field-cache.js', 'REFERENCE_AGE_MS = 7 * OFFLINE_AGE_MS', 'REFERENCE_AGE_MS = 100 * OFFLINE_AGE_MS'],
+    horizon: ['admin/js/lib/field-cache.js', 'UPCOMING_DAYS = 7', 'UPCOMING_DAYS = 70'],
+    budget: ['admin/js/lib/field-cache.js', 'const MAX_BYTES = 10 * 1024 * 1024', 'const MAX_BYTES = 200 * 1024 * 1024'],
+    commit: ['admin/js/lib/field-storage.js', 'tx.oncomplete = () => resolve(result);', 'queueMicrotask(() => resolve(result));'],
+    atomic: ['admin/js/lib/field-cache.js', 'if (accessDenied(error)) await forget(id);', 'await forget(id);'],
+    migration: ['admin/js/lib/offline-queue.js', '// v1 records remain byte-for-byte intact', 'store.clear(); // v1 records remain byte-for-byte intact'],
+    work_migration: ['admin/js/lib/field-cache.js', "if (!db.objectStoreNames.contains('drafts'))", "if (db.objectStoreNames.contains('drafts')) db.deleteObjectStore('drafts'); if (!db.objectStoreNames.contains('drafts'))"],
+    uncertain: ['admin/js/lib/offline-queue.js', "if (['sending', 'uncertain'].includes(next.value.state))", 'if (false)'],
+    lock: ['admin/js/lib/offline-queue.js', "return navigator.locks.request('ns-field-outbox-replay', runFlush);", 'return runFlush();'],
+    reference_reuse: ['admin/js/lib/field-cache.js', "if (!fresh(refs, REFERENCE_AGE_MS) || !Object.hasOwn(refs.data, 'pricingRules'))", 'if (true)'],
+    signed_media: ['admin/js/views/field-photos.js', 'if (offline) {', 'if (false) {'],
+    storage_reason: ['admin/js/lib/offline-queue.js', "/indexeddb|device storage|local storage|outbox storage|quota|close other app tabs/i.test(err?.message || '')", 'false'],
+    storage_retry: ['admin/js/lib/field-storage.js', 'if (!blocked) opening.delete(key);', ''],
+    revoked_view: ['admin/js/lib/offline-queue.js', "'ns-field-access-denied'", "'ns-field-access-notice-unused'"],
+    denial_marker: ['admin/js/lib/field-cache.js', 'return deniedAccounts.has(id) || localStorage.getItem(deniedKey(id)) === \'yes\';', 'return false;'],
+    flags: ['admin/js/lib/field-cache.js', 'quotes, flags };', 'quotes, flags: [] };']
+  };
+  if (process.env.OFFLINE_BREAK === 'blocked') {
+    const file='admin/js/lib/offline-queue.js';
+    const pattern=/function openDb\(\)[\s\S]*?(?=\nasync function withStore)/;
+    const current=readFileSync(new URL('../'+file,import.meta.url),'utf8');
+    const previous=execFileSync('git',['show',`1695ce6:${file}`],{encoding:'utf8'}).match(pattern)?.[0];
+    if (!previous || !pattern.test(current)) throw new Error('The blocked-open baseline probe no longer matches.');
+    await context.route(`**/${file}`,route=>route.fulfill({contentType:'application/javascript',body:current.replace(pattern,previous)}));
+  }
+  if (breaks[process.env.OFFLINE_BREAK]) {
+    const [file, original, broken] = breaks[process.env.OFFLINE_BREAK];
+    const source=readFileSync(new URL('../'+file,import.meta.url),'utf8');
+    if (!source.includes(original)) throw new Error('Fault probe no longer matches the product source: '+original);
+    await context.route(`**/${file}`,route=>route.fulfill({contentType:'application/javascript',body:source.replaceAll(original,broken)}));
+  }
   await context.route('**/shared/vendor/@capacitor/geolocation/dist/esm/index.js',route=>route.fulfill({contentType:'application/javascript',body:'export const Geolocation={getCurrentPosition:async()=>{throw new Error("No GPS fixture");}};'}));
   await context.route('**/__offline_fixture/*',async route=>{
     const name=new URL(route.request().url()).pathname.split('/').at(-1);
@@ -67,17 +100,22 @@ export async function offlineFixture(browser, {width=390, jobs=2, open=true, per
     if(name==='getJob')result=makeJob(args[0]);
     if(name==='listTodaysVisits')result=state.jobIds.map(makeJob);
     if(name==='getSettings')result={company:{website:'https://example.test'}};
+    if(name==='listInspectionFlags')result=[{id:'flag-1',name:'Difficult access'}];
+    if(name==='listJobFlags')result=[{flag_id:'flag-1',note:'Keep the side gate clear'}];
+    if(name==='listPricingRules')result=[{id:'rule-1',description:state.referenceText}];
+    if(name==='listAttachments')result=state.attachments;
+    if(name==='signedPhotoUrl')result=BASE+'/tests/README.md?signed-preview='+state.calls.filter(x=>x.name===name).length;
     if(name==='listServices')result=[{id:'service-1',key:'test_service',name:'Saved service',unit:'linear_ft',quotable:true}];
     if(name==='listMeasurements')result=[{id:'measurement-1',service_id:'service-1',quantity:7,unit:'linear_ft',label:'Front area',measurement_modifiers:[],job_measurement_addons:[]}];
-    if(name==='listNotes')result=[{id:'note-1',body:'Watch the garden hose',visibility:'internal'}];
+    if(name==='listNotes')result=[{id:'note-1',body:state.noteText || 'Watch the garden hose',visibility:'internal'}];
     if(name==='listQuotes')result=[{id:'quote-1',version:1,status:state.signature?'accepted':'draft',signature_url:state.signature?.path,signed_by_name:state.signature?.name}];
     if(name==='uploadSignature')result='saved/signature.png';
-    if(!name.startsWith('list')&&!['getJob','getSettings','calculatePricing'].includes(name)){
+    if(!name.startsWith('list')&&!['getJob','getSettings','calculatePricing','signedPhotoUrl'].includes(name)){
       state.writes.push({name,args});if(name==='updateProperty')state.extraPassport=args[1].passport||state.extraPassport;
       state.onWrite?.({name,args});
       if(name==='saveQuoteSignature')state.signature={path:args[1],name:args[2]};
     }
-    if(state.hold===name){await new Promise(resolve=>state.release=resolve);}
+    if(state.hold===name){await new Promise(resolve=>{heldRequests.add(resolve);state.release=()=>{for(const release of heldRequests)release();heldRequests.clear();};});}
     if(state.lost===name)return route.abort('internetdisconnected');
     return route.fulfill({contentType:'application/json',body:JSON.stringify(result)}).catch(()=>{});
   });

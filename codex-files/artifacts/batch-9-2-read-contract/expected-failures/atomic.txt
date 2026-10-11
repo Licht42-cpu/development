@@ -1,0 +1,10 @@
+FAIL - A failed preparation keeps the previous complete snapshot
+page.evaluate: TypeError: Cannot read properties of undefined (reading 'savedAt')
+    at eval (eval at evaluate (:290:30), <anonymous>:1:75)
+    at async <anonymous>:316:30
+    at /workspace/nova-shield/tests/offline-work.test.mjs:174:29
+    at async fixture (/workspace/nova-shield/tests/offline-work.test.mjs:12:86)
+    at async check (/workspace/nova-shield/tests/offline-work.test.mjs:11:112)
+    at async file:///workspace/nova-shield/tests/offline-work.test.mjs:171:1
+
+0/1 passed

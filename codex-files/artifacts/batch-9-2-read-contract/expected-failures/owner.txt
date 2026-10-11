@@ -1,0 +1,26 @@
+FAIL - Account switching hides another account’s visits, drafts and photo payloads
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
+  {
++   items: [
++     {
++       attemptedAt: null,
++       createdAt: 1791686333224,
++       id: 1,
++       label: 'Fixture action',
++       lastError: null,
++       state: 'pending',
++       type: 'uploadJobPhoto'
++     }
++   ],
+-   items: [],
+    photos: []
+  }
+
+    at file:///workspace/nova-shield/tests/offline-work.test.mjs:58:10
+    at async fixture (file:///workspace/nova-shield/tests/offline-work.test.mjs:12:86)
+    at async check (file:///workspace/nova-shield/tests/offline-work.test.mjs:11:112)
+    at async file:///workspace/nova-shield/tests/offline-work.test.mjs:54:1
+
+0/1 passed

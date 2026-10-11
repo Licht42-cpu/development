@@ -1,0 +1,11 @@
+FAIL - Denied work stays retired after reload even if its cache deletion failed
+locator.waitFor: Timeout 7000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('heading', { name: 'Work unavailable offline' }) to be visible[22m
+
+    at /workspace/nova-shield/tests/offline-work.test.mjs:103:111
+    at async fixture (/workspace/nova-shield/tests/offline-work.test.mjs:12:86)
+    at async check (/workspace/nova-shield/tests/offline-work.test.mjs:11:112)
+    at async file:///workspace/nova-shield/tests/offline-work.test.mjs:99:1
+
+0/1 passed

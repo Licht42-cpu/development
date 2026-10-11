@@ -1,0 +1,229 @@
+{
+  "starting_sha": "1695ce6c69e7d3f33727f86620a7b421ff740230",
+  "files": {
+    "expected-failures/atomic.txt": {
+      "bytes": 551,
+      "sha256": "1feebd0e6fe5149ba4ef7eded68cf1501710f7fa446d27cf5374ae35407bc4f5",
+      "captured_stdout_sha256": "1feebd0e6fe5149ba4ef7eded68cf1501710f7fa446d27cf5374ae35407bc4f5",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/baseline.txt": {
+      "bytes": 628,
+      "sha256": "f8d56c06bedf4a8d8aa8a7b01a8c8d02b239bf71f1fe3e19cbf61a02c466cb15",
+      "captured_stdout_sha256": "f8d56c06bedf4a8d8aa8a7b01a8c8d02b239bf71f1fe3e19cbf61a02c466cb15",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/blocked.txt": {
+      "bytes": 576,
+      "sha256": "452fabc39e5b4a092de8c1a402022b4cff4496ed7eb9e0c83e62270bb57d9121",
+      "captured_stdout_sha256": "452fabc39e5b4a092de8c1a402022b4cff4496ed7eb9e0c83e62270bb57d9121",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/budget.txt": {
+      "bytes": 608,
+      "sha256": "30a1c4a45cb340bb0a936858f53d9be0fcbd9bea898d09864766f9e989ede59e",
+      "captured_stdout_sha256": "30a1c4a45cb340bb0a936858f53d9be0fcbd9bea898d09864766f9e989ede59e",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/commit.txt": {
+      "bytes": 506,
+      "sha256": "667344690e53edc3c40b62a5c9c67a6681e46b25f56223d1f988ecf8e8eaecd1",
+      "captured_stdout_sha256": "667344690e53edc3c40b62a5c9c67a6681e46b25f56223d1f988ecf8e8eaecd1",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/denial_marker.txt": {
+      "bytes": 544,
+      "sha256": "33d08b65329053bcfd498fec287d5e045c86dc5aa8568373aba5f0b0a22b5834",
+      "captured_stdout_sha256": "33d08b65329053bcfd498fec287d5e045c86dc5aa8568373aba5f0b0a22b5834",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/flags.txt": {
+      "bytes": 485,
+      "sha256": "d11be40d91fa6534559ef054f017de7cb1efb49e3cf335dae20964e6c6df2263",
+      "captured_stdout_sha256": "d11be40d91fa6534559ef054f017de7cb1efb49e3cf335dae20964e6c6df2263",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/horizon.txt": {
+      "bytes": 614,
+      "sha256": "5aaa174cca628a9692c5be0c45562192bc6f777560da7de73483b71f4bf5b306",
+      "captured_stdout_sha256": "5aaa174cca628a9692c5be0c45562192bc6f777560da7de73483b71f4bf5b306",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/lock.txt": {
+      "bytes": 619,
+      "sha256": "342bbe1b9fa318affa0dac9c219b110b84b6ace4938137b6f45c82adbefda5c2",
+      "captured_stdout_sha256": "342bbe1b9fa318affa0dac9c219b110b84b6ace4938137b6f45c82adbefda5c2",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/migration.txt": {
+      "bytes": 487,
+      "sha256": "3d78659219497886c890507fe0d319ae5ccd4461e4dc5146ced8c4247f1fbbad",
+      "captured_stdout_sha256": "3d78659219497886c890507fe0d319ae5ccd4461e4dc5146ced8c4247f1fbbad",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/owner.txt": {
+      "bytes": 779,
+      "sha256": "d73b131079fa3359adf97c288ad99501c8213f3100efafc039ed33b13acb773e",
+      "captured_stdout_sha256": "d73b131079fa3359adf97c288ad99501c8213f3100efafc039ed33b13acb773e",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/reference_age.txt": {
+      "bytes": 3024,
+      "sha256": "cb6c35acbee9c170892db2eaf2e0d2e6e17f257efeb57fffd8c09e3a36c8416e",
+      "captured_stdout_sha256": "cb6c35acbee9c170892db2eaf2e0d2e6e17f257efeb57fffd8c09e3a36c8416e",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/reference_reuse.txt": {
+      "bytes": 509,
+      "sha256": "c948f002d06755e17ea1d6edc0b1c70c7d819ca7c62fb588ce23d9cbab7b7dc1",
+      "captured_stdout_sha256": "c948f002d06755e17ea1d6edc0b1c70c7d819ca7c62fb588ce23d9cbab7b7dc1",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/references.txt": {
+      "bytes": 482,
+      "sha256": "843032461bf4e9280af463537a6a1ce70bc2e27098cd952bec0100f3c5ad70fd",
+      "captured_stdout_sha256": "843032461bf4e9280af463537a6a1ce70bc2e27098cd952bec0100f3c5ad70fd",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/results.json": {
+      "bytes": 2627,
+      "sha256": "5182310524f19e742e42c23bcb17e2cd7f793cb7ed1c10858f417fe7b9b3470a"
+    },
+    "expected-failures/revoked_view.txt": {
+      "bytes": 566,
+      "sha256": "55d36d4764e2740405d5a53ad2898bb25d3f85ad781a4fb3c5cfdd95874d8c62",
+      "captured_stdout_sha256": "55d36d4764e2740405d5a53ad2898bb25d3f85ad781a4fb3c5cfdd95874d8c62",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/signed_media.txt": {
+      "bytes": 563,
+      "sha256": "9e3d195179a63e3aca7f623028cd8531766fb876fc2072182b785f5bf3446582",
+      "captured_stdout_sha256": "9e3d195179a63e3aca7f623028cd8531766fb876fc2072182b785f5bf3446582",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/storage_reason.txt": {
+      "bytes": 630,
+      "sha256": "b6d36831ceee3fdac3336c281c463a0b5b1b8ba324e9ddb13594f386b84e0592",
+      "captured_stdout_sha256": "b6d36831ceee3fdac3336c281c463a0b5b1b8ba324e9ddb13594f386b84e0592",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/storage_retry.txt": {
+      "bytes": 559,
+      "sha256": "6505a5a195e4fdeede29a2e65766c7ee3d97197e256492d5eac699245951889f",
+      "captured_stdout_sha256": "6505a5a195e4fdeede29a2e65766c7ee3d97197e256492d5eac699245951889f",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/uncertain.txt": {
+      "bytes": 507,
+      "sha256": "cc6b531f3756d8c7ee7e10d94f36f109896209941f396fe49fcfa3bf41f1ef25",
+      "captured_stdout_sha256": "cc6b531f3756d8c7ee7e10d94f36f109896209941f396fe49fcfa3bf41f1ef25",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "expected-failures/work_migration.txt": {
+      "bytes": 494,
+      "sha256": "83c392259191052e86058e36b65fc68b6733ba5bee8f3e74aa346093524298e4",
+      "captured_stdout_sha256": "83c392259191052e86058e36b65fc68b6733ba5bee8f3e74aa346093524298e4",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "field-resilience-final.txt": {
+      "bytes": 2530,
+      "sha256": "7f4e5fa380ccbbf8fc4d3143cce5f00620bd1a44cfc8093eb1dae0f001c34eab",
+      "captured_stdout_sha256": "7f4e5fa380ccbbf8fc4d3143cce5f00620bd1a44cfc8093eb1dae0f001c34eab",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "mobile-reliability-final.txt": {
+      "bytes": 2148,
+      "sha256": "2a63a325b8d0d5eaa9834deeccaad0dd526faf9aac23f3538f624257e4bbcc2f",
+      "captured_stdout_sha256": "2a63a325b8d0d5eaa9834deeccaad0dd526faf9aac23f3538f624257e4bbcc2f",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "native-bundle-final.txt": {
+      "bytes": 866,
+      "sha256": "aa4876cbb554ed554b36f4e9cf3ce61ea32a57200789e22631778e897813507f",
+      "captured_stdout_sha256": "aa4876cbb554ed554b36f4e9cf3ce61ea32a57200789e22631778e897813507f",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "native-packaging-final.txt": {
+      "bytes": 1086,
+      "sha256": "7de9e3d5da9310b1cc986ba9ef339b56b81399e418bef653f5eab14d9e1e23e6",
+      "captured_stdout_sha256": "7de9e3d5da9310b1cc986ba9ef339b56b81399e418bef653f5eab14d9e1e23e6",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "native-readiness-final.txt": {
+      "bytes": 2113,
+      "sha256": "6bf767c9d2990da241b9f01b6e712ce02f156e20c51e73670b15ec168061e686",
+      "captured_stdout_sha256": "6bf767c9d2990da241b9f01b6e712ce02f156e20c51e73670b15ec168061e686",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "native-startup-final.txt": {
+      "bytes": 1407,
+      "sha256": "7d03c0a6f2fd10223b8d4ab20393843b07fc92b0e470118f80899802f607a1c8",
+      "captured_stdout_sha256": "7d03c0a6f2fd10223b8d4ab20393843b07fc92b0e470118f80899802f607a1c8",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "native-sync.txt": {
+      "bytes": 1831,
+      "sha256": "599c3e9ad380bd07e85b5d06e82eef539e359b410e79321d534c8ae523d4aa68",
+      "captured_stdout_sha256": "599c3e9ad380bd07e85b5d06e82eef539e359b410e79321d534c8ae523d4aa68",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "native-verify.txt": {
+      "bytes": 132,
+      "sha256": "dde4abb5297c6c0a139ed67ac959810994e4982b56cd6344d3538162b78b6d96",
+      "captured_stdout_sha256": "dde4abb5297c6c0a139ed67ac959810994e4982b56cd6344d3538162b78b6d96",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "offline-work-final.txt": {
+      "bytes": 3837,
+      "sha256": "06fc13b31b7cd36f573fb68312f2613d84f1a2840edbc5b8347160d9df6c02dd",
+      "captured_stdout_sha256": "06fc13b31b7cd36f573fb68312f2613d84f1a2840edbc5b8347160d9df6c02dd",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "registered-final.txt": {
+      "bytes": 43861,
+      "sha256": "14caeffc8e70d1182cfbb9f5131b662053bb89b3ae9f939b7c70490bfba82ed8",
+      "captured_stdout_sha256": "d06a6747551aff476fdec7414c1f550c74f21ac5acfc9983f3c1147fe70641f1",
+      "normalization": "Single trailing LF; all check output retained"
+    },
+    "results.json": {
+      "bytes": 3419,
+      "sha256": "d7a0134609f0d3cede02ff97d85c7f3b336023d0c13cd02a58e8e4c939052942"
+    },
+    "screenshots/blocked-upgrade-390.png": {
+      "bytes": 35674,
+      "sha256": "83204b5e4f36e04b3a2b8c9bf590f43bd16bc3952b8625e6cf03d4c6a525a27e"
+    },
+    "screenshots/denied-replay-390.png": {
+      "bytes": 28879,
+      "sha256": "5520e18da575936125966957335e7f1a382153616fea75a71a9aa3f6a289b9bc"
+    },
+    "screenshots/empty-work-390.png": {
+      "bytes": 27646,
+      "sha256": "e0762a0c612de922d5df27b9239796cfd29c7506dcfc8f1cc355fe5fa902322a"
+    },
+    "screenshots/expired-references-390.png": {
+      "bytes": 208861,
+      "sha256": "ac50e5f21170bc00be2e079ab33ea59bb90423af89e46e65dfc3039223226f6c"
+    },
+    "screenshots/saved-photo-1200.png": {
+      "bytes": 229118,
+      "sha256": "1d9927c1cfd490b281e0f2bed0d2dbed7a1b169b2c39484de997322b5a928726"
+    },
+    "screenshots/saved-photo-390.png": {
+      "bytes": 216915,
+      "sha256": "f2854059ac259afce06c82bff5056a2a8d6f07311c028cd131c692222a7e325c"
+    },
+    "screenshots/saved-photo-430.png": {
+      "bytes": 216755,
+      "sha256": "b243ddca8c9cf70d102e7620d7c339df02c0ee2fd67fabcfe7d6309fe95edd4a"
+    },
+    "screenshots/saved-visit-390.png": {
+      "bytes": 212483,
+      "sha256": "9f141d9af652b247a8fe77336910d7c1869fd5ad364af0a97be4ccd11334fe05"
+    },
+    "screenshots/uncertain-send-390.png": {
+      "bytes": 213977,
+      "sha256": "66b27a5ba61ed9ae28cabb4391afe4be14c276ad5e0f98c16d06d6237f7faa51"
+    }
+  }
+}

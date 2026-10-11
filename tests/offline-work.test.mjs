@@ -84,6 +84,28 @@ await check('Reconnecting replays supported writes in order and removes them onl
   await f.prepare();await f.offline();await queue(f.page,'createMeasurement',{jobId:JOB,measurement:{quantity:5}},'First');await queue(f.page,'createMeasurement',{jobId:JOB,measurement:{quantity:6}},'Second');await f.offline(false);
   const result=await flush(f.page);assert.deepEqual(result.flushed,['First','Second']);assert.deepEqual(f.state.writes.map(x=>x.args[1].quantity),[5,6]);assert.equal((await records(f.page)).length,0);
 }));
+await check('Denied replay immediately hides an already-open cached visit and retains its unsent work',()=>fixture(async f=>{
+  await f.prepare();await f.offline();await f.page.reload();await f.visit();
+  await f.page.getByLabel('Note',{exact:true}).fill('Retain my unsent observation');
+  await f.page.waitForFunction(async()=>(await(await import('/admin/js/lib/field-cache.js')).readDraft('11111111-1111-4111-8111-111111111111','note'))?.value.body==='Retain my unsent observation');
+  await queue(f.page,'createMeasurement',{jobId:JOB,measurement:{quantity:5}});
+  f.state.denied=true;await f.offline(false);await flush(f.page);
+  await f.page.getByRole('heading',{name:'Saved access no longer available'}).waitFor();
+  assert.doesNotMatch(await f.page.locator('#view').innerText(),/Saved Customer A|123 Saved Street|Watch the garden hose/);
+  assert.equal((await records(f.page)).length,1);assert.equal(f.state.writes.length,0);
+  assert.equal(await f.page.evaluate(async()=>(await(await import('/admin/js/lib/field-cache.js')).readDraft('11111111-1111-4111-8111-111111111111','note')).value.body),'Retain my unsent observation');
+  await f.page.screenshot({path:join(evidence,'denied-replay-390.png'),fullPage:true});
+}));
+await check('Denied work stays retired after reload even if its cache deletion failed',()=>fixture(async f=>{
+  await f.prepare();await f.offline();await f.page.reload();await f.visit();await queue(f.page,'createMeasurement',{jobId:JOB,measurement:{quantity:5}});
+  await f.page.evaluate(()=>{const open=indexedDB.open.bind(indexedDB);indexedDB.open=(name,...args)=>{if(name==='ns-field-work')throw new DOMException('Cache cleanup unavailable','InvalidStateError');return open(name,...args);};});
+  f.state.denied=true;await f.offline(false);await flush(f.page);await f.page.getByRole('heading',{name:'Saved access no longer available'}).waitFor();
+  await f.offline();await f.page.reload();await f.page.getByRole('heading',{name:'Work unavailable offline'}).waitFor();
+  assert.equal((await records(f.page)).length,1);
+  assert.ok(await f.page.evaluate(async()=>(await(await import('/admin/js/lib/field-cache.js')).snapshot())),'Stored bytes still exist, so retirement rather than deletion must protect this read');
+  f.state.denied=false;await f.offline(false);await f.page.evaluate(()=>location.hash='/');await f.page.getByRole('heading',{name:"Today's schedule"}).waitFor();await f.prepare();
+  await f.offline();await f.page.reload();await f.page.getByRole('heading',{name:'Saved schedule'}).waitFor();
+}));
 await check('Photo bytes commit before network I/O; a lost response is held for explicit review',()=>fixture(async f=>{
   await f.prepare();f.state.lost='uploadJobPhoto';
   const result=await f.page.evaluate(async()=>{const q=await import('/admin/js/lib/offline-queue.js');return q.callOrQueue('uploadJobPhoto',{jobId:'11111111-1111-4111-8111-111111111111',file:new File(['original-photo-bytes'],'before.jpg',{type:'image/jpeg'}),opts:{kind:'before'}},'Photo upload');});
@@ -107,9 +129,17 @@ await check('A lost signature response reconciles the matching server signature 
   assert.equal(f.state.writes.filter(x=>x.name==='uploadSignature').length,1);assert.equal(f.state.writes.filter(x=>x.name==='saveQuoteSignature').length,1);assert.equal((await records(f.page)).length,0);
 }));
 await check('Different tabs share one replay lock and cannot execute the same head twice',()=>fixture(async f=>{
-  await f.offline();await queue(f.page,'createMeasurement',{jobId:JOB,measurement:{quantity:5}});await f.offline(false);
-  const second=await f.context.newPage();await second.goto(BASE+'/admin/field.html');await second.getByRole('heading',{name:"Today's schedule"}).waitFor();
-  await Promise.all([flush(f.page),flush(second)]);assert.equal(f.state.writes.filter(x=>x.name==='createMeasurement').length,1);await second.close();
+  await f.offline();await queue(f.page,'createMeasurement',{jobId:JOB,measurement:{quantity:5}});
+  const second=await f.context.newPage();await second.goto(BASE+'/admin/field.html');await second.getByRole('heading',{name:'Work unavailable offline'}).waitFor();
+  f.state.hold='createMeasurement';const accepted=new Promise(resolve=>f.state.onWrite=resolve);await f.offline(false);
+  const attempts=Promise.all([flush(f.page),flush(second)]);
+  // Hold the actual first server write while another tab requests replay.
+  // This makes overlap deterministic rather than relying on request timing.
+  try {
+    await accepted;await second.waitForFunction(async()=>(await navigator.locks.query()).pending.some(lock=>lock.name==='ns-field-outbox-replay'));
+    assert.equal(f.state.writes.filter(x=>x.name==='createMeasurement').length,1);
+  } finally { f.state.release?.();await attempts;await second.close(); }
+  assert.equal(f.state.writes.filter(x=>x.name==='createMeasurement').length,1);
 }));
 await check('Offline passport replay preserves unrelated server fields',()=>fixture(async f=>{
   await f.prepare();await f.offline();await f.page.reload();await f.visit();await f.page.getByLabel('Material',{exact:true}).fill('Vinyl');await f.page.getByRole('button',{name:'Save passport',exact:true}).click();await f.page.getByText('Passport saved on this device — waiting to sync.',{exact:true}).waitFor();
@@ -173,6 +203,117 @@ await check('Storage failure never claims that work was saved',()=>fixture(async
   await f.page.evaluate(()=>indexedDB.open=()=>{throw new DOMException('Quota exceeded','QuotaExceededError');});
   await f.page.getByRole('button',{name:'Save work for offline',exact:true}).click();await f.page.getByText('Work not saved: Quota exceeded',{exact:true}).waitFor();
   assert.equal(await f.page.getByText(/visits saved for offline/).count(),0);
+}));
+await check('Preparation caches job flags and pricing-rule metadata without invoking pricing',()=>fixture(async f=>{
+  await f.prepare();
+  const saved=await f.page.evaluate(async()=>(await import('/admin/js/lib/field-cache.js')).usableSnapshot());
+  assert.equal(saved.refs.pricingRules[0].description,'Original reference');
+  assert.equal(saved.jobs[JOB].flags[0].note,'Keep the side gate clear');
+  assert.equal(f.state.calls.filter(row=>row.name==='calculatePricing').length,0);
+  await f.offline();await f.page.reload();await f.visit();
+  assert.match(await f.page.locator('#view').innerText(),/Difficult access: Keep the side gate clear/);
+}));
+await check('Reference refresh is independent of visit facts and preparation reuses fresh references',()=>fixture(async f=>{
+  await f.prepare();
+  const first=await f.page.evaluate(async()=>({work:await(await import('/admin/js/lib/field-cache.js')).snapshot(),saved:await(await import('/admin/js/lib/field-cache.js')).usableSnapshot()}));
+  const reads=f.state.calls.filter(row=>row.name==='listPricingRules').length;
+  f.state.referenceText='Updated office reference';await f.prepare();
+  assert.equal(f.state.calls.filter(row=>row.name==='listPricingRules').length,reads);
+  const before=await f.page.evaluate(async()=>(await(await import('/admin/js/lib/field-cache.js')).snapshot()).savedAt);
+  await f.page.getByRole('button',{name:'Refresh offline reference data',exact:true}).click();
+  await f.page.getByText(/Reference data saved .* for seven days/).waitFor();
+  const after=await f.page.evaluate(async()=>(await(await import('/admin/js/lib/field-cache.js')).usableSnapshot()));
+  assert.equal(after.savedAt,before);assert.notEqual(after.refsSavedAt,first.saved.refsSavedAt);
+  assert.equal(after.refs.pricingRules[0].description,'Updated office reference');
+}));
+await check('Expired references keep saved visit facts readable but stop new measurement entry',()=>fixture(async f=>{
+  await f.prepare();
+  await f.page.evaluate(async()=>{const db=await new Promise(res=>{const r=indexedDB.open('ns-field-work');r.onsuccess=()=>res(r.result);});await new Promise((res,rej)=>{const tx=db.transaction('references','readwrite');const store=tx.objectStore('references');const r=store.get('offline-staff-a');r.onsuccess=()=>store.put({...r.result,savedAt:Date.now()-8*86400000});tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});db.close();});
+  await f.offline();await f.page.reload();await f.visit();
+  assert.match(await f.page.locator('#view').innerText(),/Reference data expired or unavailable/);
+  assert.equal(await f.page.getByRole('button',{name:'Save new measurement locally'}).isDisabled(),true);
+  assert.match(await f.page.locator('#view').innerText(),/123 Saved Street/);
+  await f.page.screenshot({path:join(evidence,'expired-references-390.png'),fullPage:true});
+}));
+await check('The seven-day horizon excludes later visits and duplicate rows do not consume the bound',()=>fixture(async f=>{
+  const result=await f.page.evaluate(async jobId=>{
+    const job=(await import('/admin/js/lib/api.js')).getJob;
+    const today=await job(jobId);
+    const day=new Date();day.setHours(12,0,0,0);day.setDate(day.getDate()+7);
+    const seventh={...today,id:'seventh-day',scheduled_for:day.toISOString()};
+    day.setDate(day.getDate()+1);
+    const eighth={...today,id:'eighth-day',scheduled_for:day.toISOString()};
+    const c=await import('/admin/js/lib/field-cache.js');const prepared=await c.prepareWork([today,today],[seventh,eighth]);
+    return {prepared,data:await c.snapshot()};
+  },JOB);
+  assert.deepEqual(Object.keys(result.data.jobs),[JOB,'seventh-day']);
+  assert.equal(result.prepared.excluded,1);assert.equal(result.prepared.truncated,false);
+}));
+await check('The ten-megabyte bound counts references and visit facts together',()=>fixture(async f=>{
+  f.state.referenceText='R'.repeat(5*1024*1024);f.state.noteText='N'.repeat(6*1024*1024);
+  await f.page.getByRole('button',{name:'Save work for offline',exact:true}).click();
+  await f.page.getByText('Work not saved: Work exceeds the 10 MB offline limit. Reduce the selected schedule.',{exact:true}).waitFor();
+  assert.equal(await f.page.evaluate(async()=>(await(await import('/admin/js/lib/field-cache.js')).snapshot())),undefined);
+  assert.equal(await f.page.getByText(/visits saved for offline/).count(),0);
+},{jobs:1}));
+await check('An aborted write transaction cannot announce that work was saved',()=>fixture(async f=>{
+  await f.page.evaluate(()=>{const put=IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(...args){const req=put.apply(this,args);if(this.name==='accounts')req.addEventListener('success',()=>this.transaction.abort(),{once:true});return req;};});
+  await f.page.getByRole('button',{name:'Save work for offline',exact:true}).click();
+  await f.page.getByText(/Work not saved:/).waitFor();
+  assert.equal(await f.page.getByText(/visits saved for offline/).count(),0);
+  assert.equal(await f.page.evaluate(async()=>(await(await import('/admin/js/lib/field-cache.js')).snapshot())),undefined);
+}));
+await check('An empty work store degrades truthfully and retains separately stored photo bytes',()=>fixture(async f=>{
+  await f.prepare();await f.offline();
+  await f.page.evaluate(async()=>{await(await import('/admin/js/lib/offline-queue.js')).callOrQueue('uploadJobPhoto',{jobId:'11111111-1111-4111-8111-111111111111',file:new Blob(['still-owned-photo']),opts:{}},'Saved photo');await new Promise((res,rej)=>{const r=indexedDB.deleteDatabase('ns-field-work');r.onsuccess=res;r.onerror=()=>rej(r.error);});});
+  await f.page.reload();await f.page.getByRole('heading',{name:'Work unavailable offline'}).waitFor();
+  assert.equal(await f.page.evaluate(async()=>(await(await import('/admin/js/lib/offline-queue.js')).pendingPhotos('11111111-1111-4111-8111-111111111111'))[0].file.text()),'still-owned-photo');
+  await f.page.screenshot({path:join(evidence,'empty-work-390.png'),fullPage:true});
+}));
+await check('A blocked populated outbox upgrade has a retry screen and preserves full legacy bytes',()=>fixture(async f=>{
+  const blocker=await f.context.newPage();await blocker.goto(BASE+'/tests/README.md');
+  await blocker.evaluate(async()=>{window.__heldDb=await new Promise(res=>{const r=indexedDB.open('ns-field-outbox',1);r.onupgradeneeded=()=>r.result.createObjectStore('queue',{keyPath:'id',autoIncrement:true});r.onsuccess=()=>res(r.result);});await new Promise(res=>{const tx=__heldDb.transaction('queue','readwrite');tx.objectStore('queue').add({type:'uploadJobPhoto',createdAt:42,args:{jobId:'legacy-job',file:new Blob(['blocked-legacy-photo'])}});tx.oncomplete=res;});});
+  await f.page.goto(BASE+'/admin/field.html');await f.page.getByRole('heading',{name:'Could not start Nova Shield'}).waitFor();
+  assert.match(await f.page.locator('#view').innerText(),/Close other app tabs/);
+  await f.page.screenshot({path:join(evidence,'blocked-upgrade-390.png'),fullPage:true});
+  await blocker.evaluate(()=>__heldDb.close());await blocker.close();
+  await f.page.getByRole('button',{name:'Retry startup'}).click();await f.page.getByRole('heading',{name:"Today's schedule"}).waitFor();
+  const saved=await records(f.page);assert.equal(saved.length,1);
+  assert.equal(await f.page.evaluate(async()=>{const db=await new Promise(res=>{const r=indexedDB.open('ns-field-outbox');r.onsuccess=()=>res(r.result);});try{return await new Promise(res=>{const r=db.transaction('queue').objectStore('queue').getAll();r.onsuccess=()=>res(r.result[0].args.file.text());});}finally{db.close();}}),'blocked-legacy-photo');
+},{open:false}));
+await check('Upgrading the populated work store preserves its snapshot and note draft',()=>fixture(async f=>{
+  await f.page.goto(BASE+'/tests/README.md');
+  await f.page.evaluate(async()=>{localStorage.setItem('ns-field-active-account','offline-staff-a');const db=await new Promise(res=>{const r=indexedDB.open('ns-field-work',1);r.onupgradeneeded=()=>{r.result.createObjectStore('accounts',{keyPath:'id'});r.result.createObjectStore('drafts',{keyPath:'key'});};r.onsuccess=()=>res(r.result);});await new Promise(res=>{const tx=db.transaction(['accounts','drafts'],'readwrite');tx.objectStore('accounts').put({id:'offline-staff-a',version:1,savedAt:Date.now(),jobs:{},refs:{services:[]},today:[],upcoming:[]});tx.objectStore('drafts').put({key:['offline-staff-a','old-job','note'],value:{body:'Old draft'},savedAt:42});tx.oncomplete=res;});db.close();});
+  await f.offline();await f.page.goto(BASE+'/admin/field.html');await f.page.getByRole('heading',{name:'Saved schedule'}).waitFor();
+  const info=await f.page.evaluate(async()=>{const c=await import('/admin/js/lib/field-cache.js');return {work:await c.snapshot(),draft:await c.readDraft('old-job','note')};});
+  assert.equal(info.work.version,1);assert.equal(info.draft.value.body,'Old draft');assert.equal(info.draft.savedAt,42);
+},{open:false}));
+await check('A blocked work-store upgrade reports failure and recovers when its old tab closes',()=>fixture(async f=>{
+  const blocker=await f.context.newPage();await blocker.goto(BASE+'/tests/README.md');
+  await blocker.evaluate(async()=>{window.__heldDb=await new Promise(res=>{const r=indexedDB.open('ns-field-work',1);r.onupgradeneeded=()=>{r.result.createObjectStore('accounts',{keyPath:'id'});r.result.createObjectStore('drafts',{keyPath:'key'});};r.onsuccess=()=>res(r.result);});await new Promise(res=>{const tx=__heldDb.transaction('accounts','readwrite');tx.objectStore('accounts').put({id:'offline-staff-a',version:1,savedAt:Date.now(),refs:{services:[]},jobs:{},today:[],upcoming:[]});tx.oncomplete=res;});});
+  await f.page.goto(BASE+'/tests/README.md');await f.page.evaluate(()=>localStorage.setItem('ns-field-active-account','offline-staff-a'));await f.offline();
+  await f.page.goto(BASE+'/admin/field.html');await f.page.getByRole('heading',{name:'Could not load this screen'}).waitFor();
+  assert.match(await f.page.locator('#view').innerText(),/Close other app tabs/);
+  await blocker.evaluate(()=>__heldDb.close());await blocker.close();
+  await f.page.getByRole('button',{name:'Retry',exact:true}).click();await f.page.getByRole('heading',{name:'Saved schedule'}).waitFor();
+},{open:false}));
+await check('A temporary storage exception can be retried without erasing saved work',()=>fixture(async f=>{
+  await f.prepare();await f.offline();await f.page.evaluate(()=>{window.__openIdb=indexedDB.open.bind(indexedDB);indexedDB.open=()=>{throw new DOMException('Temporary storage unavailable','InvalidStateError');};location.hash='/visit/11111111-1111-4111-8111-111111111111';});
+  await f.page.getByRole('heading',{name:'Could not load this screen'}).waitFor();
+  await f.page.evaluate(()=>indexedDB.open=__openIdb);
+  await f.page.getByRole('button',{name:'Retry',exact:true}).click();await f.page.getByRole('heading',{name:'Saved Customer A',exact:true,level:1}).waitFor();
+  assert.match(await f.page.locator('#view').innerText(),/123 Saved Street/);
+}));
+await check('Preparation never stores expiring signed URLs and online photo views re-sign',()=>fixture(async f=>{
+  f.state.attachments=[{id:'attachment-1',kind:'before',storage_path:'existing/before.jpg'}];
+  await f.prepare();assert.equal(f.state.calls.filter(row=>row.name==='signedPhotoUrl').length,0);
+  await f.offline();await f.page.reload();await f.visit();
+  await f.page.getByText('Server photo — preview needs a connection',{exact:true}).waitFor();
+  assert.equal(f.state.calls.filter(row=>row.name==='signedPhotoUrl').length,0);
+  await f.offline(false);await f.page.getByRole('button',{name:'Retry connection',exact:true}).click();
+  await f.page.waitForFunction(()=>document.querySelector('img[src*="signed-preview="]'));
+  await f.page.reload();await f.page.waitForFunction(()=>document.querySelector('img[src*="signed-preview=2"]'));
+  assert.equal(f.state.calls.filter(row=>row.name==='signedPhotoUrl').length,2);
 }));
 await check('A v1 upgrade preserves full legacy bytes and blocks unowned replay',()=>fixture(async f=>{
   await f.page.goto(BASE+'/tests/README.md');await f.page.evaluate(async()=>{const db=await new Promise(res=>{const r=indexedDB.open('ns-field-outbox',1);r.onupgradeneeded=()=>r.result.createObjectStore('queue',{keyPath:'id',autoIncrement:true});r.onsuccess=()=>res(r.result);});await new Promise((res,rej)=>{const tx=db.transaction('queue','readwrite');tx.objectStore('queue').add({type:'uploadJobPhoto',label:'Private previous user',createdAt:42,args:{jobId:'legacy-job',file:new Blob(['legacy-bytes'],{type:'image/jpeg'})}});tx.oncomplete=res;tx.onerror=()=>rej(tx.error);});db.close();});

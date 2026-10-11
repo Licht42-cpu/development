@@ -1,0 +1,84 @@
+{
+  "registered": {
+    "passed": 391,
+    "total": 391,
+    "exit": 0
+  },
+  "mobile-reliability": {
+    "passed": 22,
+    "total": 22,
+    "exit": 0
+  },
+  "field-resilience": {
+    "passed": 27,
+    "total": 27,
+    "exit": 0
+  },
+  "native-readiness": {
+    "passed": 24,
+    "total": 24,
+    "exit": 0
+  },
+  "native-startup": {
+    "passed": 18,
+    "total": 18,
+    "exit": 0
+  },
+  "native-bundle": {
+    "passed": 10,
+    "total": 10,
+    "exit": 0
+  },
+  "native-packaging": {
+    "passed": 19,
+    "total": 19,
+    "exit": 0
+  },
+  "offline-work": {
+    "passed": 47,
+    "total": 47,
+    "exit": 0
+  },
+  "passed": 558,
+  "total": 558,
+  "geofence": true,
+  "branch": "codex/batch-9-2-offline-work",
+  "starting_sha": "1695ce6c69e7d3f33727f86620a7b421ff740230",
+  "original_8_2_base": "1e320a6fe25ec182ac89a9846c4b3dbc931eec2d",
+  "browser": "Chromium 151.0.7922.173",
+  "playwright": "1.58.2",
+  "runtime": "Node 24.19.0",
+  "packaging": "142 fresh assets, Android copy and resources verified",
+  "screenshots": 9,
+  "fault_probes": 20,
+  "process_restart": "Actual Chromium persistent-profile process closed/reopened; not Android",
+  "source_sha256": {
+    "admin/js/bootstrap.js": "ebbf9f6ba4d75d047c46741d34d89fed93bd3591f95a9e1896f95d5f01f764e5",
+    "admin/js/field.js": "e7875aaeb7ec6f1587b736ad639f7d4e82b31d0e54d507c4e2ab64baae38259e",
+    "admin/js/lib/field-cache.js": "d0346f4fd5b68ff03fd8bf80488d2733b6cd4aeb9828770fe06ff4fb53e67ed8",
+    "admin/js/lib/field-storage.js": "c3b3880dcc919064c663de03db726daa86d00e7d399352aeff521b871a1eec66",
+    "admin/js/lib/offline-queue.js": "da6be2b6dc94b13d33d16f3f3c512d5a7de73ebed0cc367a2b190808fd5d5159",
+    "admin/js/views/field-offline.js": "52b56f63d1b32c1e624edc60f5a2db9b6ca71e9c900c05281dd8f27bd89710f2",
+    "admin/js/views/field-schedule.js": "15aea03c414481c84d9b0cf6fd029d5c5068c32b54cbf17631830bb11851fc64",
+    "tests/offline-work-fixture.mjs": "cdc114df7d9b61aab9fa247dd3708afb24e61e647b31a48f3c6410c2dda52669",
+    "tests/offline-work.md": "3e8bdd3f14b8f9b5fe3ef952027f4a39374bce4f6c20611bfbe141b00b0436f1",
+    "tests/offline-work.test.mjs": "4ea7992376bcea656aaae75362600799fba0704dfd324b246f273fccc549069c"
+  },
+  "native_android_compile_device": "UNRUN \u2014 no SDK configured or found in standard locations; no device",
+  "native_ios_compile_device": "UNRUN",
+  "database_integration": "UNRUN \u2014 no live database/RLS/provider qualification",
+  "production": "UNRUN",
+  "known_timing_observation": "Initial heavily parallel readiness run missed Save note (23/24). Isolated traversal and final standalone runs pass 24/24. Cause unestablished; assertions unchanged.",
+  "storage_limits": "20 visits, today plus 7 days, visit age 24 hours, reference age 7 days, combined read payload 10 MiB; existing draft/outbox bounds retained",
+  "retirement_limits": "Known-denied reads remain retired after IDB cleanup failure when local retirement marker persists. Simultaneous persistence failure in both stores is unqualified across restart.",
+  "integration_suites": [
+    "offline-work",
+    "native-packaging",
+    "native-startup",
+    "native-bundle",
+    "native-readiness",
+    "mobile-reliability",
+    "field-resilience"
+  ],
+  "constraints": "No Claude merge/rebase, shared API/harness/runner edits, server pricing changes, live database/settings/grants/migrations, external customer messages, deployment, APK publication or PR"
+}

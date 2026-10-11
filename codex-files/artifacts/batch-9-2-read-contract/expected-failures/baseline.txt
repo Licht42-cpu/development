@@ -1,0 +1,12 @@
+FAIL - Prefetch, offline restart and visit navigation preserve addresses, passport and notes
+locator.click: Timeout 7000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('button', { name: 'Save work for offline', exact: true })[22m
+
+    at Object.prepare (/workspace/nova-shield/tests/offline-work-fixture.mjs:121:101)
+    at /workspace/nova-shield/tests/offline-work.test.mjs:18:11
+    at fixture (/workspace/nova-shield/tests/offline-work.test.mjs:12:92)
+    at async check (/workspace/nova-shield/tests/offline-work.test.mjs:11:112)
+    at async file:///workspace/nova-shield/tests/offline-work.test.mjs:17:1
+
+0/1 passed

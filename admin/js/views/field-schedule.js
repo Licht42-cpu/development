@@ -5,7 +5,7 @@ import { onMyWayLink } from '../lib/messaging.js';
 import { getDevicePosition } from '../lib/native.js';
 import { hasArrived } from '../lib/geofence.js';
 import { describeWriteError } from '../lib/save.js';
-import { prepareWork } from '../lib/field-cache.js';
+import { prepareWork, refreshReferences } from '../lib/field-cache.js';
 
 function timeOnly(value) {
   if (!value) return null;
@@ -43,10 +43,21 @@ export async function renderSchedule({ mount, navigate }) {
     try {
       const result = await prepareWork(visits, upcoming);
       preparationStatus.textContent = `${result.count} visits saved for offline reading for 24 hours.` +
+        ' Preparation covers today and the next seven days.' +
         (result.truncated ? ' Only the first 20 visits fit this preparation.' : '') +
+        (result.excluded ? ` ${result.excluded} visits outside that window were not saved.` : '') +
         (result.persistent ? '' : ' Device storage may be removed by the browser or operating system.');
     } catch (error) { preparationStatus.textContent = `Work not saved: ${error.message}`; }
     finally { prepareButton.disabled = false; }
+  } });
+  const referenceStatus = el('p', { class: 'hint', role: 'status' });
+  const referenceButton = el('button', { class: 'btn', text: 'Refresh offline reference data', onClick: async () => {
+    referenceButton.disabled = true;
+    try {
+      const savedAt = await refreshReferences();
+      referenceStatus.textContent = `Reference data saved ${new Date(savedAt).toLocaleString()} for seven days. Visit facts were not refreshed; prices still need a connection.`;
+    } catch (error) { referenceStatus.textContent = `Reference data not refreshed: ${error.message}`; }
+    finally { referenceButton.disabled = false; }
   } });
 
   async function startVisit(job) {
@@ -167,7 +178,7 @@ export async function renderSchedule({ mount, navigate }) {
         : 'Nothing booked for today' }),
       el('a', { href: 'index.html#/winter', class: 'hint', text: 'Winter & seasonal operations →' })
     ]),
-    el('div', { class: 'card' }, [prepareButton, preparationStatus]),
+    el('div', { class: 'card' }, [prepareButton, preparationStatus, referenceButton, referenceStatus]),
     visits.length
       ? el('div', {}, visits.map(visitCard))
       : el('div', { class: 'empty', text: 'No visits scheduled for today. Set a job’s "Scheduled for" date and time on the job page to see it here.' }),

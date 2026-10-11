@@ -1,0 +1,11 @@
+FAIL - Reference refresh is independent of visit facts and preparation reuses fresh references
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+2 !== 1
+
+    at file:///workspace/nova-shield/tests/offline-work.test.mjs:199:10
+    at async fixture (file:///workspace/nova-shield/tests/offline-work.test.mjs:12:86)
+    at async check (file:///workspace/nova-shield/tests/offline-work.test.mjs:11:112)
+    at async file:///workspace/nova-shield/tests/offline-work.test.mjs:194:1
+
+0/1 passed

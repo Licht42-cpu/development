@@ -1,0 +1,11 @@
+FAIL - An interrupted in-flight send survives page closure and does not replay automatically
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+2 !== 1
+
+    at file:///workspace/nova-shield/tests/offline-work.test.mjs:167:10
+    at async fixture (file:///workspace/nova-shield/tests/offline-work.test.mjs:12:86)
+    at async check (file:///workspace/nova-shield/tests/offline-work.test.mjs:11:112)
+    at async file:///workspace/nova-shield/tests/offline-work.test.mjs:159:1
+
+0/1 passed

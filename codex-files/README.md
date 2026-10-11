@@ -21,10 +21,14 @@ Branch `codex/batch-9-2-offline-work` continues `1e320a6` independently of
 Claude. Canonical field modules now retain bounded offline work, account-owned
 drafts and recoverable writes using the original outbox. See
 [findings and reproduction](../tests/offline-work.md),
-[the snapshot contract](../docs/field-snapshot-contract-v1.md), and
-[recorded evidence](artifacts/batch-9-2-offline-work/).
-Final verification: 544/544 counted checks plus geofence. The two intentional
-failure probes have separate logs; five final screenshots were inspected.
+[the current snapshot contract](../docs/field-snapshot-contract-v2.md), and
+[follow-up evidence](artifacts/batch-9-2-read-contract/).
+The supplied full brief was reconciled from `1695ce6`: separate reference
+freshness, flags/pricing-rule metadata, seven-day horizon and blocked storage
+recovery and immediate hiding after denied replay are now covered. Current
+verification: 558/558 counted checks plus geofence, with 20 expected-failure
+probes and nine inspected screenshots.
+Initial [544-check evidence](artifacts/batch-9-2-offline-work/) is preserved.
 Android compile/device, live database and production checks remain unrun.
 The [next load-contract inputs](../docs/plans/batch-10-2-contract-readiness.md)
 are documented without importing Claude's implementation or adding stock writes.

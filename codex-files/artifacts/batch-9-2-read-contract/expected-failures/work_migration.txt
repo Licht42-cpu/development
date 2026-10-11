@@ -1,0 +1,8 @@
+FAIL - Upgrading the populated work store preserves its snapshot and note draft
+TypeError: Cannot read properties of undefined (reading 'value')
+    at fixture.open (file:///workspace/nova-shield/tests/offline-work.test.mjs:267:61)
+    at async fixture (file:///workspace/nova-shield/tests/offline-work.test.mjs:12:86)
+    at async check (file:///workspace/nova-shield/tests/offline-work.test.mjs:11:112)
+    at async file:///workspace/nova-shield/tests/offline-work.test.mjs:262:1
+
+0/1 passed

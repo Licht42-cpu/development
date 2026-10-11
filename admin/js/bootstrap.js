@@ -24,7 +24,9 @@
     const brand = document.querySelector('.field-topbar__brand'); if (brand) brand.inert = true;
     const name = error?.name || '';
     const message = String(error?.message || error || 'Unknown error');
-    const reason = /quota|storage|indexeddb/i.test(name + ' ' + message)
+    const reason = /close other app tabs/i.test(message)
+      ? 'Close other app tabs that may be using local storage, then retry.'
+      : /quota|storage|indexeddb/i.test(name + ' ' + message)
       ? 'Local storage could not be opened. Check available device space and storage permissions, then retry.'
       : /plugin|capacitor|synapse/i.test(message)
         ? 'A device component could not start. Retry; if it continues, check for an app update or report the details below.'

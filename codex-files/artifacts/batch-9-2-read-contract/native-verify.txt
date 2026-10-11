@@ -1,0 +1,5 @@
+
+> nova-shield@1.0.0 verify:mobile
+> node scripts/verify-mobile.js --android
+
+Verified 142 fresh assets, Android copy and resources

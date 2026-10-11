@@ -1,0 +1,8 @@
+FAIL - Preparation caches job flags and pricing-rule metadata without invoking pricing
+TypeError: Cannot read properties of undefined (reading '0')
+    at file:///workspace/nova-shield/tests/offline-work.test.mjs:188:39
+    at async fixture (file:///workspace/nova-shield/tests/offline-work.test.mjs:12:86)
+    at async check (file:///workspace/nova-shield/tests/offline-work.test.mjs:11:112)
+    at async file:///workspace/nova-shield/tests/offline-work.test.mjs:185:1
+
+0/1 passed

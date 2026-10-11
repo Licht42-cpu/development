@@ -10,6 +10,9 @@ export async function renderOfflineWork({ mount, navigate, retry }, snapshot, jo
     el('strong', { text: 'Showing saved work — not current server data' }),
     el('p', { text: `Saved ${new Date(snapshot.savedAt).toLocaleString()}. Access must be checked again within 24 hours. ` +
       'Reconnect to check assignment, send notes, change status or calculate prices. Maps need a connection.' }),
+    el('p', { text: snapshot.refsAvailable
+      ? `Reference data saved ${new Date(snapshot.refsSavedAt).toLocaleString()}; usable for seven days. Prices require the server.`
+      : 'Reference data expired or unavailable. Reconnect to refresh before adding measurements.' }),
     el('button', { class: 'btn', text: 'Retry connection', onClick: retry })
   ]);
   clear(mount).append(banner);
@@ -68,7 +71,15 @@ export async function renderOfflineWork({ mount, navigate, retry }, snapshot, jo
   } });
   measurements.append(el('label', { class: 'field' }, [el('span', { text: 'Service' }), service]),
     el('label', { class: 'field' }, [el('span', { text: 'New measurement quantity' }), quantity]), add, savedStatus);
+  if (!snapshot.refsAvailable) { service.disabled = true; quantity.disabled = true; add.disabled = true; }
   mount.append(measurements);
+  if (data.flags?.length) mount.append(el('div', { class: 'card' }, [
+    el('h2', { text: 'Saved inspection flags' }),
+    ...data.flags.map(flag => el('p', { text: [
+      snapshot.refs.flags?.find(row => row.id === flag.flag_id)?.name || 'Saved flag', flag.note
+    ].filter(Boolean).join(': ') })),
+    el('p', { class: 'hint', text: 'Read-only saved observations. Updating flags requires a connection.' })
+  ]));
 
   const photos = createPhotosPanel({ jobId, listPhotosFn: async () => data.attachments,
     offline: true, pendingPhotosFn: queue.pendingPhotos,

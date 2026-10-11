@@ -1,0 +1,122 @@
+[
+  {
+    "mode": "references",
+    "selected": "Preparation caches job flags",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "flags",
+    "selected": "Preparation caches job flags",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "reference_age",
+    "selected": "Expired references",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "reference_reuse",
+    "selected": "Reference refresh is independent",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "horizon",
+    "selected": "The seven-day horizon",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "budget",
+    "selected": "The ten-megabyte bound",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "commit",
+    "selected": "An aborted write transaction",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "atomic",
+    "selected": "A failed preparation",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "migration",
+    "selected": "A v1 upgrade",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "uncertain",
+    "selected": "An interrupted in-flight send",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "lock",
+    "selected": "Different tabs",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "blocked",
+    "selected": "A blocked populated",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "storage_reason",
+    "selected": "A blocked work-store",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "signed_media",
+    "selected": "Preparation never stores",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "owner",
+    "selected": "Account switching hides",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "baseline",
+    "selected": "Prefetch, offline restart",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "work_migration",
+    "selected": "Upgrading the populated work store",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "storage_retry",
+    "selected": "A temporary storage exception",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "revoked_view",
+    "selected": "Denied replay immediately",
+    "exit": 1,
+    "expected_failure_verified": true
+  },
+  {
+    "mode": "denial_marker",
+    "selected": "Denied work stays retired",
+    "exit": 1,
+    "expected_failure_verified": true
+  }
+]

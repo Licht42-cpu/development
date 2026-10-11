@@ -1,0 +1,8 @@
+FAIL - A v1 upgrade preserves full legacy bytes and blocks unowned replay
+page.evaluate: Execution context was destroyed, most likely because of a navigation.
+    at fixture.open (/workspace/nova-shield/tests/offline-work.test.mjs:299:27)
+    at async fixture (/workspace/nova-shield/tests/offline-work.test.mjs:12:86)
+    at async check (/workspace/nova-shield/tests/offline-work.test.mjs:11:112)
+    at async file:///workspace/nova-shield/tests/offline-work.test.mjs:296:1
+
+0/1 passed
