@@ -127,7 +127,8 @@ nothing to say about balances.**
 
 ## 10. The fixture set is generated, not written
 
-`tests/fixtures/daily-load-v1.json` is produced by running the real backend
+`tests/fixtures/daily-load-v2.json` (v1 until the 10.1 corrective) is
+produced by running the real backend
 on a disposable database (`npm run fixtures:daily-load`). A hand-written
 fixture is somebody's idea of what the contract says; a generated one is
 what the contract actually produced, so it cannot drift. Regenerate after

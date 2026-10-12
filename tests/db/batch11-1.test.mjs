@@ -55,7 +55,8 @@ const SEQUENCE = [
   '20261012090000_batch9_1_corrective_seasonal_review.sql',
   '20261013090000_batch11_1_seasonal_corrective_round_two.sql',
   '20261013100000_batch11_1_completion_and_evidence.sql',
-  '20261013110000_batch11_1_completion_operations.sql'
+  '20261013110000_batch11_1_completion_operations.sql',
+  '20261014090000_batch10_1_corrective_load_contract.sql'
 ];
 const migration = (f) => readFileSync(join(MIGRATIONS, f), 'utf8');
 

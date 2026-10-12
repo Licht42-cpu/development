@@ -2,6 +2,14 @@
 // against, by running the REAL backend on a disposable database and writing
 // down what it returned.
 //
+// v2 (the 10.1 corrective). Codex's review of 1ffafc2 pointed out that
+// `duplicate_retry` exercised plan BUILDING and nothing else, so the
+// replay guarantees the contract promised for confirmation, Manual Keep,
+// exceptions and day closing had no fixture behind them at all. There are
+// now operation-specific retry scenarios, plus the frozen read envelope,
+// Keep -> clear, the damaged-variance reconciliation and the
+// exception-affects-transfer case.
+//
 //   node tests/db/setup-test-db.mjs
 //   node tests/fixtures/build-daily-load-fixtures.mjs
 //
@@ -46,7 +54,10 @@ const SEQUENCE = [
   '20261011100000_batch9_1_permanent_lighting_materials.sql',
   '20261011101000_batch9_1_kit_and_sheet_operations.sql',
   '20261011110000_batch10_1_load_planning.sql',
-  '20261011111000_batch10_1_load_operations.sql'
+  '20261011111000_batch10_1_load_operations.sql',
+  '20261012090000_batch9_1_corrective_seasonal_review.sql',
+  '20261013090000_batch11_1_seasonal_corrective_round_two.sql',
+  '20261014090000_batch10_1_corrective_load_contract.sql'
 ];
 
 const DAYS = {
@@ -72,6 +83,11 @@ function stable(id, hint) {
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// The anchored form above tests a WHOLE value; this one finds uuids INSIDE
+// prose, which is where they turn up in an error message. Using the anchored
+// pattern for that silently replaces nothing -- which is how a fixture stops
+// being deterministic without anyone noticing.
+const UUID_IN_TEXT = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
 
 /** Replaces every uuid and every timestamp with something stable, so the
  *  fixture is about SHAPE and VALUES, never about when it was generated. */
@@ -100,6 +116,7 @@ function normalise(value, keyHint) {
   await assertDisposableDatabase(client);
 
   const one = async (sql, p) => (await client.query(sql, p)).rows[0];
+  const all = async (sql, p) => (await client.query(sql, p)).rows;
   const rpc = async (fn, p) => (await one(`select ${fn} as r`, p)).r;
 
   // ---- a clean database with the whole pending sequence applied
@@ -452,7 +469,7 @@ function normalise(value, keyHint) {
       ['build_load_plan', `public.build_load_plan($1,'car_a',$2::date,null)`,
         [key('p'), DAYS.siding]],
       ['authorise_load_exception',
-        `public.authorise_load_exception($1,'car_a',$2::date,'skip_required','no room',$3,null)`,
+        `public.authorise_load_exception($1,'car_a',$2::date,'skip_required','no room',$3,null,null)`,
         [key('e'), DAYS.siding, washer]]
     ]) {
       try { await rpc(sql, params); failures[name] = null; }
@@ -485,10 +502,340 @@ function normalise(value, keyHint) {
     };
   }
 
+
+  /* =================================================================== */
+  /* v2: the 10.1 corrective's scenarios.                                */
+  /*                                                                     */
+  /* Codex's review of 1ffafc2 pointed out that `duplicate_retry` above  */
+  /* exercises plan BUILDING and nothing else, so the replay guarantees   */
+  /* the contract promised for the four mutations had no fixture behind   */
+  /* them. These are those, plus the frozen read envelope and the three   */
+  /* behavioural fixes.                                                   */
+  /* =================================================================== */
+
+  /* Scenario 11 creates Car B and then deletes it again, to prove the
+     one-vehicle rule in isolation. The v2 scenarios need a second vehicle
+     to exercise scope, so they make their own. Still a FIXTURE: Car B is
+     never seeded into the real system. */
+  await client.query(
+    `insert into public.ns_stock_locations (code,name,kind,sort_order)
+     values ('car_b','Car B','vehicle',2) on conflict do nothing`);
+
+  const refusal = (err) => ({
+    refused: true, sqlstate: err.code,
+    message: err.message.replace(UUID_IN_TEXT, '<uuid>')
+  });
+  const tryRpc = async (sql, params) => {
+    try { return await rpc(sql, params); } catch (e) { return refusal(e); }
+  };
+  const onCarA = async (j) => {
+    await client.query(
+      `insert into public.ns_job_vehicle_assignments (job_id, location_id)
+       values ($1,(select id from public.ns_stock_locations where code='car_a'))
+       on conflict (job_id) do update set location_id = excluded.location_id`, [j]);
+    return j;
+  };
+
+  /* ---- 13. the frozen read envelope (finding 1) ---- */
+  {
+    const day = '2027-06-01';
+    const j = await onCarA(await job(day));
+    await measure(j, siding, 900);
+    await plan('car_a', day);
+
+    const current = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+    const none = await rpc(`public.get_load_plan('car_a','2027-06-30'::date)`, []);
+
+    await client.query(`select set_config('nova.actor_id',$1,false)`, [crew]);
+    const asCrew = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+    const otherCar = await tryRpc(`public.get_load_plan('car_b',$1::date)`, [day]);
+    await client.query(`select set_config('nova.actor_id',$1,false)`, [owner]);
+
+    scenarios.frozen_read_envelope = {
+      description: 'get_load_plan() is the contract\'s read path. It returns '
+        + 'an ENVELOPE, not a plan: `state` (current | confirmed | closed | '
+        + 'none), `can_build` so a crew is told who may build one rather '
+        + 'than shown a button that will refuse it, the two counts the old '
+        + 'DTO dropped, and the day\'s authorised visits. `state: "none"` is '
+        + 'an answer, not an error and not an empty plan.',
+      current,
+      no_plan_for_that_day: none,
+      as_crew_can_build: asCrew.can_build,
+      crew_reading_the_other_vehicle: otherCar
+    };
+  }
+
+  /* ---- 14. a closed day is still readable (finding 1) ---- */
+  {
+    const day = '2027-06-02';
+    const j = await onCarA(await job(day));
+    await measure(j, siding, 600);
+    await plan('car_a', day);
+    await rpc(`public.reconcile_day_end($1,'car_a',$2::date,'[]'::jsonb,'counted')`,
+      [key('rec'), day]);
+    scenarios.closed_day_is_readable = {
+      description: 'The old DTO filtered closed plans out, so last night\'s '
+        + 'closing count was unreadable. get_load_plan() returns it with '
+        + 'state "closed".',
+      read: await rpc(`public.get_load_plan('car_a',$1::date)`, [day])
+    };
+  }
+
+  /* ---- 15. Keep -> clear -> confirm (finding 2) ---- */
+  {
+    const day = '2027-06-03';
+    await receive(softWash, 1, 'car_a');
+    const built = await plan('car_a', day);
+    const before = built.lines.find((l) => l.material_id === softWash);
+
+    const kept = await rpc(
+      `public.set_manual_keep($1,'car_a',$2::date,$3,true,'rain tomorrow')`,
+      [key('keep'), day, softWash]);
+    const whileKept = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+
+    const cleared = await rpc(
+      `public.set_manual_keep($1,'car_a',$2::date,$3,false,null)`,
+      [key('keep'), day, softWash]);
+    const afterClear = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+
+    scenarios.manual_keep_clear_restores_recommendation = {
+      description: 'Return -> Keep -> clear. Before the corrective, clearing '
+        + 'deleted the durable keep but left the line reading "keep" with '
+        + 'the "Kept back on purpose" reason and manual_keep false -- a Keep '
+        + 'nobody had recommended, which confirmation then skipped. A '
+        + 'rebuild would have fixed it, but building is owner-only, so a '
+        + 'crew could not undo its own keep. The line now remembers its '
+        + 'pre_keep_action and goes back to it.',
+      recommended_action: before ? before.action : null,
+      keep_receipt: kept,
+      line_while_kept: whileKept.plan.lines.find((l) => l.material_id === softWash),
+      clear_receipt: cleared,
+      line_after_clear: afterClear.plan.lines.find((l) => l.material_id === softWash)
+    };
+  }
+
+  /* ---- 16. per-operation retries (finding 3) ---- */
+  {
+    const day = '2027-06-04';
+    const j = await onCarA(await job(day));
+    await measure(j, siding, 400);
+    await receive(softWash, 1, 'car_a');
+    const built = await plan('car_a', day);
+
+    // Manual Keep: the same key twice, then a LATE retry after the keep was
+    // cleared, which the original re-applied.
+    const keepKey = key('keep');
+    const keepFirst = await rpc(
+      `public.set_manual_keep($1,'car_a',$2::date,$3,true,'rain')`,
+      [keepKey, day, softWash]);
+    const keepAgain = await rpc(
+      `public.set_manual_keep($1,'car_a',$2::date,$3,true,'rain')`,
+      [keepKey, day, softWash]);
+    await rpc(`public.set_manual_keep($1,'car_a',$2::date,$3,false,null)`,
+      [key('keep'), day, softWash]);
+    const keepLateRetry = await rpc(
+      `public.set_manual_keep($1,'car_a',$2::date,$3,true,'rain')`,
+      [keepKey, day, softWash]);
+    const keepStillCleared = Number((await one(
+      `select count(*)::int as n from public.ns_load_manual_keeps
+        where work_date=$1::date and material_id=$2`, [day, softWash])).n);
+    const keepChangedIntent = await tryRpc(
+      `public.set_manual_keep($1,'car_a',$2::date,$3,true,'a different reason')`,
+      [keepKey, day, softWash]);
+
+    // Exception.
+    const excKey = key('exc');
+    const excFirst = await rpc(
+      `public.authorise_load_exception($1,'car_a',$2::date,'skip_required','van is full',$3,null,null)`,
+      [excKey, day, washer]);
+    const excAgain = await rpc(
+      `public.authorise_load_exception($1,'car_a',$2::date,'skip_required','van is full',$3,null,null)`,
+      [excKey, day, washer]);
+    const excChangedIntent = await tryRpc(
+      `public.authorise_load_exception($1,'car_a',$2::date,'skip_required','a different reason',$3,null,null)`,
+      [excKey, day, washer]);
+
+    // Confirmation.
+    const fresh = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+    const confKey = key('conf');
+    const confFirst = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null)`,
+      [confKey, fresh.plan.plan_id, fresh.plan.revision, fresh.plan.basis_fingerprint]);
+    const confAgain = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null)`,
+      [confKey, fresh.plan.plan_id, fresh.plan.revision, fresh.plan.basis_fingerprint]);
+    const confDuplicateStale = await tryRpc(
+      `public.confirm_load_plan($1,$2,$3,$4,null)`,
+      [key('conf'), fresh.plan.plan_id, fresh.plan.revision - 1,
+       fresh.plan.basis_fingerprint]);
+
+    // Reconciliation, including the cross-vehicle replay the original let
+    // through because it returned BEFORE the location check.
+    const recKey = key('rec');
+    const recFirst = await rpc(
+      `public.reconcile_day_end($1,'car_a',$2::date,'[]'::jsonb,'counted')`,
+      [recKey, day]);
+    const recAgain = await rpc(
+      `public.reconcile_day_end($1,'car_a',$2::date,'[]'::jsonb,'counted')`,
+      [recKey, day]);
+    // Two DIFFERENT cases, and the guard's order is what separates them.
+    // (a) the crew replays ITS OWN car's key against another vehicle: the
+    //     scope check passes (it can see car_a, where the key was used), so
+    //     the payload mismatch is what refuses it -- changed intent, 23505.
+    // (b) the crew replays a key belonging to a vehicle it CANNOT see: the
+    //     scope check refuses first, 42501, and the caller learns nothing
+    //     about what that key was used for. This is the disclosure path the
+    //     original left open by returning the receipt before the check.
+    await client.query(`select set_config('nova.actor_id',$1,false)`, [crew]);
+    const recOwnKeyOtherVehicle = await tryRpc(
+      `public.reconcile_day_end($1,'car_b',$2::date,'[]'::jsonb,'counted')`,
+      [recKey, day]);
+    await client.query(`select set_config('nova.actor_id',$1,false)`, [owner]);
+    const carBKey = key('rec');
+    await rpc(`public.reconcile_day_end($1,'car_b','2027-06-05'::date,'[]'::jsonb,'owner count')`,
+      [carBKey]);
+    await client.query(`select set_config('nova.actor_id',$1,false)`, [crew]);
+    const recCrossVehicle = await tryRpc(
+      `public.reconcile_day_end($1,'car_b','2027-06-05'::date,'[]'::jsonb,'owner count')`,
+      [carBKey]);
+    await client.query(`select set_config('nova.actor_id',$1,false)`, [owner]);
+    const keyKindMismatch = await tryRpc(
+      `public.reconcile_day_end($1,'car_a',$2::date,'[]'::jsonb,null)`,
+      [keepKey, day]);
+
+    scenarios.per_operation_retries = {
+      description: 'What the contract promised in §12 and the SQL did not do. '
+        + 'All four mutations now record their key, their intent fingerprint '
+        + 'and the receipt they returned, in ns_load_operations; a replay '
+        + 'returns those bytes. The guard checks kind, then SCOPE, then '
+        + 'intent -- scope before intent so a caller who cannot see the '
+        + 'location learns nothing about what the key was used for.',
+      manual_keep: {
+        first: keepFirst, same_key_again: keepAgain,
+        late_retry_after_clear: keepLateRetry,
+        durable_keeps_remaining_after_late_retry: keepStillCleared,
+        changed_intent: keepChangedIntent
+      },
+      exception: { first: excFirst, same_key_again: excAgain,
+                   changed_intent: excChangedIntent },
+      confirmation: { first: confFirst, same_key_again: confAgain,
+                      different_key_with_stale_revision: confDuplicateStale },
+      reconciliation: {
+        first: recFirst, same_key_again: recAgain,
+        // scope passes, payload differs -> changed intent
+        own_key_against_another_vehicle: recOwnKeyOtherVehicle,
+        // scope fails first -> nothing is disclosed about the key
+        crew_replaying_a_key_for_a_vehicle_it_cannot_see: recCrossVehicle },
+      key_used_for_a_different_kind: keyKindMismatch
+    };
+  }
+
+  /* ---- 17. the damaged closing variance (finding 5) ---- */
+  {
+    const day = '2027-06-08';
+    const mat = await material('FIXTURE damaged-count product',
+      { category: 'consumable', unit: 'litre' });
+    await receive(mat, 10, 'car_a');
+    const pools = async () => {
+      const r = await one(
+        `select coalesce(on_hand,0) as usable, coalesce(damaged_on_hand,0) as damaged
+           from public.ns_material_stock_by_location
+          where material_id=$1 and location_code='car_a'`, [mat]);
+      return { usable: Number(r.usable), damaged: Number(r.damaged) };
+    };
+    const before = await pools();
+    const receipt = await rpc(
+      `public.reconcile_day_end($1,'car_a',$2::date,$3::jsonb,null)`,
+      [key('rec'), day,
+       JSON.stringify([{ material_id: mat, counted_qty: 8,
+                         variance_reason: 'damaged' }])]);
+    const after = await pools();
+    const surplusCalledDamaged = await tryRpc(
+      `public.reconcile_day_end($1,'car_a','2027-06-09'::date,$2::jsonb,null)`,
+      [key('rec'), JSON.stringify([{ material_id: mat, counted_qty: 20,
+                                     variance_reason: 'damaged' }])]);
+
+    scenarios.damaged_variance_pools = {
+      description: 'THE ACCOUNTING BUG, and the decision behind the fix. The '
+        + 'count is of USABLE stock -- that is what a crew counts and what '
+        + 'the 8.1 view\'s on_hand means -- and damaged items are RETAINED, '
+        + 'not written off. So reason "damaged" is TWO movements: off usable, '
+        + 'onto damaged, total on the van unchanged. The original computed '
+        + 'the variance against usable and then posted it with condition '
+        + '"damaged", leaving usable at 10 and damaged at MINUS 2. A surplus '
+        + 'called damaged is refused rather than guessed at.',
+      pools_before: before,
+      counted: 8,
+      pools_after: after,
+      movements: await all(
+        `select delta, condition, reason from public.ns_material_stock_moves
+          where material_id=$1 and reason='adjustment' order by condition`, [mat]),
+      receipt,
+      surplus_called_damaged: surplusCalledDamaged
+    };
+  }
+
+  /* ---- 18. an exception that actually affects the load (finding 6) ---- */
+  {
+    const day = '2027-06-10';
+    const skipMat = await material('FIXTURE skip product',
+      { category: 'consumable', unit: 'litre' });
+    const extraMat = await material('FIXTURE extra product',
+      { category: 'consumable', unit: 'litre' });
+    await rule(siding, skipMat, { kind: 'consumable', fixed: 5 });
+    await receive(skipMat, 100);
+    await receive(extraMat, 40);
+    const j = await onCarA(await job(day));
+    await measure(j, siding, 100);
+    const built = await plan('car_a', day);
+
+    const baseOf = async (m) => Number((await one(
+      `select coalesce(on_hand,0) as n from public.ns_material_stock_by_location
+        where material_id=$1 and location_code='base'`, [m])).n);
+    const carOf = async (m) => Number((await one(
+      `select coalesce(on_hand,0) as n from public.ns_material_stock_by_location
+        where material_id=$1 and location_code='car_a'`, [m])).n);
+
+    const skipBefore = await baseOf(skipMat);
+    const skipExc = await rpc(
+      `public.authorise_load_exception($1,'car_a',$2::date,'skip_required','already a part jug on the van',$3,null,null)`,
+      [key('exc'), day, skipMat]);
+
+    const extraNoQuantity = await tryRpc(
+      `public.authorise_load_exception($1,'car_a',$2::date,'carry_extra','spare jug',$3,null,null)`,
+      [key('exc'), day, extraMat]);
+    const extraExc = await rpc(
+      `public.authorise_load_exception($1,'car_a',$2::date,'carry_extra','spare jug',$3,null,6)`,
+      [key('exc'), day, extraMat]);
+
+    const read = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+    const conf = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null)`,
+      [key('conf'), read.plan.plan_id, read.plan.revision,
+       read.plan.basis_fingerprint]);
+
+    scenarios.exception_affects_confirmation = {
+      description: 'Before the corrective, skip_required and carry_extra were '
+        + 'stored, linked to the line, and never read: confirmation '
+        + 'transferred the item anyway, so an authorised "go without it" '
+        + 'loaded it regardless and an authorised extra could not be carried '
+        + 'at all. A skip now sets action to "skip" and confirmation leaves '
+        + 'it; a carry_extra for something absent from the plan ADDS a line, '
+        + 'and must say how much, because an authorisation with no amount is '
+        + 'not something a confirmation can act on.',
+      skip_receipt: skipExc,
+      skipped_line: read.plan.lines.find((l) => l.material_id === skipMat),
+      base_before_confirm: skipBefore,
+      base_after_confirm: await baseOf(skipMat),
+      carry_extra_without_a_quantity: extraNoQuantity,
+      carry_extra_receipt: extraExc,
+      added_line: read.plan.lines.find((l) => l.material_id === extraMat),
+      confirmation: conf,
+      extra_on_the_van_after_confirm: await carOf(extraMat)
+    };
+  }
+
   await client.end();
 
   const out = {
-    contract: 'daily-load-contract-v1',
+    contract: 'daily-load-contract-v2',
     generated_by: 'tests/fixtures/build-daily-load-fixtures.mjs',
     note: 'Generated by running the real backend on a disposable database. '
       + 'Regenerate after any contract change; the diff IS the change. '
@@ -499,7 +846,7 @@ function normalise(value, keyHint) {
   };
 
   mkdirSync(HERE, { recursive: true });
-  const path = join(HERE, 'daily-load-v1.json');
+  const path = join(HERE, 'daily-load-v2.json');
   writeFileSync(path, JSON.stringify(out, null, 2) + '\n');
   console.log(`wrote ${path}`);
   console.log(`${Object.keys(scenarios).length} scenarios`);

@@ -74,6 +74,7 @@ export function loadPlanPanel({ locationCode = 'car_a', workDate } = {}) {
   const host = el('div', {});
   let code = locationCode;
   let day = workDate || todayISO();
+  let dayRead = null;
   let plan = null;
   let locations = [];
   let suggestions = null;
@@ -95,13 +96,19 @@ export function loadPlanPanel({ locationCode = 'car_a', workDate } = {}) {
   async function load() {
     loading = true; loadError = null; paint();
     try {
-      const [locs, p] = await Promise.all([
+      /* getLoadPlan now returns the contract's ENVELOPE, not the plan:
+         `state`, `can_build`, the two counts and the day's visits sit
+         beside it. The 10.1 corrective moved the read to get_load_plan()
+         because the DTO this component used to be handed had drifted from
+         the frozen document -- see docs/daily-load-contract-v1.md v2 §1. */
+      const [locs, read] = await Promise.all([
         api.listStockLocations(),
         api.getLoadPlan({ locationCode: code, workDate: day })
       ]);
       locations = locs.filter((l) => l.kind === 'vehicle');
-      plan = p;
-      suggestions = p
+      dayRead = read;
+      plan = read ? read.plan : null;
+      suggestions = plan
         ? await api.nextDaySuggestions({ locationCode: code, workDate: day })
         : null;
     } catch (err) {
@@ -146,19 +153,31 @@ export function loadPlanPanel({ locationCode = 'car_a', workDate } = {}) {
   }
 
   function emptyBody() {
+    /* `can_build` comes from the backend, because build_load_plan is
+       owner-only and a crew facing an empty day needs to be told to ring
+       the office rather than shown a button that will refuse it. That was
+       the other half of the review's finding 1: the old read path could not
+       say who was allowed to do anything. */
+    const canBuild = dayRead ? dayRead.can_build : true;
     return el('div', {}, [
       el('p', { class: 'hint', text:
-        `No plan for ${date(day)} yet. Building one reads the day's booked `
-        + 'work and works out what the van needs. It moves nothing.' }),
-      el('div', { class: 'btn-row', style: 'flex-wrap:wrap' }, [
-        el('button', {
-          class: 'btn btn--sm btn--primary', type: 'button', text: 'Build the plan',
-          disabled: busy ? true : undefined,
-          onClick: (e) => act(e.currentTarget,
-            () => api.buildLoadPlan({ locationCode: code, workDate: day }),
-            'Plan built.')
-        })
-      ])
+        `No plan for ${date(day)} yet. `
+        + (canBuild
+            ? 'Building one reads the day\u2019s booked work and works out '
+              + 'what the van needs. It moves nothing.'
+            : 'Only the owner builds a plan \u2014 ring the office and it '
+              + 'will appear here.') }),
+      canBuild
+        ? el('div', { class: 'btn-row', style: 'flex-wrap:wrap' }, [
+            el('button', {
+              class: 'btn btn--sm btn--primary', type: 'button', text: 'Build the plan',
+              disabled: busy ? true : undefined,
+              onClick: (e) => act(e.currentTarget,
+                () => api.buildLoadPlan({ locationCode: code, workDate: day }),
+                'Plan built.')
+            })
+          ])
+        : null
     ]);
   }
 

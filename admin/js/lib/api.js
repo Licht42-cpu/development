@@ -1293,50 +1293,33 @@ export async function buildLoadPlan({ clientOperationId, locationCode, workDate,
 
 /** The live plan for a car and day, or null. Read rather than built, so
  *  opening the screen never creates a revision. */
+/** The crew's read path, as the contract freezes it.
+ *
+ *  REWRITTEN IN THE 10.1 CORRECTIVE. This used to query ns_load_plan_view
+ *  and build its own DTO, and that DTO had drifted from the contract: it
+ *  dropped location_id, the plan note and the two counts, and it filtered
+ *  closed plans out, so last night's closing count was unreadable. Codex's
+ *  review of 1ffafc2 found all four. The shape now comes from
+ *  get_load_plan(), which is the one thing the contract freezes, so the
+ *  screen and the document cannot disagree again.
+ *
+ *  Returns the whole envelope -- `state`, `can_build`, `plan`, the counts
+ *  and the day's visits -- not just the plan, because `state: 'none'` is a
+ *  thing a screen has to be able to say. */
 export async function getLoadPlan({ locationCode, workDate }) {
-  const rows = unwrap(await supabase.from('ns_load_plan_view')
-    .select('*')
-    .eq('location_code', locationCode)
-    .eq('work_date', workDate)
-    .in('status', ['current', 'confirmed'])
-    .limit(500));
-  if (rows.length === 0) return null;
-  const head = rows[0];
-  return {
-    plan_id: head.plan_id,
-    location_code: head.location_code,
-    location_name: head.location_name,
-    work_date: head.work_date,
-    revision: head.revision,
-    status: head.status,
-    basis_fingerprint: head.basis_fingerprint,
-    generated_at: head.generated_at,
-    confirmed_at: head.confirmed_at,
-    closed_at: head.closed_at,
-    lines: rows.filter((r) => r.line_id).map((r) => ({
-      line_id: r.line_id,
-      line_kind: r.line_kind,
-      action: r.action,
-      material_id: r.material_id,
-      material_name: r.material_name,
-      rental_set_id: r.rental_set_id,
-      set_code: r.set_code,
-      required_qty: r.required_qty,
-      aboard_qty: r.aboard_qty,
-      reserved_qty: r.reserved_qty,
-      available_qty: r.available_qty,
-      damaged_qty: r.damaged_qty,
-      shortage_qty: r.shortage_qty,
-      unit: r.unit,
-      precision: r.precision,
-      level_state: r.level_state,
-      data_state: r.data_state,
-      reason: r.reason,
-      job_ids: r.job_ids || [],
-      manual_keep: r.manual_keep,
-      confirmed_operation: r.confirmed_operation
-    }))
-  };
+  return unwrap(await supabase.rpc('get_load_plan', {
+    p_location_code: locationCode,
+    p_work_date: workDate
+  }));
+}
+
+/** The day's authorised visits and the vehicles this caller may read.
+ *  Also returned inside getLoadPlan(), so a cold open is one round trip. */
+export async function loadDaySummary({ locationCode, workDate }) {
+  return unwrap(await supabase.rpc('ns_load_day_summary', {
+    p_location_code: locationCode,
+    p_work_date: workDate
+  }));
 }
 
 export async function setManualKeep({
@@ -1352,8 +1335,14 @@ export async function setManualKeep({
   }));
 }
 
+/** `quantity` is required for a `carry_extra` of a counted material: an
+ *  authorisation with no amount is not something a confirmation can act on,
+ *  and before the 10.1 corrective one was accepted and then ignored. A set
+ *  has no quantity and a level-tracked supply has no number, so both are
+ *  exempt. A `skip_required` must not carry one. */
 export async function authoriseLoadException({
-  clientOperationId, locationCode, workDate, kind, reason, materialId, rentalSetId
+  clientOperationId, locationCode, workDate, kind, reason, materialId,
+  rentalSetId, quantity
 }) {
   return unwrap(await supabase.rpc('authorise_load_exception', {
     p_client_operation_id: clientOperationId || newOperationId('exc'),
@@ -1362,7 +1351,8 @@ export async function authoriseLoadException({
     p_kind: kind,
     p_reason: reason,
     p_material_id: materialId || null,
-    p_rental_set_id: rentalSetId || null
+    p_rental_set_id: rentalSetId || null,
+    p_quantity: quantity ?? null
   }));
 }
 

@@ -38,7 +38,26 @@ const FAKE_API = `
   }
   export function newOperationId(p) { return (p || 'op') + '-fixed'; }
   export async function listStockLocations() { return clone(globalThis.__LOCATIONS); }
-  export async function getLoadPlan(a) { push('getLoadPlan', a); return clone(globalThis.__PLAN); }
+  // THE ENVELOPE, as daily-load contract v2 §1 freezes it. Before the 10.1
+  // corrective this returned the plan itself, which is the DTO drift
+  // Codex's review found: the screen was handed a shape the document did
+  // not describe.
+  export async function getLoadPlan(a) {
+    push('getLoadPlan', a);
+    const plan = clone(globalThis.__PLAN);
+    return {
+      location_id: 'loc-car-a', location_code: a.locationCode,
+      location_name: 'Car A', work_date: a.workDate,
+      state: plan ? plan.status : 'none',
+      can_build: globalThis.__CAN_BUILD !== false,
+      plan,
+      needs_review_count: plan
+        ? plan.lines.filter((l) => l.data_state === 'needs_review').length : 0,
+      unassigned_job_count: globalThis.__UNASSIGNED ?? 0,
+      day: { work_date: a.workDate, jobs: [], readable_vehicles: clone(globalThis.__LOCATIONS) }
+    };
+  }
+  export async function loadDaySummary(a) { push('loadDaySummary', a); return { work_date: a.workDate, jobs: [], readable_vehicles: clone(globalThis.__LOCATIONS) }; }
   export async function nextDaySuggestions(a) { push('nextDaySuggestions', a); return clone(globalThis.__SUGGESTIONS); }
   export async function buildLoadPlan(a) { push('buildLoadPlan', a); await gate(); return {}; }
   export async function confirmLoadPlan(a) { push('confirmLoadPlan', a); await gate(); return {}; }
@@ -169,7 +188,9 @@ async function launch() {
       fixtures: {
         __LOCATIONS: opts.locations || LOCATIONS,
         __PLAN: 'plan' in opts ? opts.plan : PLAN(),
-        __SUGGESTIONS: opts.suggestions || SUGGESTIONS
+        __SUGGESTIONS: opts.suggestions || SUGGESTIONS,
+        __CAN_BUILD: 'canBuild' in opts ? opts.canBuild : true,
+        __UNASSIGNED: opts.unassigned ?? 0
       },
       options: opts,
       bodySrc: body.toString(),
@@ -439,6 +460,31 @@ async function launch() {
     });
     await page.setViewportSize({ width: 1280, height: 900 });
   }
+
+  // ============ L. the 10.1 corrective's read envelope ==================
+
+  await record('L1 a crew facing an empty day is told who can build one, not shown a button',
+    async () => {
+      const { out } = await withPanel({ plan: null, canBuild: false },
+        async ({ mount, h }) => {
+          await h.settle(200);
+          return { text: mount.textContent, buttons: h.buttonTexts(mount) };
+        });
+      assert.match(out.text, /Only the owner builds a plan/i);
+      assert.ok(!out.buttons.includes('Build the plan'),
+        'a button that will refuse the caller is worse than a sentence');
+    });
+
+  await record('L2 the owner still gets the build button, and it says it moves nothing',
+    async () => {
+      const { out } = await withPanel({ plan: null, canBuild: true },
+        async ({ mount, h }) => {
+          await h.settle(200);
+          return { text: mount.textContent, buttons: h.buttonTexts(mount) };
+        });
+      assert.ok(out.buttons.includes('Build the plan'));
+      assert.match(out.text, /moves nothing/i);
+    });
 
   await browser.close();
   for (const r of results) {
