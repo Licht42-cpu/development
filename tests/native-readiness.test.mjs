@@ -149,6 +149,9 @@ await record('At 390px Tab follows header controls and gives the badge a visible
   await page.keyboard.press('Tab');
   assert.equal(await page.locator('.field-topbar__brand').evaluate(node => node === document.activeElement), true);
   await page.keyboard.press('Tab');
+  // Batch 10.2 adds a real preparation entry between the brand and badge.
+  assert.equal(await page.locator('.field-topbar a[href="#/load"]').evaluate(node => node === document.activeElement), true);
+  await page.keyboard.press('Tab');
   assert.equal(await page.locator('#syncBadge').evaluate(node => node === document.activeElement), true);
   const ring = await page.locator('#syncBadge').evaluate(node => {
     const s = getComputedStyle(node); return { width: s.outlineWidth, style: s.outlineStyle };

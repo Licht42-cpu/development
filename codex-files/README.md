@@ -1,5 +1,10 @@
 # Codex files — complete Nova Shield handoff
 
+Current Batch 10.2 is on `codex/batch-10-2`: [crew load and closing handoff](../tests/field-load.md),
+[browser/build evidence](artifacts/batch-10-2/). Code stays in the canonical
+field paths. Claude's frozen v2.1 contract was read without merging its branch.
+The branch includes committed plans and evidence for shared access.
+
 Shared handoff on branch `codex/all-files-handoff`. This branch contains the
 Codex application code in its normal repository paths, the revised plans under
 `docs/plans/`, and the previously local material collected here. No Claude

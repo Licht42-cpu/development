@@ -12,6 +12,7 @@ import { usableSnapshot, forget } from './lib/field-cache.js';
 import { localAccount, accessDenied } from './lib/field-identity.js';
 import { renderOfflineWork } from './views/field-offline.js';
 import { unavailableLoadRoute } from './lib/field-load-gate.js';
+import { renderFieldLoad } from './views/field-load.js';
 
 setStatusBarTheme();
 
@@ -30,6 +31,7 @@ installUnhandledRejectionToast();
 const viewEl = document.getElementById('view');
 
 const routes = [
+  { pattern: /^\/load(?:\/closing)?(?:\?.*)?$/, render: renderFieldLoad },
   { pattern: /^\/$/,                        render: renderSchedule },
   { pattern: /^\/visit\/([0-9a-f-]+)$/,     render: (ctx, id) => renderVisit(ctx, id) }
 ];
@@ -70,6 +72,10 @@ function showMessage(title, body, action, mount = viewEl) {
 let measurementRouteAttempt = 0;
 let cachedAccount = null;
 async function cachedRoute(mount, attempt) {
+  if (/^\/load(?:\/|\?|$)/.test(currentPath())) {
+    await renderFieldLoad({ mount, navigate });
+    return true;
+  }
   const data = await usableSnapshot();
   if (attempt !== measurementRouteAttempt) return true;
   if (!data) return false;

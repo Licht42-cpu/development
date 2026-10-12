@@ -1,5 +1,11 @@
 # Batch 10.2 — contract readiness after offline recovery
 
+This is the historical readiness checkpoint. Claude resolved the six
+daily-load findings in `b7f0a22`, with contract v2.1 and 24 generated
+scenarios. The implemented interface and current integration list are in
+[the Batch 10.2 handoff](../../tests/field-load.md). The route is now enabled;
+Claude's contract and implementation were read, never merged.
+
 Codex owns the phone preparation/closing interface. The maintained scope is
 in [the roadmap](batch-plan-after-7.md#102-codex-crew-keepaddreturn-and-end-day-interaction).
 Batch 9.2 supplies bounded offline job reads and the existing four-type outbox;

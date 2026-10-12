@@ -1,5 +1,10 @@
 # Batch 10.2-prep — persistence and contract groundwork
 
+Historical report. Batch 10.2 is now implemented against Claude's frozen
+v2.1 contract; the formerly disabled route is enabled. Current verification
+and integrator list: [field-load.md](field-load.md). The upgrade guarantees
+below remain covered by the updated 16-check suite.
+
 Base **e4259466087850a503cd5f6884fe54a22f72ebd1**, branch
 `codex/batch-10-2-prep`. Read-only seasonal review is pinned to Claude
 **abedf0f6e3eb1fda2fd336c5dd34186f8340b4b0**. No Claude merge, migration,

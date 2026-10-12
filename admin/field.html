@@ -10,6 +10,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <title>Nova Shield — Field Console</title>
 <link rel="stylesheet" href="css/admin.css">
+<link rel="stylesheet" href="css/field-load.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 128'%3E%3Cpath d='M50 4L94 22V64Q94 96 50 124Q6 96 6 64V22Z' fill='%230f2a33' stroke='%235aa8c4' stroke-width='7'/%3E%3C/svg%3E">
 <style>
   /* The desktop field tool assumes room to spare; a driveway does not.
@@ -74,6 +75,7 @@
 <header class="field-topbar">
   <a class="field-topbar__brand" href="#/">Nova&nbsp;Shield <em>Field</em></a>
   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+    <a class="btn btn--sm" href="#/load">Vehicle load</a>
     <button class="btn btn--sm" id="syncNow" hidden>Sync Now</button>
     <span class="sync-badge sync-badge--ok" id="syncBadge">Online</span>
     <button class="btn btn--sm" id="signOut">Sign out</button>

@@ -1,0 +1,170 @@
+{
+  "results": [
+    {
+      "name": "fixture snapshot is byte-identical to b7f0a22 and contains 24 v2.1 scenarios",
+      "ok": true
+    },
+    {
+      "name": "siding: render backend actions once per line, null stays unknown and levels have no quantities",
+      "ok": true
+    },
+    {
+      "name": "no_bleach_day: render backend actions once per line, null stays unknown and levels have no quantities",
+      "ok": true
+    },
+    {
+      "name": "no_bleach_day_with_manual_keep: render backend actions once per line, null stays unknown and levels have no quantities",
+      "ok": true
+    },
+    {
+      "name": "mixed_services: render backend actions once per line, null stays unknown and levels have no quantities",
+      "ok": true
+    },
+    {
+      "name": "permanent_lighting_with_offcut: render backend actions once per line, null stays unknown and levels have no quantities",
+      "ok": true
+    },
+    {
+      "name": "named_christmas_set: render backend actions once per line, null stays unknown and levels have no quantities",
+      "ok": true
+    },
+    {
+      "name": "winter_replenishment: render backend actions once per line, null stays unknown and levels have no quantities",
+      "ok": true
+    },
+    {
+      "name": "repeated_jobs: render backend actions once per line, null stays unknown and levels have no quantities",
+      "ok": true
+    },
+    {
+      "name": "car_b_assigned: render backend actions once per line, null stays unknown and levels have no quantities",
+      "ok": true
+    },
+    {
+      "name": "car_a_with_unassigned_job: render backend actions once per line, null stays unknown and levels have no quantities",
+      "ok": true
+    },
+    {
+      "name": "shortage_and_incomplete: render backend actions once per line, null stays unknown and levels have no quantities",
+      "ok": true
+    },
+    {
+      "name": "frozen_read_envelope: none means no built plan, crew cannot build, closing still available",
+      "ok": true
+    },
+    {
+      "name": "closed_day_is_readable: closed plan shows lines without preparation mutations",
+      "ok": true
+    },
+    {
+      "name": "operating_day_timezone: report UTC warning and configured bounds without rebucketing visits",
+      "ok": true
+    },
+    {
+      "name": "confirm quotes the rendered plan’s six parameters without a pre-confirm read",
+      "ok": true
+    },
+    {
+      "name": "late_schedule_change: 23514 sentence remains visible after automatic re-read; no automatic retry",
+      "ok": true
+    },
+    {
+      "name": "recommendation_lock: 23514 sentence remains visible after automatic re-read; no automatic retry",
+      "ok": true
+    },
+    {
+      "name": "manual_keep_clear_restores_recommendation: set and clear from same card; reload current state",
+      "ok": true
+    },
+    {
+      "name": "keep_clear_whole_day: clearing does not turn a still-needed item into Return",
+      "ok": true
+    },
+    {
+      "name": "duplicate_retry: owner build is explicit, never a cold-open side effect, replay keeps its key",
+      "ok": true
+    },
+    {
+      "name": "exception_affects_confirmation: fourth skip group has owner reason and no crew override",
+      "ok": true
+    },
+    {
+      "name": "crew_permission_failures: visible exception attempt receives honest 42501 refusal",
+      "ok": true
+    },
+    {
+      "name": "per_operation_retries: lost response survives reload and exact key/payload replay has one effect",
+      "ok": true
+    },
+    {
+      "name": "23505 changed-intent conflict is distinct from unknown response and accepted",
+      "ok": true
+    },
+    {
+      "name": "malformed acceptance response stays unknown and preserves original request",
+      "ok": true
+    },
+    {
+      "name": "per_operation_retries: late Keep replay receipt does not replace the current recommendation",
+      "ok": true
+    },
+    {
+      "name": "real browser process restart preserves the unanswered immutable request and recovers one receipt",
+      "ok": true
+    },
+    {
+      "name": "device commit failure prevents any mutation; account change hides saved request",
+      "ok": true
+    },
+    {
+      "name": "unknown saved journal format is retained and fails closed",
+      "ok": true
+    },
+    {
+      "name": "carry_extra accepts a catalogue item absent from the plan with a required operating quantity",
+      "ok": true
+    },
+    {
+      "name": "closing_without_confirmation: estimate and blank untouched items; no plan needed; receipt uses live basis",
+      "ok": true
+    },
+    {
+      "name": "damaged_variance_pools: positive damaged refusal preserved, no client variance calculation",
+      "ok": true
+    },
+    {
+      "name": "level closing has only Empty/Low/Enough, no number or quantity in request",
+      "ok": true
+    },
+    {
+      "name": "no signal: cached read is review-only and drafts remain separate per vehicle",
+      "ok": true
+    },
+    {
+      "name": "addresses/access notes remain in preparation; no client day re-bucketing",
+      "ok": true
+    },
+    {
+      "name": "Car B crew bootstrap asks backend permission rather than choosing first readable metadata",
+      "ok": true
+    },
+    {
+      "name": "airplane-mode transition disables new sends immediately; reconnect requires refresh",
+      "ok": true
+    },
+    {
+      "name": "touch and keyboard preparation, exception, closing and no horizontal overflow at 390px",
+      "ok": true
+    },
+    {
+      "name": "touch and keyboard preparation, exception, closing and no horizontal overflow at 430px",
+      "ok": true
+    },
+    {
+      "name": "touch and keyboard preparation, exception, closing and no horizontal overflow at 1200px",
+      "ok": true
+    }
+  ],
+  "passed": 41,
+  "failed": 0
+}

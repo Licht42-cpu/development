@@ -1,0 +1,31 @@
+(node:1160981) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+Browser: 151.0.7922.173
+Preview Quote popups before/after save: 1 1
+Download PDF popups before/after save: 1 1
+Real Chromium clipboard: [{"active":true,"success":true}]
+PASS - Preview Quote: pending edits do not delay the original activation
+PASS - Download PDF: pending edits do not delay the original activation
+PASS - Copy Link: copying the existing quote keeps user activation
+PASS - Copy SMS Text: copying the existing quote keeps user activation
+PASS - Copy Link uses the real Chromium clipboard without waiting for a quantity save
+PASS - A guarded successful save refreshes backend pricing even if the action does not reload
+PASS - Quote creation still waits for pending quantities
+PASS - Same-tab links still wait for quantities, even inside the quote panel
+PASS - Offline navigation offers a deliberate discard-and-leave choice
+PASS - Cancelling offline discard keeps the draft and allows retry after reconnecting
+PASS - A permission failure never offers the offline discard shortcut
+PASS - Android root Back waits for the save instead of exiting immediately
+PASS - Repeated Android Back presses share one save/exit attempt
+PASS - Android exit stays blocked for incomplete quantity input
+PASS - Android offline exit preserves the draft when cancelled
+PASS - Android offline exit requires explicit discard
+PASS - Android overlay dismissal keeps priority over save/exit
+PASS - Android keyboard dismissal keeps priority over save/exit
+PASS - admin 390px: small buttons have 44px targets without horizontal overflow
+PASS - admin 430px: small buttons have 44px targets without horizontal overflow
+PASS - field 390px: small buttons have 44px targets without horizontal overflow
+PASS - field 430px: small buttons have 44px targets without horizontal overflow
+
+22/22 passed

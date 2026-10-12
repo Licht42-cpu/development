@@ -1,0 +1,12 @@
+FAIL - confirm quotes the rendered plan’s six parameters without a pre-confirm read
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
++ null
+- '<fingerprint>'
+
+    at file:///workspace/nova-shield/tests/field-load.test.mjs:80:81
+    at async fixture (file:///workspace/nova-shield/tests/field-load.test.mjs:24:9)
+    at async test (file:///workspace/nova-shield/tests/field-load.test.mjs:14:9)
+    at async file:///workspace/nova-shield/tests/field-load.test.mjs:74:1
+0 PASS / 1 FAIL

@@ -3,6 +3,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { offlineFixture, BASE, JOB, OWNER } from './offline-work-fixture.mjs';
+import { loadFixture } from './field-load-fixture.mjs';
 
 const { default: pw } = await import(process.env.PLAYWRIGHT_MODULE || '/opt/node-tools/node_modules/playwright/index.js');
 const browser = await pw.chromium.launch({ executablePath: process.env.PLAYWRIGHT_CHROMIUM || '/opt/pw-browsers/chromium' });
@@ -15,12 +16,12 @@ async function check(name, fn) {
   catch (error) { results.push({ name, ok: false, error: error.stack }); console.log('FAIL - ' + name + '\n' + error.stack); }
 }
 async function fixture(fn, options = {}) {
-  const f = await offlineFixture(browser, { open: false, ...options });
+  const f = await loadFixture(browser, { open: false, ...options });
   if (process.env.LOAD_PREP_BREAK === 'gate') {
     const source = readFileSync(new URL('../admin/js/lib/field-load-gate.js', import.meta.url), 'utf8');
-    assert.ok(source.includes('return !LOAD_INTERFACE_ENABLED'));
+    assert.ok(source.includes('LOAD_INTERFACE_ENABLED = true'));
     await f.context.route('**/admin/js/lib/field-load-gate.js', route => route.fulfill({ contentType: 'application/javascript',
-      body: source.replace('return !LOAD_INTERFACE_ENABLED', 'return false && !LOAD_INTERFACE_ENABLED') }));
+      body: source.replace('LOAD_INTERFACE_ENABLED = true', 'LOAD_INTERFACE_ENABLED = false') }));
   }
   try { await f.page.goto(BASE + '/tests/README.md'); await fn(f); assert.deepEqual(f.errors, []); }
   finally { f.state.release?.(); await f.context.close(); }
@@ -171,7 +172,7 @@ await check('upgrade retains auto-increment sequence and concurrent flushes shar
 }));
 
 for (const width of [390, 430]) {
-  await check(`disabled entry still waits for measurement persistence at ${width}px`, () => fixture(async f => {
+  await check(`enabled load entry still waits for measurement persistence at ${width}px`, () => fixture(async f => {
     await f.offline(false); await f.page.goto(BASE + '/admin/field.html');
     await f.page.getByRole('heading', { name: "Today's schedule" }).waitFor();
     await f.page.evaluate(async () => {
@@ -182,20 +183,25 @@ for (const width of [390, 430]) {
       root.append(prepEditor.quantityInput({ id: 'guard-fixture', quantity: 7 }, { 'aria-label': 'Guard quantity' }));
     });
     await f.page.getByLabel('Guard quantity').fill('9');
-    await f.page.evaluate(async () => (await import('/admin/js/field.js')).navigate('/load'));
+    await f.page.evaluate(async () => (await import('/admin/js/field.js')).navigate('/load?vehicle=car_a&day=2027-06-01'));
     await f.page.waitForFunction(() => typeof finishPrepSave === 'function');
-    assert.equal(new URL(f.page.url()).hash, '#/load'); assert.equal(await f.page.getByLabel('Guard quantity').inputValue(), '9');
+    assert.equal(new URL(f.page.url()).hash, '#/load?vehicle=car_a&day=2027-06-01'); assert.equal(await f.page.getByLabel('Guard quantity').inputValue(), '9');
     await f.page.evaluate(() => finishPrepSave());
-    await f.page.waitForFunction(() => location.hash === '#/' && !document.querySelector('input[aria-label="Guard quantity"]'));
-    await f.page.getByRole('heading', { name: "Today's schedule" }).waitFor();
+    await f.page.getByRole('heading', { name: 'Vehicle load', exact: true }).waitFor();
+    await f.page.getByText('Window:', { exact: false }).waitFor();
+    assert.equal(await f.page.getByLabel('Guard quantity').count(), 0);
   }, { width }));
-  await check(`disabled load deep links resolve to the real schedule online and offline at ${width}px`, () => fixture(async f => {
-    await f.offline(false); await f.page.goto(BASE + '/admin/field.html#/load');
-    await f.page.getByRole('heading', { name: "Today's schedule" }).waitFor(); assert.equal(new URL(f.page.url()).hash, '#/');
+  await check(`enabled load deep links open load work rather than falling into the cached schedule at ${width}px`, () => fixture(async f => {
+    await f.offline(false); await f.page.goto(BASE + '/admin/field.html#/load?vehicle=car_a&day=2027-06-01');
+    await f.page.getByText('Window:', { exact: false }).waitFor(); assert.equal(new URL(f.page.url()).hash, '#/load?vehicle=car_a&day=2027-06-01');
+    await f.page.goto(BASE + '/admin/field.html');
+    await f.page.getByRole('heading', { name: "Today's schedule" }).waitFor();
     await f.prepare(); await f.offline(); await f.page.evaluate(() => window.dispatchEvent(new Event('offline')));
-    await f.page.goto(BASE + '/admin/field.html#/load/closing');
-    await f.page.getByRole('heading', { name: 'Saved schedule', exact: true }).waitFor(); assert.equal(new URL(f.page.url()).hash, '#/');
-    assert.equal(await f.page.getByRole('heading', { name: /Keep.*Add.*Return|Preparation|Closing/i }).count(), 0);
+    await f.page.goto(BASE + '/admin/field.html#/load/closing?vehicle=car_a&day=2027-06-01');
+    await f.page.getByRole('heading', { name: 'End-of-day count', exact: true }).waitFor();
+    assert.equal(await f.page.getByRole('heading', { name: 'Saved schedule', exact: true }).count(), 0);
+    await f.page.getByRole('link', { name: '← Schedule', exact: true }).click();
+    await f.page.getByRole('heading', { name: 'Saved schedule', exact: true }).waitFor();
     assert.match(await f.page.locator('#syncBadge').innerText(), /Offline/);
     await f.page.getByRole('button', { name: 'Open saved visit' }).first().tap();
     await f.page.getByRole('heading', { name: 'Saved Customer A', level: 1, exact: true }).waitFor();

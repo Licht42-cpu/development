@@ -1,0 +1,20 @@
+.field-load { overflow-wrap: anywhere; }
+.field-load .load-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-block: 12px; }
+.field-load .load-actions > * { flex: 1 1 160px; }
+.field-load input, .field-load select, .field-load textarea { min-height: 48px; max-width: 100%; box-sizing: border-box; }
+.field-load .btn { min-height: 48px; }
+.field-load .load-line { border-top: 1px solid var(--line); padding-block: 12px; }
+.field-load .load-line h3 { margin-block: 6px; }
+.field-load .load-quantities { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+.field-load .load-quantities div { min-width: 0; }
+.field-load .load-quantities dt { color: var(--muted); font-size: .85rem; }
+.field-load .load-quantities dd { margin: 0; font-weight: 700; }
+.field-load .load-notice { padding: 12px; border-left: 4px solid var(--gold); background: var(--surface-2); margin-block: 12px; }
+.field-load .load-refused, .field-load .load-conflict { border-color: var(--danger); }
+.field-load .load-accepted { border-color: var(--ok); }
+.field-load :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.field-load summary { padding: 12px 0; min-height: 44px; cursor: pointer; font-weight: 700; }
+.field-load .load-counts { display: grid; gap: 12px; }
+.field-load .load-count { border-top: 1px solid var(--line); padding-top: 12px; }
+.field-load .load-check { display: flex; gap: 12px; align-items: center; margin-block: 16px; }
+.field-load .load-check input { width: 48px; height: 48px; flex: 0 0 48px; }
