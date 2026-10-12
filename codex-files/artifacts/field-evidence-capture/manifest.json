@@ -1,0 +1,194 @@
+{
+  "base_sha": "04b8b946b38bcd55641f88a543e8ed720bed5be4",
+  "files": [
+    {
+      "name": "android-assemble.txt",
+      "sha256": "70efdab612e12fd79faefecccfeb2bc8c48d3adf4b1a47595b92782fc50d7d35",
+      "bytes": 17343,
+      "raw_sha256": "309a06687b791a5e14c016e9efa63b457423d7d0268eb7564e2792c4342b5275",
+      "raw_bytes": 17344,
+      "normalization": "LF, trailing whitespace removed, final newline"
+    },
+    {
+      "name": "apk-inspection.json",
+      "sha256": "4538eeba13bb01636a69cc6ba59924252afbfa0c3818e3f92dae6bb57d7a6f0a",
+      "bytes": 829
+    },
+    {
+      "name": "apk-inspection.txt",
+      "sha256": "4538eeba13bb01636a69cc6ba59924252afbfa0c3818e3f92dae6bb57d7a6f0a",
+      "bytes": 829,
+      "raw_sha256": "4538eeba13bb01636a69cc6ba59924252afbfa0c3818e3f92dae6bb57d7a6f0a",
+      "raw_bytes": 829,
+      "normalization": "LF, trailing whitespace removed, final newline"
+    },
+    {
+      "name": "apk-signing.txt",
+      "sha256": "f61433d05100c08fe4c0fb6ec215e970aed42012ec644c71af7ad15cf76d2399",
+      "bytes": 955,
+      "raw_sha256": "f61433d05100c08fe4c0fb6ec215e970aed42012ec644c71af7ad15cf76d2399",
+      "raw_bytes": 955,
+      "normalization": "LF, trailing whitespace removed, final newline"
+    },
+    {
+      "name": "cap-sync.txt",
+      "sha256": "60e3484f148e92966ceb41545c59ada72ac8d85c0b44706b8885f205141f3081",
+      "bytes": 1831,
+      "raw_sha256": "60e3484f148e92966ceb41545c59ada72ac8d85c0b44706b8885f205141f3081",
+      "raw_bytes": 1831,
+      "normalization": "LF, trailing whitespace removed, final newline"
+    },
+    {
+      "name": "dictation-1200.png",
+      "sha256": "fa17cd81507a4c1792b169d730cd319ef0f577a27c84cc41ec4f23589d4347c3",
+      "bytes": 29700
+    },
+    {
+      "name": "dictation-390.png",
+      "sha256": "ae338de015de7ea58d7a02b56630c78c688d956eb353dd715f75f9d3ca033582",
+      "bytes": 31247
+    },
+    {
+      "name": "dictation-430.png",
+      "sha256": "fcc3026f698344f58239c895cf1976feb466293293bbc3cda6d998817793f393",
+      "bytes": 31060
+    },
+    {
+      "name": "expected-failure-late.txt",
+      "sha256": "ff0b186f49c4e25b71c7b13516169b0a1ff7e6484d4d3c97219b5e94b76e96a7",
+      "bytes": 534,
+      "raw_sha256": "ff0b186f49c4e25b71c7b13516169b0a1ff7e6484d4d3c97219b5e94b76e96a7",
+      "raw_bytes": 534,
+      "normalization": "LF, trailing whitespace removed, final newline"
+    },
+    {
+      "name": "expected-failure-original.txt",
+      "sha256": "4b86975599a0b2a5f705571325e0a7572b8763b2df2b294aab8ffdf5c085ea32",
+      "bytes": 5608,
+      "raw_sha256": "4b86975599a0b2a5f705571325e0a7572b8763b2df2b294aab8ffdf5c085ea32",
+      "raw_bytes": 5608,
+      "normalization": "LF, trailing whitespace removed, final newline"
+    },
+    {
+      "name": "expected-failure-review.txt",
+      "sha256": "c5ca3598d10b17a230283264c9f1ce17ab5857e8df89b8b5422a1b3a6736fa82",
+      "bytes": 564,
+      "raw_sha256": "c5ca3598d10b17a230283264c9f1ce17ab5857e8df89b8b5422a1b3a6736fa82",
+      "raw_bytes": 564,
+      "normalization": "LF, trailing whitespace removed, final newline"
+    },
+    {
+      "name": "field-evidence.txt",
+      "sha256": "a642bf0e216b56413c82973895e4e8c52742f25fb002a5fa409c682e02d65689",
+      "bytes": 2497,
+      "raw_sha256": "a642bf0e216b56413c82973895e4e8c52742f25fb002a5fa409c682e02d65689",
+      "raw_bytes": 2497,
+      "normalization": "LF, trailing whitespace removed, final newline"
+    },
+    {
+      "name": "field-resilience.txt",
+      "sha256": "c8bbd196b55857478d8c0d7d229adbf62838e77a8af29210cee3a183a35b4556",
+      "bytes": 2551,
+      "raw_sha256": "c8bbd196b55857478d8c0d7d229adbf62838e77a8af29210cee3a183a35b4556",
+      "raw_bytes": 2551,
+      "normalization": "LF, trailing whitespace removed, final newline"
+    },
+    {
+      "name": "load-prep.txt",
+      "sha256": "f556e65eb5ddf1f1be17bb2fa37f81b2eed2a97eb13efc21384627647949ef94",
+      "bytes": 1731,
+      "raw_sha256": "f556e65eb5ddf1f1be17bb2fa37f81b2eed2a97eb13efc21384627647949ef94",
+      "raw_bytes": 1731,
+      "normalization": "LF, trailing whitespace removed, final newline"
+    },
+    {
+      "name": "mobile-reliability.txt",
+      "sha256": "1e41f87a8a95b640ef9d10c800c13188fc3de022d92b39a8638dfe8841299edb",
+      "bytes": 2170,
+      "raw_sha256": "1e41f87a8a95b640ef9d10c800c13188fc3de022d92b39a8638dfe8841299edb",
+      "raw_bytes": 2170,
+      "normalization": "LF, trailing whitespace removed, final newline"
+    },
+    {
+      "name": "native-bundle.txt",
+      "sha256": "b4dc164f734a0e596c29328e7d3a705606cb3190892ba2890a1cdaa1e8aaf017",
+      "bytes": 1656,
+      "raw_sha256": "b4dc164f734a0e596c29328e7d3a705606cb3190892ba2890a1cdaa1e8aaf017",
+      "raw_bytes": 1656,
+      "normalization": "LF, trailing whitespace removed, final newline"
+    },
+    {
+      "name": "native-packaging.txt",
+      "sha256": "1d96f72638ffb8fdac2a2addea28eefb4e5b3252ad87f0066147ceee79c4448c",
+      "bytes": 1481,
+      "raw_sha256": "1d96f72638ffb8fdac2a2addea28eefb4e5b3252ad87f0066147ceee79c4448c",
+      "raw_bytes": 1481,
+      "normalization": "LF, trailing whitespace removed, final newline"
+    },
+    {
+      "name": "native-readiness.txt",
+      "sha256": "4ba2b5118f6a9b0361c25fdf3278109e9b82c9b7469cdbdceeb3ed340b085512",
+      "bytes": 2135,
+      "raw_sha256": "4ba2b5118f6a9b0361c25fdf3278109e9b82c9b7469cdbdceeb3ed340b085512",
+      "raw_bytes": 2135,
+      "normalization": "LF, trailing whitespace removed, final newline"
+    },
+    {
+      "name": "native-startup.txt",
+      "sha256": "9a214df267285267f38d243d5a3ed9c44516a2b1f54ea40d4f6d8a3f7b0d432d",
+      "bytes": 1802,
+      "raw_sha256": "9a214df267285267f38d243d5a3ed9c44516a2b1f54ea40d4f6d8a3f7b0d432d",
+      "raw_bytes": 1802,
+      "normalization": "LF, trailing whitespace removed, final newline"
+    },
+    {
+      "name": "offline-work.txt",
+      "sha256": "51c8a65d08386a7b7122f3d8b75cb1a5e5adbd497ab89cfd4a11e4cf0b3b68e4",
+      "bytes": 4232,
+      "raw_sha256": "51c8a65d08386a7b7122f3d8b75cb1a5e5adbd497ab89cfd4a11e4cf0b3b68e4",
+      "raw_bytes": 4232,
+      "normalization": "LF, trailing whitespace removed, final newline"
+    },
+    {
+      "name": "originals-1200.png",
+      "sha256": "b614c663cbf21c6c24dbd0fe083df96b85fb82c9ab96a7f0aab6c24ae936c7c1",
+      "bytes": 36131
+    },
+    {
+      "name": "originals-390.png",
+      "sha256": "e92185636ee185a3654887a48f1d8b066144c9a36ebc293a5232f5801699511c",
+      "bytes": 39084
+    },
+    {
+      "name": "originals-430.png",
+      "sha256": "7afb5ec7574a20931208c3c37e0da76727e30dea9b2f5fa7ae2721a7428badca",
+      "bytes": 38792
+    },
+    {
+      "name": "registered-regression.txt",
+      "sha256": "a42c49ceab8184d0bd181fbd913ae39661758601c3f10ba6d08aaa729eec1d93",
+      "bytes": 44550,
+      "raw_sha256": "a42c49ceab8184d0bd181fbd913ae39661758601c3f10ba6d08aaa729eec1d93",
+      "raw_bytes": 44550,
+      "normalization": "LF, trailing whitespace removed, final newline"
+    },
+    {
+      "name": "results.json",
+      "sha256": "c3d0b663b71a006f71c831512aaa8fa3fcb75dc9b1597ded211f92bd753cb7b0",
+      "bytes": 3773
+    },
+    {
+      "name": "validation.json",
+      "sha256": "05879f180157503bb4bafea689f16db612f85e1843365a99d29589f81d7e284f",
+      "bytes": 2569
+    },
+    {
+      "name": "verify-mobile.txt",
+      "sha256": "73d65d51869818a066279faa1513eb1c24271f4ac684bf60eca945cbba842835",
+      "bytes": 340,
+      "raw_sha256": "73d65d51869818a066279faa1513eb1c24271f4ac684bf60eca945cbba842835",
+      "raw_bytes": 340,
+      "normalization": "LF, trailing whitespace removed, final newline"
+    }
+  ]
+}

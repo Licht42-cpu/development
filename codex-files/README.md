@@ -73,6 +73,13 @@ remain the actual source. Future changes should update those canonical paths.
 
 ## Implementation commits already pushed
 
+The latest independent field increment is **codex/field-evidence-capture**:
+[photo originals and reviewed dictation](../tests/field-evidence.md), with
+[evidence](artifacts/field-evidence-capture/). It retains original image bytes,
+uses explicit unknown capture metadata, and requires review before speech
+enters a note. No fifth outbox handler is added. This is partial 11.2 work;
+the load corrective and full completion integration remain separate.
+
 The latest preparation branch is **codex/batch-10-2-prep**, based on
 `e4259466087850a503cd5f6884fe54a22f72ebd1`. Its handoff is
 [tests/load-prep.md](../tests/load-prep.md), with a

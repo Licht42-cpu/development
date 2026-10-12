@@ -2,6 +2,7 @@ import { el, clear, select, toast } from '../../../shared/dom.js';
 import { humanise } from '../../../shared/format.js';
 import { passportPanel, checklistPanel } from './field-workspace.js';
 import { createPhotosPanel } from './field-photos.js';
+import { createDictationReview } from '../components/field-dictation.js';
 import { retainNoteDraft } from '../lib/field-cache.js';
 import * as queue from '../lib/offline-queue.js';
 
@@ -82,6 +83,7 @@ export async function renderOfflineWork({ mount, navigate, retry }, snapshot, jo
   ]));
 
   const photos = createPhotosPanel({ jobId, listPhotosFn: async () => data.attachments,
+    retainOriginals: true, ownerId: snapshot.id,
     offline: true, pendingPhotosFn: queue.pendingPhotos,
     uploadFn: async (id, file, opts) => {
       await queue.callOrQueue('uploadJobPhoto', { jobId: id, file, opts }, 'Photo upload', { ownerId: snapshot.id });
@@ -91,16 +93,20 @@ export async function renderOfflineWork({ mount, navigate, retry }, snapshot, jo
   await photos.render();
   const input = el('textarea', { 'aria-label': 'Note', placeholder: 'Draft a note for the office…' });
   const visibility = select([{ value: 'internal', label: 'Internal — staff only' },
-    { value: 'customer', label: 'Customer-visible' }], 'internal');
+    { value: 'customer', label: 'Customer-visible' }], 'internal', null, { 'aria-label': 'Who can see it' });
   const draftStatus = el('p', { class: 'hint', role: 'status' });
+  const dictationHost = el('div', {});
   mount.append(el('div', { class: 'card' }, [el('h2', { text: 'Notes' }),
     el('p', { text: 'You can keep a draft here. Sending a note requires a connection.' }),
     ...data.notes.map(note => el('div', { class: 'section-box' }, [
       el('span', { class: 'badge', text: note.visibility === 'customer' ? 'Customer-visible' : 'Internal' }),
       el('p', { text: note.body })])),
     el('label', { class: 'field' }, [el('span', { text: 'Note draft' }), input]),
-    el('label', { class: 'field' }, [el('span', { text: 'Who can see it' }), visibility]), draftStatus]));
-  await retainNoteDraft(jobId, input, visibility, draftStatus);
+    el('label', { class: 'field' }, [el('span', { text: 'Who can see it' }), visibility]), draftStatus, dictationHost]));
+  const noteDraft = await retainNoteDraft(jobId, input, visibility, draftStatus);
+  const dictation = createDictationReview({ jobId, ownerId: snapshot.id, target: input,
+    visibility, flushDraft: noteDraft.flush });
+  dictationHost.append(dictation.root); await dictation.ready;
   // Cached quotes are references, not a currently valid offer. Existing
   // captured signatures stay in the outbox; fresh offline acceptance is not
   // offered against a potentially revised/revoked quote.

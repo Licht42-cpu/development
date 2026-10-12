@@ -1,0 +1,130 @@
+{
+  "results": [
+    {
+      "name": "original bytes and metadata commit before markup; Back saves a draft without uploading",
+      "ok": true
+    },
+    {
+      "name": "original survives reload and resumes; queue submission uses the existing photo handler",
+      "ok": true
+    },
+    {
+      "name": "marked upload preserves the unmodified original and selection-time tag",
+      "ok": true
+    },
+    {
+      "name": "route interruption closes markup and preserves the unfinished original",
+      "ok": true
+    },
+    {
+      "name": "capture storage rejects oversized originals without eviction or queued writes",
+      "ok": true
+    },
+    {
+      "name": "capture budget includes text metadata and frozen upload options",
+      "ok": true
+    },
+    {
+      "name": "removing a local original leaves separately queued photo bytes intact",
+      "ok": true
+    },
+    {
+      "name": "future capture-store version fails closed and retains the original bytes",
+      "ok": true
+    },
+    {
+      "name": "atomic handoff permits only one submission claim for a saved capture",
+      "ok": true
+    },
+    {
+      "name": "failed original commit prevents markup and upload rather than claiming local durability",
+      "ok": true
+    },
+    {
+      "name": "interrupted submission restores originals but offers no automatic fresh upload",
+      "ok": true
+    },
+    {
+      "name": "review location denied is explicit and never becomes a claimed capture geotag",
+      "ok": true
+    },
+    {
+      "name": "review location unavailable is explicit and never becomes a claimed capture geotag",
+      "ok": true
+    },
+    {
+      "name": "review location reported is explicit and never becomes a claimed capture geotag",
+      "ok": true
+    },
+    {
+      "name": "photos and speech buffers stay private to their account across switch and return",
+      "ok": true
+    },
+    {
+      "name": "same-account visits do not mix original photos or dictation buffers",
+      "ok": true
+    },
+    {
+      "name": "speech is review-only until explicit transfer; note sends only through Save note",
+      "ok": true
+    },
+    {
+      "name": "unsubmitted dictation survives reload without appearing as a saved note",
+      "ok": true
+    },
+    {
+      "name": "late final speech cannot overwrite a review edited after stopping",
+      "ok": true
+    },
+    {
+      "name": "older speech callbacks cannot overwrite a newer transcript",
+      "ok": true
+    },
+    {
+      "name": "failed note-draft commit retains dictation for recovery instead of clearing it",
+      "ok": true
+    },
+    {
+      "name": "microphone permission failure retains text and does not send a note",
+      "ok": true
+    },
+    {
+      "name": "identity read failure stops speech without an unhandled callback or note write",
+      "ok": true
+    },
+    {
+      "name": "unsupported speech engine has an honest typed review fallback",
+      "ok": true
+    },
+    {
+      "name": "backgrounding stops recognition and drops late results",
+      "ok": true
+    },
+    {
+      "name": "leaving a visit aborts recognition and ignores late speech results",
+      "ok": true
+    },
+    {
+      "name": "offline notes accept only reviewed text into a durable unsubmitted draft",
+      "ok": true
+    },
+    {
+      "name": "390px touch/keyboard originals and dictation fit without overflow",
+      "ok": true
+    },
+    {
+      "name": "430px touch/keyboard originals and dictation fit without overflow",
+      "ok": true
+    },
+    {
+      "name": "1200px touch/keyboard originals and dictation fit without overflow",
+      "ok": true
+    },
+    {
+      "name": "actual Chromium restart preserves unsubmitted originals and dictation bytes",
+      "ok": true
+    }
+  ],
+  "passed": 31,
+  "failed": 0
+}

@@ -1,0 +1,57 @@
+{
+  "base_sha": "04b8b946b38bcd55641f88a543e8ed720bed5be4",
+  "branch": "codex/field-evidence-capture",
+  "scope": "independent photo originals and reviewed dictation increment; partial 11.2, no load or completion interface",
+  "node": "v24.19.0",
+  "chromium": "Chromium 151.0.7922.173 built on Debian GNU/Linux 13 (trixie)",
+  "suites_passed": {
+    "registered_regression": 391,
+    "offline-work": 47,
+    "field-resilience": 27,
+    "mobile-reliability": 22,
+    "native-readiness": 24,
+    "native-startup": 18,
+    "load-prep": 16,
+    "native-packaging": 19,
+    "native-bundle": 10,
+    "field-evidence": 31
+  },
+  "unique_counted_checks": 605,
+  "geofence": "passed separately",
+  "current_failed": 0,
+  "selected_skipped": 0,
+  "expected_failures": {
+    "corrupt_original": 1,
+    "bypass_review": 1,
+    "disable_late_guard": 1
+  },
+  "android": {
+    "build": "passed",
+    "seconds": 25.73,
+    "assets": 146,
+    "staged_files": 147,
+    "apk_public_files": 149,
+    "signing": "v2 verified; debug signer",
+    "device": "UNRUN; no device/emulator attempt"
+  },
+  "unrun": [
+    "physical Android camera, speech availability, microphone/location permission dialogs, hardware Back and TalkBack",
+    "OS storage eviction and cellular behaviour",
+    "live DB/storage/production and server evidence/completion integration"
+  ],
+  "claude_head_at_start": "32963a3",
+  "load_corrective": "not pushed at start; load stays gated",
+  "outbox": "v3 and four types unchanged; local captures store has no sender or replay",
+  "environment_draft": "unpublished; unchanged",
+  "source_sha256": {
+    "admin/js/components/field-dictation.js": "f0341f9b31692f15acc76d9b816a5d844d53cc84bba76c312a43098489b9a69c",
+    "admin/js/components/photo-markup.js": "d1ece0ead262801abe242d90a8189e33b655895d595054c403f7de457f1d5189",
+    "admin/js/lib/field-captures.js": "276801f3c2ec102e1c5dfe5f029f7140eca77362a6516402fe5f073fef4b2cb3",
+    "admin/js/lib/field-cache.js": "45116d6f26b5fc2a422744f8956e5d916f5881c6a8f6fb5baa136f3ce13499d4",
+    "admin/js/views/field-workspace.js": "c50cf1bef360f66bc6efef87f1ef13f90332069bfa35c4d05fb5ca77d9ed6354",
+    "admin/js/views/field-offline.js": "142957a73b338d32c785312e45944ba442a29afcbf11a4dbb56b244313c36e9e",
+    "admin/js/views/field-photos.js": "7193b665de2e32557d19f53b678004413776d7e2c1bc5d46dde68e7d98be2de9",
+    "tests/field-evidence.test.mjs": "7404c8b72ffb531f6eecdf6fee6a472d5b8e84c14fd20c535a4412ada156a13a",
+    "tests/offline-work.test.mjs": "3ad2f0da1d0fc7610ad62ff2a60889476e76bdbc267af0fba8473a33b7b958fd"
+  }
+}
