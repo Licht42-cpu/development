@@ -100,14 +100,15 @@ These are 10.1 findings, separate from the seven seasonal findings handed to
 Claude earlier. No fixes or live probes have been performed here. The suggested
 cases above are acceptance needs, not invented wire fields or operations.
 
-## Ownership clarification required
+## Ownership clarification resolved
 
-The brief's literal prohibition of **`admin/js/**`** includes Codex's own
-field router, `field-load-gate.js`, outbox and field views. Earlier assignments
-allocate those to Codex. An asynchronous clarification asks whether Codex-owned
-field/mobile files are exempt while Claude-owned API/inventory/management and
-backend files remain protected. No JavaScript was changed while that question
-is pending. Keeping `/load` gated off preserves measurement and Back guards.
+The owner explicitly authorized **Codex-owned field/mobile files** within
+`admin/js/**`, including the field router, `field-load-gate.js`, outbox and
+field views. Claude-owned API, inventory/management and backend files remain
+protected. This resolves the brief's blanket path prohibition; no further
+scope confirmation is needed. No JavaScript has changed in this checkpoint.
+Keeping `/load` gated off preserves measurement and Back guards while the
+contract findings above remain unresolved.
 
 ## Outbox decision
 
@@ -128,10 +129,10 @@ This is a design decision for resumption, not a shipped new online-only UI.
 - Skipped: no selected test was disabled or skipped.
 - **UNRUN:** 10.2 touch/keyboard, restart, two-vehicle state, mutation retries,
   conflict rendering, level/unknown display and day closing because the
-  interface has not been implemented pending the contract and ownership
-  resolution. APK/build/browser regression was not rerun for a Markdown-only
+  interface has not been implemented pending the contract corrections.
+  APK/build/browser regression was not rerun for a Markdown-only
   report. Emulator/device/live DB/production remain outside this task.
 
-Resume after a versioned contract/fixture corrective and the owned-file scope
-clarification. Do not merge Claude, loosen permissions, invent a read/receipt
+Resume after a versioned contract/fixture corrective; owned-file authorization
+is already granted. Do not merge Claude, loosen permissions, invent a read/receipt
 shape, infer authoritative load changes locally or start 11.2.
