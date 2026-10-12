@@ -4,6 +4,7 @@ import { humanise } from '../../../shared/format.js';
 import { createMeasurementsPanel } from './measurements.js';
 import { createQuotePanel } from './quote.js';
 import { createPhotosPanel } from './field-photos.js';
+import { createDictationReview } from '../components/field-dictation.js';
 import * as offlineQueue from '../lib/offline-queue.js';
 import { reviewRequestLink } from '../lib/messaging.js';
 import { isNative, hapticLight, getDevicePosition } from '../lib/native.js';
@@ -328,6 +329,7 @@ export async function renderVisit({ mount, navigate }, jobId) {
   measurementsPanel.guardActions(quotePanel.root, { allowQuoteDelivery: true });
   const photosPanel = createPhotosPanel({
     jobId: job.id,
+    retainOriginals: true, ownerId,
     pendingPhotosFn: offlineQueue.pendingPhotos,
     uploadFn: async (jobId, file, opts) => {
       const { queued } = await offlineQueue.callOrQueue('uploadJobPhoto', { jobId, file, opts }, 'Photo upload', { ownerId });
@@ -401,7 +403,7 @@ export async function renderVisit({ mount, navigate }, jobId) {
   const noteVisibility = select(
     [{ value: 'internal', label: 'Internal — staff only' },
      { value: 'customer', label: 'Customer-visible' }],
-    'internal'
+    'internal', null, { 'aria-label': 'Who can see it' }
   );
   const noteBtn = el('button', { class: 'btn', text: 'Save note' });
   const notesList = el('div', {});
@@ -409,6 +411,7 @@ export async function renderVisit({ mount, navigate }, jobId) {
     dataset: { notesStatus: '' } });
   let notesAttempt = 0;
   const draftStatus = el('p', { class: 'hint', role: 'status' });
+  const dictationHost = el('div', {});
   let clearNoteDraft;
 
   noteBtn.addEventListener('click', async () => {
@@ -625,13 +628,18 @@ export async function renderVisit({ mount, navigate }, jobId) {
       el('label', { class: 'field' }, [el('span', { text: 'New note' }), noteBody]),
       el('label', { class: 'field' }, [el('span', { text: 'Who can see it' }), noteVisibility]),
       el('div', { class: 'btn-row', style: 'margin-bottom:12px' }, [noteBtn]),
-      draftStatus, notesStatus, notesList
+      draftStatus, dictationHost, notesStatus, notesList
     ])
   );
 
   paintCompletion();
   await reload({ initial: true });
   await refreshNotes();
-  try { clearNoteDraft = await retainNoteDraft(job.id, noteBody, noteVisibility, draftStatus); }
+  try {
+    clearNoteDraft = await retainNoteDraft(job.id, noteBody, noteVisibility, draftStatus);
+    const dictation = createDictationReview({ jobId: job.id, ownerId, target: noteBody,
+      visibility: noteVisibility, flushDraft: clearNoteDraft.flush });
+    dictationHost.append(dictation.root); await dictation.ready;
+  }
   catch (error) { draftStatus.textContent = `Device draft storage unavailable: ${error.message}`; }
 }

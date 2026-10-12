@@ -201,5 +201,9 @@ export async function retainNoteDraft(jobId, input, visibility, status) {
   };
   input.addEventListener('input', save);
   visibility.addEventListener('change', save);
-  return async () => { await chain; await deleteDraft(jobId, 'note', owner); };
+  const clear = async () => { await chain; await deleteDraft(jobId, 'note', owner); };
+  // Review tools can wait for the existing note draft to commit before
+  // clearing their own buffer. No second note writer or delivery path.
+  clear.flush = () => chain;
+  return clear;
 }

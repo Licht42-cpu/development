@@ -6,6 +6,12 @@ This table supersedes the historical counts below. Batch 10.2-prep builds
 the current owned assets; no adb/emulator attempt was repeated. Prior build
 and stale-asset evidence remains in its original artifact directories.
 
+Latest field-capture increment: [field-evidence.md](field-evidence.md) records
+146 verified guard assets, 147 staged files and 149 APK public files. Assembly,
+APK inspection and debug signing pass. Speech APIs are mocked in browser tests;
+native speech/permission/device behaviour remains UNRUN. The APK contains the
+Codex branch's API and does not integrate Claude's newer completion caller.
+
 | Level/check | Status | Evidence or remaining limit |
 | --- | --- | --- |
 | Capacitor sync and asset guard | Qualified | Staged/configured assets and seven native plugins agree; this is asset preparation |

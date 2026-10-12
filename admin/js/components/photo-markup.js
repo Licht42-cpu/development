@@ -13,12 +13,14 @@ import { pushOverlay, removeOverlay } from '../lib/navigation.js';
  *  original file's bytes unchanged if the tech skips markup entirely --
  *  either way the caller gets back the same File-shaped thing it would
  *  have uploaded anyway. */
-export function openPhotoMarkup(file) {
+export function openPhotoMarkup(file, { cancelOnDismiss = false, current = () => true } = {}) {
   return new Promise((resolve) => {
     let tool = 'arrow';
     let drawing = false;
     let start = null;
     let img = null;
+    let finished = false;
+    let imageUrl;
 
     const overlay = el('div', {
       style: 'position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.85);' +
@@ -103,14 +105,19 @@ export function openPhotoMarkup(file) {
        on document.body, not a route, so nothing else would clean it up.
        Dismissing is Skip: the caller still gets the unmodified photo it
        was always going to get if the tech chose not to mark it up. */
-    const backDismiss = () => finish(false);
+    const backDismiss = () => finish(false, cancelOnDismiss);
+    const cleanup = new MutationObserver(() => { if (!current()) finish(false, true); });
 
-    function finish(useMarkup) {
+    function finish(useMarkup, cancelled = false) {
+      if (finished) return;
+      finished = true; cleanup.disconnect();
       removeOverlay(backDismiss);
       canvas.removeEventListener('pointerdown', onStart);
       canvas.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onEnd);
       overlay.remove();
+      if (imageUrl) URL.revokeObjectURL(imageUrl);
+      if (cancelled) return resolve(null);
       if (!useMarkup || marks.length === 0) return resolve(file);
       canvas.toBlob((blob) => {
         resolve(blob ? new File([blob], file.name, { type: 'image/png' }) : file);
@@ -135,12 +142,14 @@ export function openPhotoMarkup(file) {
       canvas,
       el('div', { class: 'btn-row', style: 'margin-top:12px' }, [toolRow, undoBtn]),
       el('div', { class: 'btn-row', style: 'margin-top:10px' }, [
+        ...(cancelOnDismiss ? [el('button', { class: 'btn', text: 'Keep draft', type: 'button', onClick: () => finish(false, true) })] : []),
         el('button', { class: 'btn', text: 'Skip', type: 'button', onClick: () => finish(false) }),
         el('button', { class: 'btn btn--primary', text: 'Use this photo', type: 'button', onClick: () => finish(true) })
       ])
     );
     document.body.append(overlay);
     pushOverlay(backDismiss);
+    cleanup.observe(document.body, { childList: true, subtree: true });
 
     img = new Image();
     img.onload = () => {
@@ -154,6 +163,7 @@ export function openPhotoMarkup(file) {
       canvas.height = Math.round(img.height * scale);
       redraw(marks);
     };
-    img.src = URL.createObjectURL(file);
+    imageUrl = URL.createObjectURL(file);
+    img.src = imageUrl;
   });
 }

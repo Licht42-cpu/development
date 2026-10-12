@@ -1,0 +1,12 @@
+FAIL - speech is review-only until explicit transfer; note sends only through Save note
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
++ 'Spoken observation'
+- 'Typed context'
+
+    at file:///workspace/nova-shield/tests/field-evidence.test.mjs:236:10
+    at async fixture (file:///workspace/nova-shield/tests/field-evidence.test.mjs:55:9)
+    at async check (file:///workspace/nova-shield/tests/field-evidence.test.mjs:14:9)
+    at async file:///workspace/nova-shield/tests/field-evidence.test.mjs:233:1
+0 PASS / 1 FAIL

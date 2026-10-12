@@ -18,6 +18,7 @@ await check('Prefetch, offline restart and visit navigation preserve addresses, 
   await f.prepare();await f.offline();await f.page.reload();await f.page.getByRole('heading',{name:'Saved schedule'}).waitFor();
   const calls=f.state.calls.length;await f.page.getByRole('button',{name:'Open saved visit'}).first().click();await f.page.getByRole('heading',{name:'Saved Customer A',exact:true,level:1}).waitFor();
   assert.match(await f.page.locator('#view').innerText(),/123 Saved Street/);assert.equal(await f.page.getByLabel('Water tap location',{exact:true}).inputValue(),'Rear tap');
+  await f.page.getByText('Watch the garden hose',{exact:true}).waitFor();
   assert.match(await f.page.locator('#view').innerText(),/Watch the garden hose/);assert.equal(f.state.calls.length,calls);
   await f.page.screenshot({path:join(evidence,'saved-visit-390.png'),fullPage:true});
 }));
