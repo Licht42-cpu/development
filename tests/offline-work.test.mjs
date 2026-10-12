@@ -27,7 +27,7 @@ await check('Passport and note drafts survive a closed page and are labeled unse
   await f.page.getByLabel('Note',{exact:true}).fill('Do not lose this note');
   await f.page.getByLabel('Material',{exact:true}).fill('Unsubmitted vinyl');
   await f.page.waitForFunction(async()=>{const c=await import('/admin/js/lib/field-cache.js');return (await c.readDraft('11111111-1111-4111-8111-111111111111','note'))?.value.body==='Do not lose this note'&&(await c.readDraft('11111111-1111-4111-8111-111111111111','passport'))?.value['siding.material']==='Unsubmitted vinyl';});
-  await f.page.reload();await f.page.getByLabel('Material',{exact:true}).waitFor();await f.page.waitForFunction(()=>document.querySelector('textarea[aria-label="Note"]').value==='Do not lose this note');
+  await f.page.reload();await f.page.getByLabel('Material',{exact:true}).waitFor();await f.page.getByLabel('Note',{exact:true}).waitFor();await f.page.waitForFunction(()=>document.querySelector('textarea[aria-label="Note"]').value==='Do not lose this note');
   assert.equal(await f.page.getByLabel('Material',{exact:true}).inputValue(),'Unsubmitted vinyl');assert.match(await f.page.locator('#view').innerText(),/not submitted|not sent/);
 }));
 await check('Offline passport saves survive restart as pending property facts',()=>fixture(async f=>{

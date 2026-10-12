@@ -335,15 +335,17 @@ function openOutbox() {
         el('p', { class: 'hint', text: `Saved ${new Date(item.createdAt).toLocaleString()}` }),
         el('p', { class: item.lastError ? 'error-text' : 'hint',
           text: item.lastError ? `Last sync failed: ${item.lastError}` : index ? 'Waiting behind earlier actions.' : 'Waiting to sync.' }),
-        item.state === 'uncertain' ? el('button', { class: 'btn', text: 'Review and retry',
+        item.state === 'uncertain' || item.type === 'completeJobWithEvidence' && item.outcome === 'unknown' ? el('button', { class: 'btn', text: 'Review and retry',
           disabled: !current.online || current.syncing || current.discarding,
           onClick: async () => {
-            if (!window.confirm('The server may already have received this action. Check the visit for duplicates first. Retry anyway?')) return;
+            if (!window.confirm(item.type === 'completeJobWithEvidence'
+              ? 'Recover the original completion receipt with the same key and unchanged request?'
+              : 'The server may already have received this action. Check the visit for duplicates first. Retry anyway?')) return;
             try { await offlineQueue.confirmRetry(item.id); await offlineQueue.flush(); }
             catch (error) { toast(error.message, 'error'); }
           } }) : null,
         el('button', { class: 'btn btn--sm btn--danger', text: 'Discard',
-          'aria-label': `Discard ${item.label || item.type}`, disabled: current.syncing || current.discarding,
+          'aria-label': `Discard ${item.label || item.type}`, disabled: current.syncing || current.discarding || item.type === 'completeJobWithEvidence' && (item.outcome === 'unknown' || item.state === 'uncertain'),
           onClick: async () => {
             if (!window.confirm(`Discard "${item.label || item.type}" from this device? It will not be retried. ` +
               'This cannot undo a server change already received.')) return;

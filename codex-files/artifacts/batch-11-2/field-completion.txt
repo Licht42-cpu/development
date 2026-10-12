@@ -1,0 +1,36 @@
+PASS - frozen fixture contains 14 scenarios and matches the reviewed upstream snapshot
+PASS - cleaning_before_and_after: requirements show confirmed blocking shortfalls and no status bypass
+PASS - Cancel, Escape and Android overlay Back never submit a reviewed declaration
+PASS - late route/account change during review cannot submit and preserves notes
+PASS - confirmation quotes rendered versions, null finish stays unknown and no fresh read precedes send
+PASS - policy changing between independent reads cannot produce a mixed reviewable snapshot
+PASS - quick_winter_proof remains advisory/proposed; one reviewed operation
+PASS - lighting_installation_and_component: proposed installation/component requirements stay visible and advisory
+PASS - unconfigured_is_not_satisfied: unknown required count is not zero; acceptance retains unconfigured state
+PASS - stale_policy_and_job/stale_job_version: conflict blocks automatic replay; original draft retained
+PASS - stale_policy_and_job/stale_policy_version: conflict blocks automatic replay; original draft retained
+PASS - missing_blocking_evidence: 23514 sentence remains visible; photos and original request retained
+PASS - denied_access: 42501 is refusal, not offline or accepted; stored work remains scoped
+PASS - same_key_retry_lost_response: original key/payload recovery has one effect and no duplicate debit
+PASS - malformed acceptance stays unknown; original receipt recovery does not post a second effect
+PASS - permission loss hides cached private acceptance but retains its immutable local record
+PASS - changed_intent_same_key: 23505 is conflict, not success or a new automatic retry
+PASS - leaving the visit closes the review overlay without declaring completion
+PASS - offline finish is provisional, saved queue survives reload, reconnect is server acceptance only
+PASS - active marker 2 blocks the old app validator without deleting pending completion or legacy bytes
+PASS - real Chromium process restart retains request bytes, explicit retry key and one acceptance effect
+PASS - legacy File/Blob actions retain bytes beside marker-2 completion and all five drain once
+PASS - an unanswered completion cannot be discarded or replaced by a second key
+PASS - storage failure before completion commit sends nothing and keeps the raw draft
+PASS - usage records explicit location/precision, level remains nonnumeric, additional work has no amount
+PASS - locked_history: accepted ledger and evidence are read-only; current reopening does not mutate receipt
+PASS - register uses attachment ID and purpose/scope, never a guessed path or review GPS
+PASS - evidence lost response retains immutable request for explicit same-key retry
+PASS - one_image_two_scopes: same attachment is registered deliberately twice without uploading twice
+PASS - job-scoped evidence on file remains visible when no per-service requirement counts it
+PASS - authorised_exception and reasoned_correction are read-only server facts, not crew approval controls
+PASS - accepted evidence photo removal is refused before the legacy delete API
+PASS - review, keyboard cancellation, notes/usage controls and overflow at 390px
+PASS - review, keyboard cancellation, notes/usage controls and overflow at 430px
+PASS - review, keyboard cancellation, notes/usage controls and overflow at 1200px
+35 PASS / 0 FAIL

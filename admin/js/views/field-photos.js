@@ -4,6 +4,7 @@ import { isNative, takeNativePhoto, persistPhotoLocally } from '../lib/native.js
 import { openPhotoMarkup } from '../components/photo-markup.js';
 import { localAccount } from '../lib/field-identity.js';
 import { saveOriginal, savedCaptures, updateCapture, removeCapture, observeReviewLocation } from '../lib/field-captures.js';
+import { photoIsFrozen } from '../lib/field-completion-api.js';
 
 const TAGS = [
   { value: 'before',      label: 'Before' },
@@ -70,13 +71,16 @@ export function createPhotosPanel({ jobId, uploadFn, pendingPhotosFn, listPhotos
         await updateCapture(capture.id, { prepared: marked === file ? null : marked, stage: 'submitting' }, selectedOwner);
       }
       let queued;
+      let uploadResult;
       try {
-        queued = await upload(jobId, marked, opts);
+        uploadResult = await upload(jobId, marked, opts);
+        queued = typeof uploadResult === 'object' ? uploadResult.queued : uploadResult;
       } catch (error) {
         if (capture) await updateCapture(capture.id, { stage: 'needs-review' }, selectedOwner);
         throw error;
       }
-      if (capture) await updateCapture(capture.id, { stage: queued ? 'queued' : 'uploaded' }, selectedOwner);
+      if (capture) await updateCapture(capture.id, { stage: queued ? 'queued' : 'uploaded',
+        metadata: { ...capture.metadata, ...(uploadResult?.result?.id ? { uploadedAttachmentId: uploadResult.result.id } : {}) } }, selectedOwner);
       await render({ localOnly: queued });
       if (root.isConnected) root.querySelector('[data-add-photo]')?.focus();
     } catch (err) {
@@ -123,6 +127,12 @@ export function createPhotosPanel({ jobId, uploadFn, pendingPhotosFn, listPhotos
       clear(tile).append(el('span', { class: 'hint', text: 'Server photo — preview needs a connection' }));
       return tile;
     }
+    tile.setAttribute('role', 'button');
+    tile.setAttribute('aria-label', `Review removal of ${photo.caption || tagLabel(photo.kind)} photo`);
+    tile.tabIndex = 0;
+    tile.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); tile.click(); }
+    });
     api.signedPhotoUrl(photo.storage_path, 900, 'job-photos').then(url => {
       clear(tile).append(
         el('img', { src: url, alt: photo.caption || tagLabel(photo.kind) }),
@@ -138,6 +148,8 @@ export function createPhotosPanel({ jobId, uploadFn, pendingPhotosFn, listPhotos
     tile.addEventListener('click', async () => {
       if (!confirmAction('Remove this photo?')) return;
       try {
+        if (retainOriginals && await photoIsFrozen(photo.id)) throw new Error('This photo is locked by an accepted completion. Ask the owner for a reasoned correction.');
+        if (retainOriginals && await localAccount() !== ownerId) throw new Error('Account changed. Reopen the visit.');
         await api.deleteAttachment(photo.id);
         await render();
       } catch (err) {

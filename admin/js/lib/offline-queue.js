@@ -1,13 +1,17 @@
 import * as api from './api.js';
 import { localAccount, accessDenied } from './field-identity.js';
 import { forget } from './field-cache.js';
-import { OUTBOX_VERSION, upgradeOutbox, validateOutbox } from './outbox-schema.js';
+import { OUTBOX_VERSION, COMPLETION_RECORD_VERSION, upgradeOutbox, validateOutbox } from './outbox-schema.js';
+import { completeFieldJob } from './field-completion-api.js';
 
 /** A bounded, honest offline outbox for the Field Console -- not a general
- *  sync engine. It covers exactly the four action types the field console
+ *  sync engine. It covers the four original action types the field console
  *  needs to survive a dead driveway connection: Property Passport/checklist
  *  writes, adding a measurement, uploading a photo, and capturing a
- *  signature. Everything else (sending an email, building a quote from
+ *  signature, plus the explicitly reviewed/versioned completion request.
+ *  Completion has an idempotent server contract and keeps its receipt in
+ *  the existing lifecycle store; its conflicts never auto-replay.
+ *  Everything else (sending an email, building a quote from
  *  calculation, revisions) still needs a live connection, same as before --
  *  those aren't things a tech does standing at the truck with no signal.
  *
@@ -62,12 +66,16 @@ async function withStore(mode, fn) {
   try {
     db = await openDb();
     const result = await new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE, mode);
+      const tx = db.transaction(mode === 'readwrite' ? [STORE, 'schema', 'lifecycle'] : [STORE], mode);
       const store = tx.objectStore(STORE);
-      const result = fn(store);
+      let result, workError;
+      try {
+        result = fn(store, tx);
+        if (result?.then) result.catch(error => { workError = error; try { tx.abort(); } catch {} });
+      } catch (error) { tx.abort(); reject(error); return; }
       tx.oncomplete = () => resolve(result);
       tx.onerror = () => reject(tx.error);
-      tx.onabort = () => reject(tx.error);
+      tx.onabort = () => reject(workError || tx.error);
     });
     if (storageError) { storageError = null; notify(); }
     return result;
@@ -95,6 +103,7 @@ const HANDLERS = {
   updateProperty: (args) => api.updateProperty(args.id, args.patch),
   createMeasurement: (args) => api.createMeasurement(args.jobId, args.measurement),
   uploadJobPhoto: (args) => api.uploadJobPhoto(args.jobId, args.file, args.opts),
+  completeJobWithEvidence: (args) => completeFieldJob(args.payload),
   saveSignature: async (args) => {
     const path = await api.uploadSignature(args.jobId, args.pngBlob);
     return api.saveQuoteSignature(args.quoteId, path, args.signerName);
@@ -151,12 +160,21 @@ async function enqueue(type, args, label, scope) {
   if (scope?.ownerId && scope.ownerId !== ownerId) throw new Error('Account changed before this action was saved. Reopen the visit.');
   const size = payload => new Blob([JSON.stringify(payload || {})]).size + (payload?.file?.size || 0) + (payload?.pngBlob?.size || 0);
   const payloadBytes = size(args);
-  const id = await withStore('readwrite', async store => {
+  const id = await withStore('readwrite', async (store, tx) => {
     const items = await reqToPromise(store.getAll());
+    const completion = type === 'completeJobWithEvidence';
+    if (completion) {
+      if (!args.payload?.p_client_operation_id || args.payload.p_job_id !== args.jobId || !Number.isInteger(args.payload.p_job_lock_version) || !Number.isInteger(args.payload.p_policy_version))
+        throw new Error('Completion needs its original key and rendered versions.');
+      if (items.some(item => item.type === type && item.ownerId === ownerId && item.jobId === args.jobId))
+        throw new Error('A completion for this visit is already saved. Review it before creating another.');
+      tx.objectStore('schema').put({ key: 'schema', version: OUTBOX_VERSION, recordVersion: COMPLETION_RECORD_VERSION });
+    }
     if (items.length >= 200 || items.reduce((n, item) => n + (item.payloadBytes ?? size(item.args)), 0) + payloadBytes > 50 * 1024 * 1024)
       throw new Error('Device outbox is full. Sync or review saved actions before adding more.');
     return reqToPromise(store.add({ type, args, label, ownerId, jobId: scope?.jobId || args.jobId || null,
-      basePassport: scope?.basePassport, payloadBytes, state: 'pending', createdAt: Date.now() }));
+      basePassport: scope?.basePassport, payloadBytes, state: completion ? 'queued' : 'pending',
+      ...(completion ? { recordVersion: COMPLETION_RECORD_VERSION, outcome: 'not-sent' } : {}), createdAt: Date.now() }));
   });
   notify(await count());
   return id;
@@ -172,6 +190,7 @@ export async function pending() {
   return (items || []).filter(i => !i.ownerId || i.ownerId === owner).map(i => ({ id: i.id,
     label: i.ownerId ? i.label : 'Legacy action — ownership unknown', type: i.ownerId ? i.type : 'legacy',
     createdAt: i.createdAt, state: !i.ownerId ? 'blocked' : i.state === 'sending' ? 'uncertain' : i.state,
+    outcome: i.outcome || null,
     lastError: !i.ownerId ? 'Retained from the previous version. Automatic replay is blocked.'
       : i.state === 'sending' ? 'The app closed during a send. The server may already have received it.' : i.lastError || null,
     attemptedAt: i.attemptedAt || null }));
@@ -207,7 +226,9 @@ export async function confirmRetry(id) {
     const item = await reqToPromise(store.get(id));
     if (!item?.ownerId || item.ownerId !== owner) throw new Error('This action does not belong to the signed-in account.');
     if (flushInFlight) throw new Error('Wait for sync to finish.');
-    return reqToPromise(store.put({ ...item, state: 'pending', lastError: null }));
+    if (item.type === 'completeJobWithEvidence' && item.outcome === 'refused')
+      throw new Error('The server refused this completion. Reload the requirements and explicitly replace it after review.');
+    return reqToPromise(store.put({ ...item, state: item.type === 'completeJobWithEvidence' ? 'queued' : 'pending', lastError: null }));
   }));
   notify();
 }
@@ -223,6 +244,8 @@ export function discard(id) {
     await mutateWhenIdle(() => withStore('readwrite', async store => {
       const item = await reqToPromise(store.get(id));
       if (item?.ownerId && item.ownerId !== owner) throw new Error('This action belongs to another account.');
+      if (item?.type === 'completeJobWithEvidence' && (item.state === 'sending' || item.outcome === 'unknown'))
+        throw new Error('This completion may already be accepted. Recover its original receipt before discarding anything.');
       return reqToPromise(store.delete(id));
     }));
     const items = await pending();
@@ -320,7 +343,11 @@ async function runFlush() {
     const next = await withStore('readonly', store => reqToPromise(store.index('ownerId').getAll(owner)))
       .then(items => items.length ? { id: items[0].id, value: items[0] } : null);
     if (!next) break;
-    if (['sending', 'uncertain'].includes(next.value.state)) {
+    if (next.value.type === 'completeJobWithEvidence' && next.value.recordVersion !== COMPLETION_RECORD_VERSION) {
+      lastError = 'Saved completion uses an unsupported record format. Update the app; its request was preserved.';
+      break;
+    }
+    if (['sending', 'uncertain', 'conflict', 'needs-review'].includes(next.value.state)) {
       lastError = 'A previous send may already have succeeded. Review the action before retrying.';
       break;
     }
@@ -355,7 +382,19 @@ async function runFlush() {
         if (await localAccount() !== owner) break;
         value = alreadySaved ? quote : await api.saveQuoteSignature(args.quoteId, path, args.signerName);
       } else value = await HANDLERS[next.value.type](sendArgs);
-      await withStore('readwrite', (store) => store.delete(next.id));
+      await withStore('readwrite', async (store, tx) => {
+        if (next.value.type === 'completeJobWithEvidence') {
+          const history = tx.objectStore('lifecycle');
+          const rows = await reqToPromise(history.getAll());
+          // Accepted receipts are bounded history. Pending queue rows are
+          // never evicted, including when this receipt commit fails.
+          const accepted = rows.filter(row => row.state === 'accepted').sort((a,b) => a.savedAt-b.savedAt);
+          if (accepted.length >= 200) history.delete(accepted[0].id);
+          history.put({ id: `completion:${next.id}`, ownerId: owner, jobId: next.value.jobId, state: 'accepted',
+            payload: next.value.args.payload, receipt: value, savedAt: Date.now() });
+        }
+        store.delete(next.id);
+      });
       results[next.id] = value;
       flushedLabels.push(next.value.label);
     } catch (err) {
@@ -369,8 +408,13 @@ async function runFlush() {
       }
       failedId = next.id; cause = err;
       const sending = await withStore('readonly', store => reqToPromise(store.get(next.id)));
+      const completion = next.value.type === 'completeJobWithEvidence';
+      const conflict = ['55000', '23514', '23505'].includes(err?.code);
+      const refused = conflict || ['42501','22023','P0002'].includes(err?.code);
       await withStore('readwrite', store => store.put({ ...next.value,
-        state: sending?.state === 'sending' && looksOffline(err) && next.value.type !== 'updateProperty' ? 'uncertain' : 'pending',
+        state: completion ? conflict ? 'conflict' : 'needs-review'
+          : sending?.state === 'sending' && looksOffline(err) && next.value.type !== 'updateProperty' ? 'uncertain' : 'pending',
+        ...(completion ? { outcome: refused ? 'refused' : 'unknown', errorCode: err.code || null } : {}),
         lastError, attemptedAt: Date.now() }));
       break;
     }
@@ -379,6 +423,19 @@ async function runFlush() {
   remaining = await count();
   notify(remaining);
   return { flushed: flushedLabels, remaining, error: lastError, results, failedId, cause };
+}
+
+export async function completionState(jobId) {
+  const owner = await localAccount();
+  if (!owner) return { pending: null, accepted: null };
+  const pending = await withStore('readonly', store => reqToPromise(store.getAll()));
+  const db = await openDb();
+  try {
+    const tx = db.transaction('lifecycle', 'readonly');
+    const rows = await reqToPromise(tx.objectStore('lifecycle').index('ownerId').getAll(owner));
+    return { pending: pending.find(row => row.ownerId === owner && row.jobId === jobId && row.type === 'completeJobWithEvidence') || null,
+      accepted: rows.filter(row => row.jobId === jobId && row.state === 'accepted').sort((a,b) => b.savedAt-a.savedAt)[0] || null };
+  } finally { db.close(); }
 }
 
 // Three-way merge only edited fields. Preserve unrelated server changes;

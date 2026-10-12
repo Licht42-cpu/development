@@ -1,0 +1,55 @@
+
+> nova-shield@1.0.0 cap:sync
+> npm run sync:mobile && npx cap sync
+
+
+> nova-shield@1.0.0 sync:mobile
+> node scripts/sync-mobile.js
+
+Synced admin/ + shared/ -> mobile/www/; checked 386 local references
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+✔ Copying web assets from www to android/app/src/main/assets/public in 28.58ms
+✔ Creating capacitor.config.json in android/app/src/main/assets in 638.03μs
+✔ copy android in 40.63ms
+✔ Updating Android plugins in 1.04ms
+[info] Found 7 Capacitor plugins for android:
+       @capacitor/app@8.1.2
+       @capacitor/camera@8.2.5
+       @capacitor/filesystem@8.1.4
+       @capacitor/geolocation@8.2.3
+       @capacitor/haptics@8.0.2
+       @capacitor/share@8.0.3
+       @capacitor/status-bar@8.0.4
+✔ update android in 27.41ms
+✔ Copying web assets from www to ios/App/App/public in 29.77ms
+✔ Creating capacitor.config.json in ios/App/App in 253.08μs
+✔ copy ios in 43.85ms
+✔ Updating iOS plugins in 1.65ms
+[info] All Capacitor plugins have a Package.swift file and will be included in Package.swift
+[info] Writing Package.swift
+[info] Found 7 Capacitor plugins for ios:
+       @capacitor/app@8.1.2
+       @capacitor/camera@8.2.5
+       @capacitor/filesystem@8.1.4
+       @capacitor/geolocation@8.2.3
+       @capacitor/haptics@8.0.2
+       @capacitor/share@8.0.3
+       @capacitor/status-bar@8.0.4
+✔ update ios in 20.49ms
+✔ copy web in 4.71ms
+✔ update web in 21.33ms
+[info] Sync finished in 0.217s
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

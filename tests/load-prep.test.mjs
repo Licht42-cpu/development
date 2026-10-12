@@ -140,7 +140,7 @@ for (const marker of [{ key: 'schema', version: 99, recordVersion: 1 }, { key: '
     await assert.rejects(flush(f.page), /unknown schema version/); assert.deepEqual(await snapshot(f.page), before); assert.equal(f.state.writes.length, 0);
   }));
 }
-await check('new states persist separately, no existing handler uses them and no fifth handler is installed', () => fixture(async f => {
+await check('lifecycle states persist separately from legacy handlers; unsupported load actions still refuse', () => fixture(async f => {
   await seed(f); await count(f.page); const before = await snapshot(f.page);
   const states = await f.page.evaluate(async owner => {
     const { OUTBOX_STATES } = await import('/admin/js/lib/outbox-schema.js');

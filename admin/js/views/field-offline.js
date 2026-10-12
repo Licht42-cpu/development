@@ -5,6 +5,7 @@ import { createPhotosPanel } from './field-photos.js';
 import { createDictationReview } from '../components/field-dictation.js';
 import { retainNoteDraft } from '../lib/field-cache.js';
 import * as queue from '../lib/offline-queue.js';
+import { createFieldCompletion } from '../components/field-completion.js';
 
 export async function renderOfflineWork({ mount, navigate, retry }, snapshot, jobId) {
   const banner = el('div', { class: 'warn', role: 'status' }, [
@@ -42,7 +43,7 @@ export async function renderOfflineWork({ mount, navigate, retry }, snapshot, jo
     ...(job.customers?.phone ? [el('div', { class: 'btn-row' }, [
       el('a', { class: 'btn', href: `tel:${job.customers.phone}`, text: 'Call' }),
       el('a', { class: 'btn', href: `sms:${job.customers.phone}`, text: 'Text' })])] : []),
-    el('p', { class: 'hint', text: `Saved status: ${humanise(job.status)}. Status and completion need a connection.` }),
+    el('p', { class: 'hint', text: `Saved status: ${humanise(job.status)}. Server-accepted completion needs a connection; reviewed finish declarations can be saved provisionally.` }),
     passportPanel(job.properties, null, jobId, snapshot.id).root, checklistPanel(job.properties, jobId, snapshot.id));
 
   const measurements = el('div', { class: 'card' }, [el('h2', { text: 'Saved measurements' }),
@@ -91,6 +92,8 @@ export async function renderOfflineWork({ mount, navigate, retry }, snapshot, jo
     } });
   mount.append(photos.root);
   await photos.render();
+  const completion = createFieldCompletion({jobId,ownerId:snapshot.id,offline:true});
+  mount.append(completion.root);completion.start();
   const input = el('textarea', { 'aria-label': 'Note', placeholder: 'Draft a note for the office…' });
   const visibility = select([{ value: 'internal', label: 'Internal — staff only' },
     { value: 'customer', label: 'Customer-visible' }], 'internal', null, { 'aria-label': 'Who can see it' });

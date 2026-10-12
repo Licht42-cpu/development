@@ -1,0 +1,12 @@
+.field-completion { overflow-wrap: anywhere; }
+.field-completion input, .field-completion select, .field-completion textarea, .field-completion .btn { min-height: 48px; }
+.field-completion .completion-notice { padding: 12px; margin-block: 10px; border-left: 4px solid var(--gold); background: var(--surface-2); }
+.field-completion .completion-accepted { border-color: var(--ok); }
+.field-completion .completion-conflict, .field-completion .completion-refused { border-color: var(--danger); }
+.field-completion .completion-check { display: flex; gap: 12px; align-items: center; margin-block: 12px; }
+.field-completion .completion-check input { width: 48px; height: 48px; flex: 0 0 48px; }
+.field-completion summary { cursor: pointer; min-height: 48px; padding-block: 10px; }
+.field-completion .completion-watermark { background: var(--surface-2); padding: 10px; font-size: .85rem; }
+.completion-review { width: min(560px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); overflow-y: auto; box-sizing: border-box; border: 1px solid var(--line); border-radius: 12px; color: var(--text); background: var(--surface); padding: 18px; }
+.completion-review::backdrop { background: rgba(0,0,0,.55); }
+.field-completion :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }

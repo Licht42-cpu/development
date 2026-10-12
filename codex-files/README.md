@@ -1,5 +1,10 @@
 # Codex files — complete Nova Shield handoff
 
+Batch 11.2 is on `codex/batch-11-2`: [completion/evidence handoff](../tests/field-completion.md),
+[current evidence](artifacts/batch-11-2/). It carries forward the earlier
+original-photo/dictation increment and preserves completed 10.2. Claude's
+backend stays independent; all current handoffs are committed here.
+
 Current Batch 10.2 is on `codex/batch-10-2`: [crew load and closing handoff](../tests/field-load.md),
 [browser/build evidence](artifacts/batch-10-2/). Code stays in the canonical
 field paths. Claude's frozen v2.1 contract was read without merging its branch.

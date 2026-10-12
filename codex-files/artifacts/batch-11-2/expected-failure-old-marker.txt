@@ -1,0 +1,10 @@
+FAIL - active marker 2 blocks the old app validator without deleting pending completion or legacy bytes
+AssertionError [ERR_ASSERTION]: The input did not match the regular expression /unknown schema version/. Input:
+
+'wrongly accepted'
+
+    at file:///workspace/nova-shield/tests/field-completion.test.mjs:110:9
+    at async fixture (file:///workspace/nova-shield/tests/field-completion.test.mjs:16:6)
+    at async test (file:///workspace/nova-shield/tests/field-completion.test.mjs:11:117)
+    at async file:///workspace/nova-shield/tests/field-completion.test.mjs:107:1
+0 PASS / 1 FAIL

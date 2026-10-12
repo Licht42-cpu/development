@@ -1,7 +1,10 @@
-// Storage shape is independent of action handlers. A future reviewed handler
-// can use these stores without another IDB migration; none is added now.
+// v3 keeps legacy records intact. Completion uses the pre-existing lifecycle
+// store and activates marker 2 atomically, without another DB/store migration.
 export const OUTBOX_VERSION = 3;
 export const OUTBOX_RECORD_VERSION = 1;
+// Marker 2 is written atomically ONLY when the first completion is queued.
+// Prior apps understand marker 1 and refuse marker 2 without losing rows.
+export const COMPLETION_RECORD_VERSION = 2;
 export const OUTBOX_STATES = Object.freeze(['queued', 'accepted', 'conflict', 'needs-review']);
 export const OUTBOX_SCHEMA = Object.freeze({ key: 'schema', version: OUTBOX_VERSION, recordVersion: OUTBOX_RECORD_VERSION });
 
@@ -33,7 +36,7 @@ export function validateOutbox(db) {
     let marker;
     tx.objectStore('schema').get('schema').onsuccess = event => { marker = event.target.result; };
     tx.oncomplete = () => {
-      if (marker?.version !== OUTBOX_VERSION || marker?.recordVersion !== OUTBOX_RECORD_VERSION)
+      if (marker?.version !== OUTBOX_VERSION || ![OUTBOX_RECORD_VERSION, COMPLETION_RECORD_VERSION].includes(marker?.recordVersion))
         reject(new Error('Device outbox uses an unknown schema version. Update the app; saved actions were kept.'));
       else resolve();
     };

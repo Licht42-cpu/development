@@ -1,5 +1,10 @@
 # Field evidence capture and reviewed dictation — owned workload increment
 
+Historical increment, now carried into `codex/batch-11-2`. The completed
+completion/evidence interface and current integrator list are in
+[field-completion.md](field-completion.md). The raw-byte/dictation guarantees
+below remain covered by the 31-check suite.
+
 Base: **04b8b946b38bcd55641f88a543e8ed720bed5be4**. Branch:
 `codex/field-evidence-capture`. This implements two independent field items
 from the 11.2 workload while 10.2 still awaits Claude's load corrective.

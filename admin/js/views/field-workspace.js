@@ -12,11 +12,13 @@ import { reviewFlag } from '../components/review-flag.js';
 import { trySave, describeWriteError } from '../lib/save.js';
 import { readDraft, writeDraft, deleteDraft, retainNoteDraft } from '../lib/field-cache.js';
 import { localAccount } from '../lib/field-identity.js';
+import { createFieldCompletion } from '../components/field-completion.js';
 
-/* The four action types this console queues offline, per the task:
+/* The original four action types this console queues offline:
    Passport/checklist writes, adding a measurement, uploading a photo, and
    capturing a signature. Everything else here still calls api.js directly
-   and needs a live connection, same as before. */
+   and needs a live connection, same as before. Reviewed completion adds
+   one explicitly versioned/idempotent type in field-completion.js. */
 function queueToast(queued, okMessage) {
   toast(queued ? 'Offline — saved locally, will sync automatically' : okMessage);
 }
@@ -332,9 +334,9 @@ export async function renderVisit({ mount, navigate }, jobId) {
     retainOriginals: true, ownerId,
     pendingPhotosFn: offlineQueue.pendingPhotos,
     uploadFn: async (jobId, file, opts) => {
-      const { queued } = await offlineQueue.callOrQueue('uploadJobPhoto', { jobId, file, opts }, 'Photo upload', { ownerId });
+      const { queued, result } = await offlineQueue.callOrQueue('uploadJobPhoto', { jobId, file, opts }, 'Photo upload', { ownerId });
       queueToast(queued, 'Photo added');
-      return queued;
+      return { queued, result };
     }
   });
 
@@ -344,10 +346,11 @@ export async function renderVisit({ mount, navigate }, jobId) {
   const checklistHost = el('div', {});
 
   const statusSelect = select(
-    JOB_STATUSES.map(s => ({ value: s, label: humanise(s) })), job.status,
+    JOB_STATUSES.filter(s => s !== 'completed' || job.status === 'completed').map(s => ({ value: s, label: humanise(s) })), job.status,
     async (e) => {
       const control = e.target;
       const before = job.status;
+      if (control.value === 'completed') { control.value = before; return toast('Use reviewed completion and server evidence acceptance.', 'error'); }
       await trySave(
         async () => {
           await api.updateJob(job.id, { status: control.value });
@@ -358,39 +361,33 @@ export async function renderVisit({ mount, navigate }, jobId) {
     }
   );
 
-  /* Explicit completion, rather than hunting for 'completed' in a 15-item
-     dropdown. This is the action that stamps ns_jobs.completed_at, which was
-     never written before and which the completion report now dates itself
-     from. api.completeJob only matches a row whose completed_at is still
-     null, so a double-tap cannot move an existing completion time. */
-  const completeBtn = el('button', { class: 'btn btn--primary', text: 'Mark Job Complete' });
+  // Completion is a reviewed, versioned outbox request; only its server
+  // receipt establishes acceptance. No direct status/completeJob bypass.
+  const completionPanel = createFieldCompletion({ jobId: job.id, ownerId,
+    beforeReview: () => measurementsPanel.flush(),
+    onAccepted: receipt => {
+      Object.assign(job, { status: receipt.job.status, completed_at: receipt.job.completed_at, lock_version: receipt.job.lock_version });
+      if (receipt.job.status === 'completed' && !statusSelect.querySelector('option[value="completed"]'))
+        statusSelect.append(el('option', {value:'completed',text:'Completed — accepted by server',disabled:true}));
+      statusSelect.value = receipt.job.status;
+      paintCompletion();
+    } });
+  const completeBtn = el('button', { class: 'btn btn--primary', text: 'Review completion' });
   const completeHint = el('p', { class: 'hint', style: 'margin:6px 0 0' });
 
   function paintCompletion() {
     const done = !!job.completed_at;
     completeBtn.disabled = done;
-    completeBtn.textContent = done ? 'Job Complete' : 'Mark Job Complete';
+    completeBtn.textContent = done ? 'Job Complete' : 'Review completion';
     completeHint.textContent = done
       ? `Completed ${new Date(job.completed_at).toLocaleString('en-CA')}`
-      : 'Stamps the completion time on the job record.';
+      : 'Review evidence and usage. Finished work is provisional until the server accepts it.';
   }
 
   completeBtn.addEventListener('click', async () => {
     if (job.completed_at) return;
-    if (!confirmAction('Mark this job complete?')) return;
-    completeBtn.disabled = true;
-    completeBtn.textContent = 'Completing…';
-    await trySave(
-      async () => {
-        const saved = await api.completeJob(job.id);
-        if (!saved) throw new Error('This job was already marked complete.');
-        job.completed_at = saved.completed_at;
-        job.status = saved.status;
-        statusSelect.value = saved.status;
-      },
-      { success: 'Job marked complete' }
-    );
-    paintCompletion();
+    completionPanel.root.scrollIntoView({block:'start'});
+    await completionPanel.openReview();
   });
 
   /* Notes from the field. job_notes has existed since the core schema and
@@ -493,6 +490,9 @@ export async function renderVisit({ mount, navigate }, jobId) {
       ]);
       if (!measurementsPanel.isCurrent(refresh)) return;
       job.status = fresh.status;
+      job.completed_at = fresh.completed_at;
+      job.lock_version = fresh.lock_version;
+      paintCompletion();
       Object.assign(job.properties, fresh.properties);
       if (statusSelect.value !== fresh.status) statusSelect.value = fresh.status;
       sections = freshSections; measurements = freshMeasurements; pricing = freshPricing; quotes = freshQuotes;
@@ -618,6 +618,7 @@ export async function renderVisit({ mount, navigate }, jobId) {
     measurementsPanel.root,
     el('div', { class: 'card' }, [quotePanel.root]),
     photosPanel.root,
+    completionPanel.root,
     el('div', { class: 'card' }, [
       el('div', { class: 'card__head' }, [
         el('div', {}, [
@@ -633,6 +634,7 @@ export async function renderVisit({ mount, navigate }, jobId) {
   );
 
   paintCompletion();
+  completionPanel.start();
   await reload({ initial: true });
   await refreshNotes();
   try {

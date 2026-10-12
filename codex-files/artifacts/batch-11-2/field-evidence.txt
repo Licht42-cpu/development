@@ -1,0 +1,35 @@
+(node:1215767) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - original bytes and metadata commit before markup; Back saves a draft without uploading
+PASS - original survives reload and resumes; queue submission uses the existing photo handler
+PASS - marked upload preserves the unmodified original and selection-time tag
+PASS - route interruption closes markup and preserves the unfinished original
+PASS - capture storage rejects oversized originals without eviction or queued writes
+PASS - capture budget includes text metadata and frozen upload options
+PASS - removing a local original leaves separately queued photo bytes intact
+PASS - future capture-store version fails closed and retains the original bytes
+PASS - atomic handoff permits only one submission claim for a saved capture
+PASS - failed original commit prevents markup and upload rather than claiming local durability
+PASS - interrupted submission restores originals but offers no automatic fresh upload
+PASS - review location denied is explicit and never becomes a claimed capture geotag
+PASS - review location unavailable is explicit and never becomes a claimed capture geotag
+PASS - review location reported is explicit and never becomes a claimed capture geotag
+PASS - photos and speech buffers stay private to their account across switch and return
+PASS - same-account visits do not mix original photos or dictation buffers
+PASS - speech is review-only until explicit transfer; note sends only through Save note
+PASS - unsubmitted dictation survives reload without appearing as a saved note
+PASS - late final speech cannot overwrite a review edited after stopping
+PASS - older speech callbacks cannot overwrite a newer transcript
+PASS - failed note-draft commit retains dictation for recovery instead of clearing it
+PASS - microphone permission failure retains text and does not send a note
+PASS - identity read failure stops speech without an unhandled callback or note write
+PASS - unsupported speech engine has an honest typed review fallback
+PASS - backgrounding stops recognition and drops late results
+PASS - leaving a visit aborts recognition and ignores late speech results
+PASS - offline notes accept only reviewed text into a durable unsubmitted draft
+PASS - 390px touch/keyboard originals and dictation fit without overflow
+PASS - 430px touch/keyboard originals and dictation fit without overflow
+PASS - 1200px touch/keyboard originals and dictation fit without overflow
+PASS - actual Chromium restart preserves unsubmitted originals and dictation bytes
+31 PASS / 0 FAIL
