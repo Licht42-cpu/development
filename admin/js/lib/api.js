@@ -1720,3 +1720,280 @@ export async function retireSeasonalSet({
     p_note: note || null
   }));
 }
+
+/* =====================================================================
+   Batch 12.1 -- dispatch, property instructions and the two crew-triggered
+   customer messages.
+
+   Every mutation here takes a client operation id and is replay-safe
+   server-side (dispatch contract v1 §8). Every planning mutation also
+   quotes the revision the screen was shown, the same way a load
+   confirmation quotes its three values: a concurrent edit is refused with
+   the current number rather than applied on top of somebody else's work.
+   ===================================================================== */
+
+/** The ordered day for one vehicle: stops in order, work that needs a car,
+ *  the operating-day window, and what the dispatch edits did to the load
+ *  plan. One read, frozen in docs/dispatch-contract-v1.md §3. */
+export async function getDispatchDay({ locationCode, workDate }) {
+  return unwrap(await supabase.rpc('get_dispatch_day', {
+    p_location_code: locationCode,
+    p_work_date: workDate
+  }));
+}
+
+/** Set the order of a vehicle's day.
+ *
+ *  `jobIds` must be EXACTLY the day's jobs, in the wanted order -- the
+ *  backend refuses a subset rather than quietly dropping the stop a stale
+ *  screen had not seen. */
+export async function reorderDispatchDay({
+  clientOperationId, locationCode, workDate, jobIds, expectedRevision
+}) {
+  return unwrap(await supabase.rpc('reorder_dispatch_day', {
+    p_client_operation_id: clientOperationId || newOperationId('ord'),
+    p_location_code: locationCode,
+    p_work_date: workDate,
+    p_job_ids: jobIds,
+    p_expected_revision: expectedRevision ?? null
+  }));
+}
+
+/** Put a job on a vehicle, or take it off with `locationCode: null`.
+ *
+ *  Invalidates the load plan on both the car it left and the one it joined;
+ *  the receipt lists what it touched and says `stock_moved: false`, because
+ *  a reassignment on a screen does not carry tools across a car park. */
+export async function assignJobToVehicle({
+  clientOperationId, jobId, locationCode, expectedRevision, reason
+}) {
+  return unwrap(await supabase.rpc('assign_job_to_vehicle', {
+    p_client_operation_id: clientOperationId || newOperationId('asg'),
+    p_job_id: jobId,
+    p_location_code: locationCode ?? null,
+    p_expected_revision: expectedRevision ?? null,
+    p_reason: reason || null
+  }));
+}
+
+/** Move a job to another time, possibly another day. */
+export async function rescheduleJob({
+  clientOperationId, jobId, scheduledFor, expectedRevision, reason
+}) {
+  return unwrap(await supabase.rpc('reschedule_job', {
+    p_client_operation_id: clientOperationId || newOperationId('resch'),
+    p_job_id: jobId,
+    p_scheduled_for: scheduledFor,
+    p_expected_revision: expectedRevision ?? null,
+    p_reason: reason || null
+  }));
+}
+
+/** What the two cars are competing for on a day. A read: nothing is
+ *  transferred, reserved, bought or consumed by looking. */
+export async function dispatchEquipmentConflicts({ workDate }) {
+  return unwrap(await supabase.rpc('dispatch_equipment_conflicts', {
+    p_work_date: workDate
+  }));
+}
+
+/* ------------------------------------------- property instructions -- */
+
+/** How to get in, what to watch for, and the defined work zones.
+ *
+ *  THE ONLY PATH TO THE PRIVATE COLUMNS. `access_code` and `internal_note`
+ *  have no column-level SELECT for `authenticated`, so this function --
+ *  which checks that the caller owns the business or crews a vehicle with
+ *  work at the property -- is how they are read. Do not add a table read
+ *  for them; a UI filter is not authorisation. */
+export async function getPropertyAccess(propertyId) {
+  return unwrap(await supabase.rpc('get_property_access', {
+    p_property_id: propertyId
+  }));
+}
+
+/** Write the working details. Every field is sent every time, because a
+ *  partial update whose nulls mean "leave alone" cannot express "clear
+ *  this". `expectedVersion` 0 is a first save. */
+export async function setPropertyAccess({
+  clientOperationId, propertyId, entranceNote, hazardNote, parkingNote,
+  internalNote, accessCode, customerNote, expectedVersion
+}) {
+  return unwrap(await supabase.rpc('set_property_access', {
+    p_client_operation_id: clientOperationId || newOperationId('acc'),
+    p_property_id: propertyId,
+    p_entrance_note: entranceNote ?? null,
+    p_hazard_note: hazardNote ?? null,
+    p_parking_note: parkingNote ?? null,
+    p_internal_note: internalNote ?? null,
+    p_access_code: accessCode ?? null,
+    p_customer_note: customerNote ?? null,
+    p_expected_version: expectedVersion ?? null
+  }));
+}
+
+/** Create or replace a work zone.
+ *
+ *  `space` is 'geographic' (points are {lat,lng}) or 'image' (points are
+ *  {x,y} as 0..1 fractions of `imageSource`). A drawing is not a surveyed
+ *  boundary and the backend will not let it claim to be one. */
+export async function savePropertyWorkZone({
+  clientOperationId, propertyId, label, kind, space, points, imageSource,
+  note, zoneId, expectedVersion
+}) {
+  return unwrap(await supabase.rpc('save_property_work_zone', {
+    p_client_operation_id: clientOperationId || newOperationId('zone'),
+    p_property_id: propertyId,
+    p_label: label,
+    p_kind: kind,
+    p_space: space,
+    p_points: points,
+    p_image_source: imageSource ?? null,
+    p_note: note ?? null,
+    p_zone_id: zoneId ?? null,
+    p_expected_version: expectedVersion ?? null
+  }));
+}
+
+/** Retire a zone. Not a delete: what was drawn, and when it stopped
+ *  applying, is history. */
+export async function retirePropertyWorkZone({
+  clientOperationId, zoneId, reason
+}) {
+  return unwrap(await supabase.rpc('retire_property_work_zone', {
+    p_client_operation_id: clientOperationId || newOperationId('zone'),
+    p_zone_id: zoneId,
+    p_reason: reason
+  }));
+}
+
+/* ------------------------------------------- issues and the states -- */
+
+/** Report that the crew could not get in, or that the kit broke.
+ *
+ *  A report never changes the job's commercial status and never completes
+ *  or cancels anything; the receipt says so explicitly. */
+export async function reportJobIssue({
+  clientOperationId, jobId, kind, reason, materialId
+}) {
+  return unwrap(await supabase.rpc('report_job_issue', {
+    p_client_operation_id: clientOperationId || newOperationId('iss'),
+    p_job_id: jobId,
+    p_kind: kind,
+    p_reason: reason,
+    p_material_id: materialId ?? null
+  }));
+}
+
+/** Resolve a reported problem. Owner-only and reasoned. */
+export async function resolveJobIssue({
+  clientOperationId, issueId, resolutionState, note
+}) {
+  return unwrap(await supabase.rpc('resolve_job_issue', {
+    p_client_operation_id: clientOperationId || newOperationId('res'),
+    p_issue_id: issueId,
+    p_resolution_state: resolutionState,
+    p_note: note
+  }));
+}
+
+/** Set a stop's dispatch state: planned, skipped, blocked or
+ *  work_finished.
+ *
+ *  `work_finished` IS NOT A COMPLETION. An accepted completion is
+ *  completeJobWithEvidence() and nothing else; this call cannot produce one
+ *  and its receipt reports the completion state separately so a screen
+ *  cannot render one as the other. */
+export async function setDispatchStage({
+  clientOperationId, jobId, state, reason, expectedVersion
+}) {
+  return unwrap(await supabase.rpc('set_dispatch_stage', {
+    p_client_operation_id: clientOperationId || newOperationId('stg'),
+    p_job_id: jobId,
+    p_state: state,
+    p_reason: reason ?? null,
+    p_expected_version: expectedVersion ?? null
+  }));
+}
+
+/** The commercial status, the dispatch state, the completion state and the
+ *  open issues, side by side. Four facts, never inferred from each other. */
+export async function jobDispatchStatus(jobId) {
+  const rows = unwrap(await supabase.from('ns_job_dispatch_status')
+    .select('*').eq('job_id', jobId));
+  return rows[0] || null;
+}
+
+export async function listJobIssues(jobId) {
+  return unwrap(await supabase.from('ns_job_issues')
+    .select('*').eq('job_id', jobId).order('reported_at', { ascending: false }));
+}
+
+/* --------------------------------------- the two customer messages -- */
+
+/** "On the way" or "we cannot get in", through the existing notification
+ *  pipeline.
+ *
+ *  FIVE OUTCOMES, four of which are not a send: `accepted` (queued),
+ *  `delivered`, `provider_failed`, `unknown` and `unavailable` (no provider
+ *  configured, or no number on file). The receipt's `delivery_state` is the
+ *  honest one -- `sent` is always false, because queueing is not sending. */
+export async function requestJobNotification({
+  clientOperationId, jobId, kind, channel
+}) {
+  return unwrap(await supabase.rpc('request_job_notification', {
+    p_client_operation_id: clientOperationId || newOperationId('nt'),
+    p_job_id: jobId,
+    p_kind: kind,
+    p_channel: channel || 'sms'
+  }));
+}
+
+/** What a job's messages have come to, and whether a provider is
+ *  configured at all. */
+export async function jobNotificationRequests(jobId) {
+  return unwrap(await supabase.rpc('job_notification_requests', {
+    p_job_id: jobId
+  }));
+}
+
+/** Record what the provider said. Owner-only: a crew cannot mark its own
+ *  message delivered. `unknown` deliberately stays live and keeps blocking
+ *  a second request, because a retry might be the customer's second
+ *  identical text. */
+export async function recordNotificationOutcome({
+  requestId, deliveryState, providerMessageId, providerError
+}) {
+  return unwrap(await supabase.rpc('record_notification_outcome', {
+    p_request_id: requestId,
+    p_delivery_state: deliveryState,
+    p_provider_message_id: providerMessageId ?? null,
+    p_provider_error: providerError ?? null
+  }));
+}
+
+/* ------------------------------------------------ winter dispatch -- */
+
+/** Properties with winter work that could go out, ONE ROW PER PROPERTY --
+ *  walkway and deck are one visit -- plus the automation state, which is
+ *  `unconfigured` because no snowfall rule, forecast source or visit
+ *  allowance exists. */
+export async function winterDispatchCandidates({ workDate }) {
+  return unwrap(await supabase.rpc('ns_winter_dispatch_candidates', {
+    p_work_date: workDate
+  }));
+}
+
+/** Send an existing winter job out, deliberately. Creates no job and no
+ *  minimum, and refuses a second visit to the same property that day. */
+export async function dispatchWinterVisit({
+  clientOperationId, jobId, locationCode, scheduledFor, reason
+}) {
+  return unwrap(await supabase.rpc('dispatch_winter_visit', {
+    p_client_operation_id: clientOperationId || newOperationId('win'),
+    p_job_id: jobId,
+    p_location_code: locationCode ?? null,
+    p_scheduled_for: scheduledFor,
+    p_reason: reason
+  }));
+}

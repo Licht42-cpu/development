@@ -25,6 +25,7 @@ SUITES=(
   tests/db/batch9-1-lighting.test.mjs
   tests/db/batch10-1.test.mjs
   tests/db/batch11-1.test.mjs
+  tests/db/batch12-1.test.mjs
 )
 
 failed=0
