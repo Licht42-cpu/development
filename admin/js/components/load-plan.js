@@ -28,7 +28,13 @@ import { date, dateTime } from '../../../shared/format.js';
 const ACTIONS = [
   ['keep',   'Keep aboard',  'What stays on the van.'],
   ['add',    'Add',          'What to put on before leaving.'],
-  ['return', 'Return',       'What to take off and leave at Base.']
+  ['return', 'Return',       'What to take off and leave at Base.'],
+  /* 'skip' is a line the OWNER authorised going without. Confirming does
+     not transfer it. It had no group here, so an authorised departure was
+     invisible on this screen while being perfectly visible in the backend's
+     response -- the half of finding 6 that lived in the admin console. */
+  ['skip',   'Set aside',
+   'The owner authorised going without these. Confirming does not move them.']
 ];
 
 const LEVEL_LABEL = { empty: 'Empty', low: 'Low', enough: 'Enough' };
@@ -152,6 +158,23 @@ export function loadPlanPanel({ locationCode = 'car_a', workDate } = {}) {
     ]);
   }
 
+  /* WHICH DAY IS THIS. `work_date` is a bare calendar date; the backend
+     turns it into a range of instants using the operating timezone the
+     owner has set in Settings. Until one is set it uses UTC, which west of
+     Greenwich puts a late-afternoon visit on the NEXT day's plan -- while
+     the field console's own visit list, bounded at the device's local
+     midnight, shows it today. Saying so is the whole point: the previous
+     version had an answer nobody had chosen and no way to see it.
+     See docs/daily-load-contract-v1.md v2.1 §2a. */
+  function timezoneNotice() {
+    if (!dayRead || dayRead.work_day_timezone_state !== 'unconfigured') return null;
+    return el('p', { class: 'hint', style: 'margin:0 0 8px', text:
+      'The operating day has no timezone set, so this plan counts a day as '
+      + 'midnight to midnight UTC. Work booked late in the afternoon can '
+      + 'fall on the next day’s plan. Set it in Settings to match the '
+      + 'day the crew actually works.' });
+  }
+
   function emptyBody() {
     /* `can_build` comes from the backend, because build_load_plan is
        owner-only and a crew facing an empty day needs to be told to ring
@@ -160,6 +183,7 @@ export function loadPlanPanel({ locationCode = 'car_a', workDate } = {}) {
        say who was allowed to do anything. */
     const canBuild = dayRead ? dayRead.can_build : true;
     return el('div', {}, [
+      timezoneNotice(),
       el('p', { class: 'hint', text:
         `No plan for ${date(day)} yet. `
         + (canBuild
@@ -190,6 +214,8 @@ export function loadPlanPanel({ locationCode = 'car_a', workDate } = {}) {
         `Revision ${plan.revision}, built ${dateTime(plan.generated_at)}`
         + (plan.confirmed_at ? ` · confirmed ${dateTime(plan.confirmed_at)}` : '')
         + (plan.closed_at ? ` · day closed ${dateTime(plan.closed_at)}` : '') }),
+
+      timezoneNotice(),
 
       review.length
         ? el('div', { class: 'section-box', style: 'margin:0 0 10px' }, [
@@ -244,11 +270,24 @@ export function loadPlanPanel({ locationCode = 'car_a', workDate } = {}) {
                   'Confirm that the van now matches this plan? This posts the '
                   + 'transfers between Base and the vehicle — it is the step '
                   + 'that actually moves stock.')) return;
-                await act(e.currentTarget, () => api.confirmLoadPlan({
+                /* All three are quoted from the plan THIS SCREEN rendered,
+                   never re-read first: re-reading would defeat the point,
+                   which is to catch a change the operator has not seen.
+                   `lines_fingerprint` is the recommendation lock — a Manual
+                   Keep or an authorised exception moves it while the
+                   revision and the basis both stay put. */
+                const ok = await act(e.currentTarget, () => api.confirmLoadPlan({
                   planId: plan.plan_id,
                   expectedRevision: plan.revision,
-                  expectedFingerprint: plan.basis_fingerprint
+                  expectedFingerprint: plan.basis_fingerprint,
+                  expectedLinesFingerprint: plan.lines_fingerprint
                 }), 'Load confirmed and transfers posted.');
+                /* A refusal here means the screen is out of date, so the
+                   recovery is to show what the plan says NOW. The toast
+                   carries the reason and is not cleared by the repaint.
+                   trySave's `after` deliberately runs on success only, so
+                   this reload is the caller's job. */
+                if (!ok) await load();
               }
             })
           : null
@@ -283,6 +322,11 @@ export function loadPlanPanel({ locationCode = 'car_a', workDate } = {}) {
           ? el('span', { class: 'badge badge--ok', text: 'Kept on purpose' }) : null,
         line.data_state === 'needs_review'
           ? el('span', { class: 'badge badge--warn', text: 'Needs review' }) : null,
+        // An owner authorisation is a state of the line, like Needs review
+        // and Estimated, and is badged the same way so it is scannable
+        // rather than only readable in the reason sentence.
+        line.data_state === 'exception'
+          ? el('span', { class: 'badge badge--warn', text: 'Owner authorised' }) : null,
         line.precision === 'estimated'
           ? el('span', { class: 'badge badge--warn', text: 'Estimated' }) : null,
         line.confirmed_operation
@@ -298,7 +342,12 @@ export function loadPlanPanel({ locationCode = 'car_a', workDate } = {}) {
             'Tracked as Empty / Low / Enough, so there is no quantity to show.' })
         : null,
 
-      line.material_id && plan.status === 'current'
+      /* NO MANUAL-KEEP CONTROL ON AN OWNER-AUTHORISED SET-ASIDE. A keep is
+         "do not take it off the van"; a skip is "the owner said go without
+         it". They are different decisions by different people, and offering
+         the crew a button that reads as overriding an authorisation is
+         misleading even though the backend refuses to overwrite it. */
+      line.material_id && plan.status === 'current' && line.action !== 'skip'
         ? el('div', { class: 'btn-row', style: 'flex-wrap:wrap' }, [
             el('button', {
               class: 'btn btn--sm', type: 'button',

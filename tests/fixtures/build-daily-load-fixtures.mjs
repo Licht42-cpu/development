@@ -57,7 +57,8 @@ const SEQUENCE = [
   '20261011111000_batch10_1_load_operations.sql',
   '20261012090000_batch9_1_corrective_seasonal_review.sql',
   '20261013090000_batch11_1_seasonal_corrective_round_two.sql',
-  '20261014090000_batch10_1_corrective_load_contract.sql'
+  '20261014090000_batch10_1_corrective_load_contract.sql',
+  '20261015090000_batch10_1_corrective_day_boundary_and_lock.sql'
 ];
 
 const DAYS = {
@@ -89,6 +90,14 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // being deterministic without anyone noticing.
 const UUID_IN_TEXT = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi;
 
+/* Two timestamps are KEPT verbatim, because they are derived from a fixed
+   date and a fixed timezone rather than from when the file was generated --
+   and they are the whole point of the operating-day scenario: the window a
+   work date covers is what a client has to be able to compare against its
+   own idea of the day. The generator pins the session timezone to UTC so
+   their rendering does not depend on the host. */
+const KEPT_TIMESTAMP_KEYS = new Set(['window_starts_at', 'window_ends_at']);
+
 /** Replaces every uuid and every timestamp with something stable, so the
  *  fixture is about SHAPE and VALUES, never about when it was generated. */
 function normalise(value, keyHint) {
@@ -103,7 +112,9 @@ function normalise(value, keyHint) {
       const hint = (keyHint || '').replace(/_id$/, '').replace(/^active_/, '');
       return stable(value, hint || 'id');
     }
-    if (/^\d{4}-\d{2}-\d{2}T/.test(value)) return '<timestamp>';
+    if (/^\d{4}-\d{2}-\d{2}T/.test(value)) {
+      return KEPT_TIMESTAMP_KEYS.has(keyHint) ? value : '<timestamp>';
+    }
     if (/^[0-9a-f]{32}$/.test(value)) return '<fingerprint>';
   }
   return value;
@@ -114,6 +125,10 @@ function normalise(value, keyHint) {
   const client = new pg.Client({ connectionString: PGURL });
   await client.connect();
   await assertDisposableDatabase(client);
+  // Pinned so a timestamptz rendered into jsonb reads the same on every
+  // machine. Without this the kept window bounds would carry the host's
+  // zone and two runs could differ.
+  await client.query(`set time zone 'UTC'`);
 
   const one = async (sql, p) => (await client.query(sql, p)).rows[0];
   const all = async (sql, p) => (await client.query(sql, p)).rows;
@@ -442,8 +457,8 @@ function normalise(value, keyHint) {
 
     let conflict = null;
     try {
-      await rpc(`public.confirm_load_plan($1,$2,$3,null,null)`,
-        [key('conf'), built.plan_id, built.revision]);
+      await rpc(`public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+        [key('conf'), built.plan_id, built.revision, built.lines_fingerprint]);
     } catch (err) {
       conflict = { code: err.code, message: err.message };
     }
@@ -658,13 +673,21 @@ function normalise(value, keyHint) {
     // Confirmation.
     const fresh = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
     const confKey = key('conf');
-    const confFirst = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null)`,
-      [confKey, fresh.plan.plan_id, fresh.plan.revision, fresh.plan.basis_fingerprint]);
-    const confAgain = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null)`,
-      [confKey, fresh.plan.plan_id, fresh.plan.revision, fresh.plan.basis_fingerprint]);
+    const confFirst = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
+      [confKey, fresh.plan.plan_id, fresh.plan.revision,
+       fresh.plan.basis_fingerprint, fresh.plan.lines_fingerprint]);
+    const confAgain = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
+      [confKey, fresh.plan.plan_id, fresh.plan.revision,
+       fresh.plan.basis_fingerprint, fresh.plan.lines_fingerprint]);
     const confDuplicateStale = await tryRpc(
-      `public.confirm_load_plan($1,$2,$3,$4,null)`,
+      `public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
       [key('conf'), fresh.plan.plan_id, fresh.plan.revision - 1,
+       fresh.plan.basis_fingerprint, fresh.plan.lines_fingerprint]);
+    // v2.1: a confirmation that will not say what it saw is refused
+    // outright, rather than being checked against nothing.
+    const confWithoutLock = await tryRpc(
+      `public.confirm_load_plan($1,$2,$3,$4,null,null)`,
+      [key('conf'), fresh.plan.plan_id, fresh.plan.revision,
        fresh.plan.basis_fingerprint]);
 
     // Reconciliation, including the cross-vehicle replay the original let
@@ -717,7 +740,9 @@ function normalise(value, keyHint) {
       exception: { first: excFirst, same_key_again: excAgain,
                    changed_intent: excChangedIntent },
       confirmation: { first: confFirst, same_key_again: confAgain,
-                      different_key_with_stale_revision: confDuplicateStale },
+                      different_key_with_stale_revision: confDuplicateStale,
+                      // v2.1 §6: no lines fingerprint, no confirmation.
+                      without_the_recommendation_lock: confWithoutLock },
       reconciliation: {
         first: recFirst, same_key_again: recAgain,
         // scope passes, payload differs -> changed intent
@@ -807,9 +832,9 @@ function normalise(value, keyHint) {
       [key('exc'), day, extraMat]);
 
     const read = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
-    const conf = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null)`,
+    const conf = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
       [key('conf'), read.plan.plan_id, read.plan.revision,
-       read.plan.basis_fingerprint]);
+       read.plan.basis_fingerprint, read.plan.lines_fingerprint]);
 
     scenarios.exception_affects_confirmation = {
       description: 'Before the corrective, skip_required and carry_extra were '
@@ -832,10 +857,228 @@ function normalise(value, keyHint) {
     };
   }
 
+  /* =================================================================== */
+  /* v2.1: the second round of the same review.                          */
+  /* The operating day, and the recommendation lock.                      */
+  /* =================================================================== */
+
+  /* ---- 19. which day is the work date (finding 1) ---- */
+  {
+    const day = '2027-06-14';
+    const zone = async (z) => (z
+      ? client.query(
+          `insert into public.app_settings (key, value)
+           values ('operations', jsonb_build_object('work_day_timezone', $1::text))
+           on conflict (key) do update set value = excluded.value`, [z])
+      : client.query(`delete from public.app_settings where key = 'operations'`));
+
+    const evening = await onCarA(await job(day));
+    // 18:30 on the 14th in Edmonton; 00:30 on the 15th in UTC.
+    await client.query(
+      `update public.ns_jobs set scheduled_for = '2027-06-15T00:30:00Z' where id = $1`,
+      [evening]);
+    await measure(evening, siding, 120);
+
+    const dayJobs = async (d) => (await all(
+      `select job_id, assigned from public.ns_vehicle_day_jobs(
+         (select id from public.ns_stock_locations where code='car_a'), $1::date)`,
+      [d])).map((r) => stable(r.job_id, 'job'));
+
+    await zone(null);
+    const unconfiguredRead = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+    const unconfiguredOnDay = await dayJobs(day);
+    const unconfiguredNextDay = await dayJobs('2027-06-15');
+
+    await zone('America/Edmonton');
+    const configuredRead = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+    const configuredOnDay = await dayJobs(day);
+    const configuredNextDay = await dayJobs('2027-06-15');
+
+    await zone('Mars/Olympus_Mons');
+    const badZoneRead = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+    await zone(null);
+
+    scenarios.operating_day_timezone = {
+      description: 'WHICH DAY `work_date` MEANS. It was never stated, and the '
+        + 'backend had an answer nobody had chosen: the UTC calendar date. '
+        + 'The field console bounds its own visit list at the DEVICE\'s local '
+        + 'midnight, so west of Greenwich a late-afternoon visit shows on the '
+        + 'crew\'s schedule for today and is absent from today\'s load plan -- '
+        + 'the van is loaded for a day that does not contain the job. The '
+        + 'operating timezone is the OWNER\'s to set '
+        + '(app_settings.operations ->> work_day_timezone) and is not '
+        + 'invented here; while it is unset the bounds stay UTC, exactly as '
+        + 'before, and the read says `unconfigured` so a screen can say so. '
+        + 'A zone name PostgreSQL does not know is treated as unset rather '
+        + 'than raising, because one bad settings row must not stop the crew '
+        + 'seeing the day.',
+      visit_scheduled_at: '2027-06-15T00:30:00Z (18:30 on the 14th in Edmonton)',
+      unconfigured: {
+        work_day_timezone: unconfiguredRead.work_day_timezone,
+        work_day_timezone_state: unconfiguredRead.work_day_timezone_state,
+        window_starts_at: unconfiguredRead.day.window_starts_at,
+        window_ends_at: unconfiguredRead.day.window_ends_at,
+        jobs_on_the_14th: unconfiguredOnDay,
+        jobs_on_the_15th: unconfiguredNextDay
+      },
+      configured: {
+        work_day_timezone: configuredRead.work_day_timezone,
+        work_day_timezone_state: configuredRead.work_day_timezone_state,
+        window_starts_at: configuredRead.day.window_starts_at,
+        window_ends_at: configuredRead.day.window_ends_at,
+        jobs_on_the_14th: configuredOnDay,
+        jobs_on_the_15th: configuredNextDay
+      },
+      unknown_zone_is_treated_as_unset: {
+        work_day_timezone: badZoneRead.work_day_timezone,
+        work_day_timezone_state: badZoneRead.work_day_timezone_state
+      }
+    };
+  }
+
+  /* ---- 20. the recommendation lock (findings 2, 4 and 6) ---- */
+  {
+    const day = '2027-06-16';
+    const held = await material('FIXTURE lock product',
+      { category: 'consumable', unit: 'litre' });
+    await rule(siding, held, { kind: 'consumable', fixed: 4 });
+    await receive(held, 60);
+    const j = await onCarA(await job(day));
+    await measure(j, siding, 100);
+    const seen = await plan('car_a', day);
+
+    // Somebody else holds it back while the crew is still looking at the
+    // screen. The revision has not moved and the schedule has not changed.
+    const keepReceipt = await rpc(
+      `public.set_manual_keep($1,'car_a',$2::date,$3,true,'rain coming')`,
+      [key('keep'), day, held]);
+
+    const staleConfirm = await tryRpc(
+      `public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
+      [key('conf'), seen.plan_id, seen.revision, seen.basis_fingerprint,
+       seen.lines_fingerprint]);
+
+    const reloaded = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+    const afterReload = await rpc(
+      `public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
+      [key('conf'), reloaded.plan.plan_id, reloaded.plan.revision,
+       reloaded.plan.basis_fingerprint, reloaded.plan.lines_fingerprint]);
+
+    scenarios.recommendation_lock = {
+      description: 'A Manual Keep or an owner-authorised exception changes '
+        + 'what the plan RECOMMENDS without moving its revision or its basis '
+        + 'fingerprint -- the basis is the day\'s schedule, and the schedule '
+        + 'did not move. So a crew could confirm the screen it was still '
+        + 'looking at and transfer a set of lines nobody had agreed to. '
+        + '`lines_fingerprint` covers the item, action, required quantity, '
+        + 'level, data_state and manual-keep flag of every line; it '
+        + 'deliberately ignores the reason wording and the six reporting '
+        + 'quantities, because re-wording a reason or Base receiving a '
+        + 'delivery does not change what the crew must do. The revision and '
+        + 'the lines fingerprint are both REQUIRED by confirm_load_plan: a '
+        + 'confirmation that cannot say what it saw cannot be checked. '
+        + 'Recovery is to re-read and confirm what it says now.',
+      lines_fingerprint_when_read: seen.lines_fingerprint,
+      manual_keep_receipt: keepReceipt,
+      lines_fingerprint_after_the_keep: reloaded.plan.lines_fingerprint,
+      basis_fingerprint_unchanged:
+        seen.basis_fingerprint === reloaded.plan.basis_fingerprint,
+      revision_unchanged: seen.revision === reloaded.plan.revision,
+      confirmation_with_the_stale_lock: staleConfirm,
+      confirmation_after_reloading: afterReload
+    };
+  }
+
+  /* ---- 21. Keep -> clear is a WHOLE-DAY restore (finding 2) ---- */
+  {
+    const day = '2027-06-17';
+    const needed = await material('FIXTURE still-needed tool');
+    const spare  = await material('FIXTURE unneeded tool');
+    await rule(siding, needed, { kind: 'equipment', removable: true });
+    // Removable kit for a service that is NOT booked today, so the plan's
+    // own derivation says Return.
+    await rule(windows, spare, { kind: 'equipment', removable: true });
+    await receive(needed, 1); await receive(spare, 1);
+    for (const m of [needed, spare]) {
+      await rpc(`public.post_stock_transfer($1,$2,1,'base','car_a',true,'fixture',null)`,
+        [key('mv'), m]);
+    }
+    const j = await onCarA(await job(day));
+    await measure(j, siding, 150);
+    const built = await plan('car_a', day);
+    const pick = (p, m) => p.lines.find((l) => l.material_id === m);
+    const derived = {
+      still_needed: pick(built, needed).action,
+      not_needed_today: pick(built, spare).action
+    };
+
+    for (const m of [needed, spare]) {
+      await rpc(`public.set_manual_keep($1,'car_a',$2::date,$3,true,'rain coming')`,
+        [key('keep'), day, m]);
+    }
+    const whileHeld = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+    for (const m of [needed, spare]) {
+      await rpc(`public.set_manual_keep($1,'car_a',$2::date,$3,false,null)`,
+        [key('keep'), day, m]);
+    }
+    const afterClear = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+
+    scenarios.keep_clear_whole_day = {
+      description: 'Clearing a Manual Keep restores the RECOMMENDATION, and '
+        + 'the recommendation is a whole-day fact. Not "everything cleared '
+        + 'becomes Return": the item another stop still needs comes back as '
+        + 'Keep and only the one nothing needs goes back to Base. The line '
+        + 'remembers what it was (`pre_keep_action`/`pre_keep_reason`), which '
+        + 'is spent once it is restored, so a crew can undo its own Keep '
+        + 'without an owner rebuild.',
+      derived_before_any_keep: derived,
+      while_held: {
+        still_needed: pick(whileHeld.plan, needed).action,
+        not_needed_today: pick(whileHeld.plan, spare).action,
+        remembered: {
+          still_needed: pick(whileHeld.plan, needed).pre_keep_action,
+          not_needed_today: pick(whileHeld.plan, spare).pre_keep_action
+        }
+      },
+      after_clearing: {
+        still_needed: pick(afterClear.plan, needed),
+        not_needed_today: pick(afterClear.plan, spare)
+      }
+    };
+  }
+
+  /* ---- 22. a closing count with no confirmed plan (finding 5) ---- */
+  {
+    const day = '2027-06-18';
+    const mat = await material('FIXTURE unplanned-day product',
+      { category: 'consumable', unit: 'litre' });
+    await receive(mat, 12, 'car_a');
+    const receipt = await rpc(
+      `public.reconcile_day_end($1,'car_a',$2::date,$3::jsonb,'counted at the yard')`,
+      [key('rec'), day,
+       JSON.stringify([{ material_id: mat, counted_qty: 9,
+                         variance_reason: 'used_more', precision: 'estimated' }])]);
+
+    scenarios.closing_without_confirmation = {
+      description: 'A closing count is a PHYSICAL observation and does not '
+        + 'depend on a plan: no plan was ever built for this day, let alone '
+        + 'confirmed, and the count still posts its correction. The receipt '
+        + 'says `plan_id: null` rather than implying one, names its '
+        + '`variance_basis` as the live usable balance (a morning plan '
+        + 'snapshot is not a current balance), and an estimated count is '
+        + 'recorded as estimated in the ledger rather than as an exact one.',
+      receipt,
+      ledger: await all(
+        `select mv.delta, mv.condition, mv.count_precision, mv.reason
+           from public.ns_material_stock_moves mv
+          where mv.material_id = $1 and mv.reason = 'adjustment'`, [mat])
+    };
+  }
+
   await client.end();
 
   const out = {
-    contract: 'daily-load-contract-v2',
+    contract: 'daily-load-contract-v2.1',
     generated_by: 'tests/fixtures/build-daily-load-fixtures.mjs',
     note: 'Generated by running the real backend on a disposable database. '
       + 'Regenerate after any contract change; the diff IS the change. '

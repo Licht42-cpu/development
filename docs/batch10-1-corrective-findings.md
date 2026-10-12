@@ -9,12 +9,15 @@ built on them would have shown the operator things that were not true.
 **Every finding was verified against this repository's own source before
 anything was changed**, then reproduced as an executable check that fails
 against the original 10.1 SQL and passes against the corrective. The proofs
-are K1–K12 in `tests/db/batch10-1.test.mjs` (67 checks).
+are K1–K12 (round one) and L1–L11 (round two) in
+`tests/db/batch10-1.test.mjs` (79 checks).
 
-**Nothing was applied to the live database.** The fix is one new migration,
-`20261014090000_batch10_1_corrective_load_contract.sql`; the 10.1 migrations
-are not edited, and `ns_load_plan_view` is left exactly as it was so nothing
-already reading it breaks.
+**Nothing was applied to the live database.** The fix is **two** new
+migrations — `20261014090000_batch10_1_corrective_load_contract.sql` (round
+one) and `20261015090000_batch10_1_corrective_day_boundary_and_lock.sql`
+(round two, below) — applied in filename order. The 10.1 migrations are not
+edited, and `ns_load_plan_view` is left exactly as it was so nothing already
+reading it breaks.
 
 | # | verdict | proof |
 |---|---|---|
@@ -24,6 +27,19 @@ already reading it breaks.
 | 4 | contract gap — fixed, and receipts are now stored | K7 |
 | 5 | **real defect**, an accounting bug — fixed | K8, K9 |
 | 6 | **real defect** — fixed | K10, K11 |
+
+**Round two.** Re-reading the assignment against what round one shipped
+found two things it had documented without implementing. Both are in §
+"Round two" below, and both are real: a work date with an unchosen timezone,
+and a confirmation that could accept a recommendation the crew had not seen.
+
+| # | round-two verdict | proof |
+|---|---|---|
+| 1 | **real defect** — the work date's timezone was never stated, and the code's unchosen answer disagrees with the field console's own day boundary | L1, L2, L3, M1–M3 |
+| 2, 4, 6 | **real defect** — a Manual Keep or an authorised exception changed the recommendation without changing anything a confirmation checked | L5, L6, L7, L11, M4, M5 |
+| 6 | **real defect, found during round two's visual QA** — a crew Manual Keep overwrote an owner authorisation's wording, and the admin screen had no group for a `skip` line at all | L10, M4 |
+| 3 | **gap in the proof, not the code** — concurrency was asserted nowhere | L8 |
+| 5 | **gap in the proof, not the code** — closing with no plan, and an estimate reaching the ledger as an estimate, were asserted nowhere | L9 |
 
 **None was disproved.** Eleven of the twelve new checks fail without the
 corrective; K9 passes without it because it asserts behaviour that was
@@ -254,6 +270,93 @@ van).
 
 ---
 
+## Round two: two findings round one documented but did not implement
+
+### Finding 1 again — the work date had no timezone, and that is not cosmetic
+
+**Reproduced by reading, then by test.** `ns_vehicle_day_jobs` and
+`ns_unassigned_day_jobs` bucketed the day as
+`(scheduled_for at time zone 'UTC')::date`. Nobody chose UTC; it is what
+gets written when the question is not asked. Meanwhile the field console's
+own visit list — `api.js listTodaysVisits`, which the crew's schedule has
+used since Batch 4 — bounds the day at the **device's local midnight**.
+
+West of Greenwich those two disagree for every late-afternoon job. L2 is the
+case: a visit at 18:30 on the 9th in Edmonton is 01:30 on the **10th** in
+UTC, so it is on the crew's schedule for the 9th and absent from the 9th's
+load plan. The van is loaded for a day that does not contain the job, and
+nothing anywhere says why.
+
+**The fix does not invent the timezone**, because it is a business fact and
+the owner's to set: `ns_work_day_timezone()` reads
+`app_settings.operations ->> 'work_day_timezone'`, `ns_work_day_bounds()`
+turns a date into a half-open instant range, and both day-membership
+functions use it. While nothing is set the bounds stay UTC — byte-identical
+to the previous behaviour, so no plan changes under anyone silently — and
+every read reports `work_day_timezone_state: 'unconfigured'` so the screen
+can say that evening work may fall on the next day's plan. A zone name
+PostgreSQL does not know is treated as unset rather than raising: one
+malformed settings row must not stop the crew seeing the day (L3).
+
+**The business decision this leaves open, stated rather than defaulted:**
+*which* timezone the operating day runs in. Nothing in the repository
+records it, so nothing here chooses it. Until it is set the behaviour is
+unchanged and visibly flagged.
+
+### Findings 2, 4 and 6 again — a confirmation could accept an unseen recommendation
+
+**Reproduced by test.** A plan's `basis_fingerprint` covers the day's
+schedule. A Manual Keep (round one's own fix) and an owner-authorised
+exception (round one's other fix) both change what the lines *say to do* —
+and neither touches the revision or the basis. So L6: the crew reads the
+plan, somebody holds the bleach kit back, the crew confirms the screen it is
+still looking at, and both of round one's checks pass. The transfers posted
+are not the ones anybody agreed to.
+
+**The fix** is `ns_load_plans.lines_fingerprint`, maintained by a trigger on
+`ns_load_plan_lines` — by trigger and not by each writer, because the
+writers are the problem and a third one added later would forget. It is
+returned everywhere the plan is returned, and `confirm_load_plan` now
+**requires** both the revision and the lines fingerprint the caller was
+shown (`22023` if either is missing, L5). It covers the item, action,
+required quantity, level, data_state and manual-keep flag of every line, and
+deliberately ignores the reason wording and the six reporting quantities:
+re-wording a reason, or `available_qty` moving because Base took a delivery,
+does not change what the crew must do, and a lock that fired on those would
+train everyone to click through it (L11).
+
+Two consequences worth naming:
+
+* **It is a breaking change**, the second in this corrective. The
+  five-argument `confirm_load_plan` is dropped and asserted gone — a
+  surviving overload would be a confirmation path with no lock on it. A
+  five-argument call still resolves and now fails with `22023`. There is no
+  compatibility path that skips the check, deliberately.
+* **The admin console was the other half of finding 6.** `load-plan.js`
+  rendered Keep, Add and Return and had no group for `skip`, so an
+  owner-authorised set-aside was invisible on the screen while being
+  perfectly visible in the backend's response. It now has one, with its
+  authorisation reason and an "Owner authorised" badge (M4). Screenshotting
+  that new group is what turned up the next item.
+* **A crew Manual Keep could overwrite an owner authorisation.** The new
+  group rendered a "Keep it back" button on the set-aside line, and
+  `set_manual_keep` would have replaced the authorisation's wording with
+  "Kept back on purpose" on the way past. A keep against a `skip` line now
+  records the durable keep for the next build and leaves the live line as
+  the owner set it; the screen offers no such control (L10, M4).
+
+### Two things round two also closed in the proof rather than the code
+
+Finding 3's concurrency clause and finding 5's "normal, estimated, level,
+damage and unconfirmed-day closing must all work" had no assertions behind
+them. L8 races two connections on one key — one acceptance, one `23505`, the
+stock moved once, and a later retry still replaying the original receipt.
+L9 closes a day for which no plan was ever built and checks the estimate
+reaches the ledger as `count_precision: 'estimated'` rather than as an exact
+figure. Neither found a defect, which is reported as such.
+
+---
+
 ## Two things this turned up that the review did not
 
 ### A second vehicle changes the rules for every test above it
@@ -281,13 +384,21 @@ is what forced the drop-then-create for `authorise_load_exception`.
 
 | | result |
 |---|---|
-| `batch10-1` | **67/67**, K1–K12 new |
-| without the corrective | 54/66 — **eleven of the twelve K checks fail** |
+| `batch10-1` | **79/79**: K1–K12 (round one) and L1–L11 (round two) |
+| without round one's migration | 54/66 — **eleven of the twelve K checks fail** |
+| without round two's migration | 57/78 — **ten of the eleven L checks fail** |
 | `batch7-1` / `batch8-1` / `batch9-1` / `lighting` / `batch11-1` | unchanged |
-| `phase26` | **24/24** against the v2 envelope, L1–L2 new |
-| pending-migration rehearsal | **19 of 19** apply in filename order from a clean disposable database, 0 unexplained |
+| `phase26` | **29/29**: L1–L2 (round one) and M1–M5 (round two) |
+| pending-migration rehearsal | **20 of 20** apply in filename order from a clean disposable database, 0 unexplained |
 | live Supabase compatibility | **UNRUN** |
 | production verification | **UNRUN** |
 
-`tests/fixtures/daily-load-v2.json` has twenty scenarios, six of them new,
-generated from the real backend and verified byte-identical across two runs.
+L4 is the one L check that passes without round two's migration: it asserts
+that clearing a Keep restores a whole-day recommendation, which round one
+already got right. It is a regression guard, not a defect proof, and is
+reported as one.
+
+`tests/fixtures/daily-load-v2.json` has **twenty-four** scenarios, ten of
+them added across the two rounds, generated from the real backend and
+verified byte-identical across two clean rebuilds. The file keeps its name;
+its `contract` field reads `daily-load-contract-v2.1`.

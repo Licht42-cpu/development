@@ -45,7 +45,8 @@ const SEQUENCE = [
   '20261011111000_batch10_1_load_operations.sql',
   '20261012090000_batch9_1_corrective_seasonal_review.sql',
   '20261013090000_batch11_1_seasonal_corrective_round_two.sql',
-  '20261014090000_batch10_1_corrective_load_contract.sql'
+  '20261014090000_batch10_1_corrective_load_contract.sql',
+  '20261015090000_batch10_1_corrective_day_boundary_and_lock.sql'
 ];
 const migration = (f) => readFileSync(join(MIGRATIONS, f), 'utf8');
 
@@ -443,8 +444,8 @@ const OTHER_DAY = '2026-11-13';
     async () => {
       const plan = await buildPlan('car_a', DAY);
       const err = await errorOf(() => rpc(
-        `public.confirm_load_plan($1,$2,$3,null,null)`,
-        [opId('conf'), plan.plan_id, plan.revision - 1]));
+        `public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+        [opId('conf'), plan.plan_id, plan.revision - 1, plan.lines_fingerprint]));
       assert.ok(err); assert.equal(err.code, '23514');
       assert.match(err.message, new RegExp(`current one is ${plan.revision}`));
     });
@@ -455,8 +456,8 @@ const OTHER_DAY = '2026-11-13';
     const j = await newJob(DAY);
     await measure(j, siding, 300);
     const err = await errorOf(() => rpc(
-      `public.confirm_load_plan($1,$2,$3,null,null)`,
-      [opId('conf'), plan.plan_id, plan.revision]));
+      `public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+      [opId('conf'), plan.plan_id, plan.revision, plan.lines_fingerprint]));
     assert.ok(err, 'the revision matched, so only the fingerprint can catch this');
     assert.equal(err.code, '23514');
     assert.match(err.message, /changed after this plan was built/i);
@@ -466,7 +467,8 @@ const OTHER_DAY = '2026-11-13';
     const a = await buildPlan('car_a', DAY);
     await buildPlan('car_a', DAY);
     const err = await errorOf(() => rpc(
-      `public.confirm_load_plan($1,$2,null,null,null)`, [opId('conf'), a.plan_id]));
+      `public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+      [opId('conf'), a.plan_id, a.revision, a.lines_fingerprint]));
     assert.ok(err); assert.equal(err.code, '23514');
     assert.match(err.message, /newer one exists/i);
   });
@@ -487,8 +489,8 @@ const OTHER_DAY = '2026-11-13';
       const soapBefore = Number((await one(
         `select coalesce(on_hand,0) as n from public.ns_material_stock_by_location
           where material_id=$1 and location_code='car_a'`, [soap])).n);
-      const r = await rpc(`public.confirm_load_plan($1,$2,$3,null,null)`,
-        [opId('conf'), plan.plan_id, plan.revision]);
+      const r = await rpc(`public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+        [opId('conf'), plan.plan_id, plan.revision, plan.lines_fingerprint]);
       assert.equal(r.status, 'confirmed');
       assert.ok(r.transfers_posted > 0);
       const soapAfter = Number((await one(
@@ -507,12 +509,12 @@ const OTHER_DAY = '2026-11-13';
   await record('E3 a retried confirmation does not move stock twice', async () => {
     const plan = await buildPlan('car_a', OTHER_DAY);
     const key = opId('conf');
-    const a = await rpc(`public.confirm_load_plan($1,$2,$3,null,null)`,
-      [key, plan.plan_id, plan.revision]);
+    const a = await rpc(`public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+      [key, plan.plan_id, plan.revision, plan.lines_fingerprint]);
     const before = Number((await one(
       `select count(*)::int as n from public.ns_material_stock_moves`)).n);
-    const b = await rpc(`public.confirm_load_plan($1,$2,$3,null,null)`,
-      [key, plan.plan_id, plan.revision]);
+    const b = await rpc(`public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+      [key, plan.plan_id, plan.revision, plan.lines_fingerprint]);
     const after = Number((await one(
       `select count(*)::int as n from public.ns_material_stock_moves`)).n);
     assert.equal(b.replayed, true);
@@ -562,8 +564,8 @@ const OTHER_DAY = '2026-11-13';
       const plan = await buildPlan('car_a', DAY);
       const setLine = plan.lines.find((l) => l.rental_set_id !== null);
       assert.ok(setLine);
-      const r = await rpc(`public.confirm_load_plan($1,$2,$3,null,null)`,
-        [opId('conf'), plan.plan_id, plan.revision]);
+      const r = await rpc(`public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+        [opId('conf'), plan.plan_id, plan.revision, plan.lines_fingerprint]);
       const after = r.lines.find((l) => l.line_id === setLine.line_id);
       assert.equal(after.confirmed_operation, null,
         'a set is an asset the crew carries, not a balance that moves');
@@ -750,8 +752,8 @@ const OTHER_DAY = '2026-11-13';
       const plan = await buildPlan('car_b', '2026-12-01');
       await beCrew();
       const err = await errorOf(() => rpc(
-        `public.confirm_load_plan($1,$2,$3,null,null)`,
-        [opId('conf'), plan.plan_id, plan.revision]));
+        `public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+        [opId('conf'), plan.plan_id, plan.revision, plan.lines_fingerprint]));
       assert.ok(err); assert.equal(err.code, '42501');
       assert.match(err.message, /do not work from/i);
     } finally {
@@ -796,7 +798,7 @@ const OTHER_DAY = '2026-11-13';
         'public.build_load_plan(text,text,date,text)',
         'public.set_manual_keep(text,text,date,uuid,boolean,text)',
         'public.authorise_load_exception(text,text,date,text,text,uuid,uuid,numeric)',
-        'public.confirm_load_plan(text,uuid,integer,text,text)',
+        'public.confirm_load_plan(text,uuid,integer,text,text,text)',
         'public.reconcile_day_end(text,text,date,jsonb,text)'
       ]) {
         const { ok } = await one(
@@ -1016,12 +1018,14 @@ const OTHER_DAY = '2026-11-13';
       const plan = await buildPlan('car_a', day);
 
       const key = opId('conf');
-      const first = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null)`,
-        [key, plan.plan_id, plan.revision, plan.basis_fingerprint]);
+      const first = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
+        [key, plan.plan_id, plan.revision, plan.basis_fingerprint,
+         plan.lines_fingerprint]);
       assert.equal(first.replayed, false);
 
-      const same = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null)`,
-        [key, plan.plan_id, plan.revision, plan.basis_fingerprint]);
+      const same = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
+        [key, plan.plan_id, plan.revision, plan.basis_fingerprint,
+         plan.lines_fingerprint]);
       assert.equal(same.replayed, true, 'the same key is a retry');
       assert.equal(same.transfers_posted, first.transfers_posted,
         'and returns the receipt it returned the first time');
@@ -1030,8 +1034,9 @@ const OTHER_DAY = '2026-11-13';
       // once the plan was confirmed, so a second confirmation carrying a
       // STALE revision was answered rather than refused.
       const err = await errorOf(() => rpc(
-        `public.confirm_load_plan($1,$2,$3,$4,null)`,
-        [opId('conf'), plan.plan_id, plan.revision - 1, plan.basis_fingerprint]));
+        `public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
+        [opId('conf'), plan.plan_id, plan.revision - 1, plan.basis_fingerprint,
+         plan.lines_fingerprint]));
       assert.ok(err, 'a different key with a stale revision is not a retry');
       assert.equal(err.code, '23505');
       assert.match(err.message, /already confirmed/i);
@@ -1176,9 +1181,9 @@ const OTHER_DAY = '2026-11-13';
       assert.ok(line.exception_id, 'and the response exposes the exception');
 
       const fresh = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
-      const conf = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null)`,
+      const conf = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
         [opId('conf'), fresh.plan.plan_id, fresh.plan.revision,
-         fresh.plan.basis_fingerprint]);
+         fresh.plan.basis_fingerprint, fresh.plan.lines_fingerprint]);
 
       /* THE DEFECT: the exception was stored, linked to the line, and then
          confirmation transferred the item anyway -- so an authorised "go
@@ -1228,9 +1233,9 @@ const OTHER_DAY = '2026-11-13';
       assert.equal(Number(line.required_qty), 6);
       assert.equal(line.data_state, 'exception');
 
-      const conf = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null)`,
+      const conf = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
         [opId('conf'), read.plan.plan_id, read.plan.revision,
-         read.plan.basis_fingerprint]);
+         read.plan.basis_fingerprint, read.plan.lines_fingerprint]);
       assert.ok(conf.transfers_posted >= 1);
       assert.equal(Number((await one(
         `select on_hand from public.ns_material_stock_by_location
@@ -1259,6 +1264,373 @@ const OTHER_DAY = '2026-11-13';
       assert.equal(err2.code, '23505');
       assert.match(err2.message, /already used for a manual_keep/i);
     });
+
+  /* ======================================================================
+     L. THE SECOND ROUND OF THE SAME REVIEW.
+     Findings 1, 2 and 4 left two things undone, and
+     20261015090000_batch10_1_corrective_day_boundary_and_lock.sql is what
+     this block tests:
+
+       * WHICH DAY IS THE WORK DATE. It was never stated, and the code's
+         unchosen answer (the UTC calendar date) disagrees with the field
+         console's own day boundary (the device's local midnight) for every
+         late-afternoon job west of Greenwich.
+
+       * WHAT THE CREW WAS LOOKING AT. A Manual Keep or an authorised
+         exception changes what the plan recommends without moving its
+         revision or its basis fingerprint, so a confirmation could transfer
+         a set of lines nobody had agreed to.
+
+     Every check here fails against the sequence without that migration.
+     ====================================================================== */
+  const LDAY   = '2027-03-09';
+  const LEVE   = '2027-03-10T01:30:00Z';  // 18:30 on the 9th in Edmonton
+  const setZone = (zone) => client.query(
+    `insert into public.app_settings (key, value)
+     values ('operations', jsonb_build_object('work_day_timezone', $1::text))
+     on conflict (key) do update set value = excluded.value`, [zone]);
+  const clearZone = () => client.query(
+    `delete from public.app_settings where key = 'operations'`);
+  const dayJobIds = async (day) => (await all(
+    `select job_id from public.ns_vehicle_day_jobs(
+       (select id from public.ns_stock_locations where code='car_a'), $1::date)`,
+    [day])).map((r) => r.job_id);
+
+  await record('L1 (finding 1) an unset operating timezone is reported, not guessed',
+    async () => {
+      await clearZone();
+      const read = await rpc(`public.get_load_plan('car_a',$1::date)`, [LDAY]);
+      assert.equal(read.work_day_timezone, null);
+      assert.equal(read.work_day_timezone_state, 'unconfigured',
+        'unknown is a state the screen can show, not a silent default');
+      // And the window it actually used is published, so a client that
+      // bounds its own day can see whether the two agree.
+      assert.equal(read.day.work_day_timezone_state, 'unconfigured');
+      assert.ok(read.day.window_starts_at, 'the window is not a mystery');
+      assert.ok(read.day.window_ends_at);
+    });
+
+  await record('L2 (finding 1) the work date is the configured operating day, not UTC',
+    async () => {
+      const evening = await onCarA(await newJob(LDAY));
+      await client.query(
+        `update public.ns_jobs set scheduled_for = $2 where id = $1`,
+        [evening, LEVE]);
+      await measure(evening, siding, 100);
+
+      /* THE DEFECT. With no zone configured the backend buckets by the UTC
+         calendar date, so an 18:30 visit on the 9th belongs to the 10th --
+         while the field console's visit list, which bounds the day at the
+         DEVICE's local midnight, shows it on the 9th. The van is loaded for
+         a day that does not contain the job. */
+      assert.ok(!(await dayJobIds(LDAY)).includes(evening),
+        'UTC bucketing puts the evening job on the next day');
+      assert.ok((await dayJobIds('2027-03-10')).includes(evening));
+
+      try {
+        await setZone('America/Edmonton');
+        const read = await rpc(`public.get_load_plan('car_a',$1::date)`, [LDAY]);
+        assert.equal(read.work_day_timezone, 'America/Edmonton');
+        assert.equal(read.work_day_timezone_state, 'configured');
+        assert.ok((await dayJobIds(LDAY)).includes(evening),
+          'the evening visit is on the operating day the owner set');
+        assert.ok(!(await dayJobIds('2027-03-10')).includes(evening),
+          'and it is on exactly one day, not both');
+      } finally {
+        await clearZone();
+      }
+    });
+
+  await record('L3 (finding 1) a zone name PostgreSQL does not know is treated as unset',
+    async () => {
+      try {
+        await setZone('Mars/Olympus_Mons');
+        const read = await rpc(`public.get_load_plan('car_a',$1::date)`, [LDAY]);
+        assert.equal(read.work_day_timezone, null);
+        assert.equal(read.work_day_timezone_state, 'unconfigured',
+          'one bad settings row must not stop the crew seeing the day');
+      } finally {
+        await clearZone();
+      }
+    });
+
+  await record('L4 (finding 2) clearing a Keep restores a WHOLE-DAY recommendation',
+    async () => {
+      const day = '2027-03-16';
+      const needed = await newMaterial('FIXTURE L needed tool');
+      const spare  = await newMaterial('FIXTURE L spare tool');
+      await rule(siding, needed, { kind: 'equipment', removable: true });
+      // The spare is removable kit for WINDOW cleaning, which is not booked
+      // today -- so the plan's own derivation says Return.
+      await rule(windows, spare, { kind: 'equipment', removable: true });
+      const job = await onCarA(await newJob(day));
+      await measure(job, siding, 120);
+      await receive(needed, 1); await receive(spare, 1);
+      await rpc(`public.post_stock_transfer($1,$2,1,'base','car_a',true,'L setup',null)`,
+        [opId('mv'), needed]);
+      await rpc(`public.post_stock_transfer($1,$2,1,'base','car_a',true,'L setup',null)`,
+        [opId('mv'), spare]);
+
+      const plan = await buildPlan('car_a', day);
+      const of = (p, m) => p.lines.find((l) => l.material_id === m);
+      assert.equal(of(plan, needed).action, 'keep', 'today needs it');
+      assert.equal(of(plan, spare).action, 'return', 'nothing today needs it');
+
+      for (const m of [needed, spare]) {
+        await rpc(`public.set_manual_keep($1,'car_a',$2::date,$3,true,'rain coming')`,
+          [opId('keep'), day, m]);
+      }
+      const held = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+      assert.equal(of(held.plan, needed).action, 'keep');
+      assert.equal(of(held.plan, spare).action, 'keep', 'the hold overrides Return');
+
+      for (const m of [needed, spare]) {
+        await rpc(`public.set_manual_keep($1,'car_a',$2::date,$3,false,null)`,
+          [opId('keep'), day, m]);
+      }
+      const cleared = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+      // NOT "everything cleared becomes Return": the item another stop
+      // needs stays aboard, and only the one nothing needs goes back.
+      assert.equal(of(cleared.plan, needed).action, 'keep',
+        'something the day still needs must not be sent back to Base');
+      assert.match(of(cleared.plan, needed).reason, /Siding/i,
+        'and it carries the derived reason again, not the hold wording');
+      assert.equal(of(cleared.plan, spare).action, 'return');
+      assert.equal(of(cleared.plan, needed).manual_keep, false);
+      assert.equal(of(cleared.plan, needed).pre_keep_action, null,
+        'the remembered recommendation is spent once it is restored');
+    });
+
+  await record('L5 (finding 4) a confirmation must say which revision AND which lines it saw',
+    async () => {
+      const day = '2027-03-17';
+      const job = await onCarA(await newJob(day));
+      await measure(job, siding, 150);
+      await receive(soap, 300);
+      const plan = await buildPlan('car_a', day);
+
+      const noRev = await errorOf(() => rpc(
+        `public.confirm_load_plan($1,$2,null,null,null,$3)`,
+        [opId('conf'), plan.plan_id, plan.lines_fingerprint]));
+      assert.ok(noRev); assert.equal(noRev.code, '22023');
+      assert.match(noRev.message, /revision you were shown/i);
+
+      const noLines = await errorOf(() => rpc(
+        `public.confirm_load_plan($1,$2,$3,null,null,null)`,
+        [opId('conf'), plan.plan_id, plan.revision]));
+      assert.ok(noLines); assert.equal(noLines.code, '22023');
+      assert.match(noLines.message, /lines_fingerprint you were shown/i);
+
+      assert.ok(plan.lines_fingerprint, 'and the value is in the response to quote');
+    });
+
+  await record('L6 (finding 2) a Keep set after the crew looked blocks the confirmation',
+    async () => {
+      const day = '2027-03-18';
+      const job = await onCarA(await newJob(day));
+      await measure(job, siding, 150);
+      await receive(soap, 300);
+      const seen = await buildPlan('car_a', day);
+
+      // Somebody else holds the bleach kit back while the crew is still
+      // looking at the screen. The revision has not moved and the schedule
+      // has not changed, so only the lines fingerprint can catch this.
+      await rpc(`public.set_manual_keep($1,'car_a',$2::date,$3,true,'rain')`,
+        [opId('keep'), day, bleachKit]);
+
+      const err = await errorOf(() => rpc(
+        `public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
+        [opId('conf'), seen.plan_id, seen.revision, seen.basis_fingerprint,
+         seen.lines_fingerprint]));
+      assert.ok(err, 'the stale recommendation was accepted before this fix');
+      assert.equal(err.code, '23514');
+      assert.match(err.message, /recommends changed after you looked/i);
+
+      const fresh = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+      assert.notEqual(fresh.plan.lines_fingerprint, seen.lines_fingerprint);
+      const ok = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
+        [opId('conf'), fresh.plan.plan_id, fresh.plan.revision,
+         fresh.plan.basis_fingerprint, fresh.plan.lines_fingerprint]);
+      assert.equal(ok.status, 'confirmed', 'reloading is the recovery');
+      assert.equal(ok.confirmed_lines_fingerprint, fresh.plan.lines_fingerprint,
+        'and the receipt says what it was checked against');
+    });
+
+  await record('L7 (finding 6) an authorised skip after the crew looked blocks it too',
+    async () => {
+      const day = '2027-03-19';
+      const job = await onCarA(await newJob(day));
+      await measure(job, siding, 150);
+      await receive(soap, 300);
+      const seen = await buildPlan('car_a', day);
+
+      await rpc(
+        `public.authorise_load_exception($1,'car_a',$2::date,'skip_required',
+           'left it at the last property',$3,null,null)`,
+        [opId('exc'), day, soap]);
+
+      const err = await errorOf(() => rpc(
+        `public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+        [opId('conf'), seen.plan_id, seen.revision, seen.lines_fingerprint]));
+      assert.ok(err); assert.equal(err.code, '23514');
+      assert.match(err.message, /owner authorised a departure/i);
+    });
+
+  await record('L8 (finding 3) two confirmations at once move the stock once',
+    async () => {
+      const day = '2027-03-20';
+      // Its own material, stocked only at Base, so the confirmation
+      // certainly has a transfer to post.
+      const race = await newMaterial('FIXTURE L race tool');
+      await rule(siding, race, { kind: 'equipment' });
+      await receive(race, 5);
+      const job = await onCarA(await newJob(day));
+      await measure(job, siding, 150);
+      const plan = await buildPlan('car_a', day);
+      const key = opId('conf');
+      const args = [key, plan.plan_id, plan.revision, plan.lines_fingerprint];
+
+      const other = new pg.Client({ connectionString: PGURL });
+      await other.connect();
+      try {
+        await other.query(`select set_config('nova.is_admin','on',false)`);
+        await other.query(`select set_config('nova.actor_id',$1,false)`, [ownerId]);
+
+        await client.query('begin');
+        const first = await rpc(
+          `public.confirm_load_plan($1,$2,$3,null,null,$4)`, args);
+        assert.equal(first.replayed, false);
+
+        // The second caller is already inside the function, blocked on the
+        // plan row, when the first commits.
+        const racing = other.query(
+          `select public.confirm_load_plan($1,$2,$3,null,null,$4) as r`, args)
+          .then(() => null, (e) => e);
+        await new Promise((r) => setTimeout(r, 150));
+        await client.query('commit');
+        const err = await racing;
+
+        assert.ok(err, 'a concurrent duplicate is a conflict, not a second load');
+        assert.equal(err.code, '23505');
+
+        const moves = Number((await one(
+          `select count(*)::int as n from public.ns_material_stock_moves mv
+             join public.ns_stock_operations o on o.id = mv.operation_id
+            where o.client_operation_id like $1`, [`${key}:%`])).n);
+        assert.ok(moves > 0, 'the accepted confirmation did post transfers');
+        const ops = Number((await one(
+          `select count(*)::int as n from public.ns_load_operations
+            where client_operation_id = $1`, [key])).n);
+        assert.equal(ops, 1, 'one key, one ledger entry');
+
+        // And a LATER retry of the same key is still a retry.
+        const replay = await rpc(
+          `public.confirm_load_plan($1,$2,$3,null,null,$4)`, args);
+        assert.equal(replay.replayed, true);
+        assert.equal(replay.transfers_posted, first.transfers_posted);
+      } finally {
+        await other.end();
+      }
+    });
+
+  await record('L9 (finding 5) a day closes with no confirmed plan, and an estimate stays an estimate',
+    async () => {
+      const day = '2027-03-23';
+      await receive(soap, 40, 'car_a');
+      const before = Number((await one(
+        `select coalesce(on_hand,0) as n from public.ns_material_stock_by_location
+          where material_id=$1 and location_code='car_a'`, [soap])).n);
+
+      // No plan was ever built for this day, let alone confirmed. A closing
+      // count is a physical observation and does not depend on one.
+      const recKey = opId('rec');
+      const r = await rpc(
+        `public.reconcile_day_end($1,'car_a',$2::date,$3::jsonb,'counted at the yard')`,
+        [recKey, day, JSON.stringify([
+          { material_id: soap, counted_qty: before - 3,
+            variance_reason: 'used_more', precision: 'estimated' }
+        ])]);
+      assert.equal(r.replayed, false);
+      assert.equal(r.plan_id, null, 'and the receipt says there was no plan');
+      assert.equal(r.variance_basis, 'live_usable_on_hand');
+      assert.equal(Number(r.lines[0].variance_qty), -3);
+
+      const mv = await one(
+        `select mv.count_precision, mv.condition from public.ns_material_stock_moves mv
+           join public.ns_stock_operations o on o.id = mv.operation_id
+          where o.client_operation_id like $1 and mv.material_id = $2
+          order by mv.created_at desc limit 1`, [`${recKey}%`, soap]);
+      assert.equal(mv ? mv.condition : null, 'usable',
+        'a used_more variance is a usable-pool adjustment');
+      assert.equal(mv.count_precision, 'estimated',
+        'an estimated count must not be recorded as an exact one');
+    });
+
+  await record('L10 (finding 6) a crew keep does not overwrite an owner authorisation',
+    async () => {
+      const day = '2027-03-25';
+      const mat = await newMaterial('FIXTURE L authorised product',
+        { category: 'consumable', unit: 'litre' });
+      await rule(siding, mat, { kind: 'consumable', fixed: 5 });
+      await receive(mat, 50);
+      const job = await onCarA(await newJob(day));
+      await measure(job, siding, 100);
+      await buildPlan('car_a', day);
+      await rpc(
+        `public.authorise_load_exception($1,'car_a',$2::date,'skip_required',
+           'borrowed one from the shop next door',$3,null,null)`,
+        [opId('exc'), day, mat]);
+
+      const keep = await rpc(
+        `public.set_manual_keep($1,'car_a',$2::date,$3,true,'crew wants it anyway')`,
+        [opId('keep'), day, mat]);
+      assert.equal(keep.manual_keep, true, 'the durable keep is still recorded');
+
+      const read = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+      const line = read.plan.lines.find((l) => l.material_id === mat);
+      assert.equal(line.action, 'skip', 'the owner\'s decision stands');
+      assert.match(line.reason, /borrowed one from the shop next door/,
+        'and so does the wording of the authorisation');
+      assert.ok(line.exception_id);
+      // It IS on record for the next build, which is the honest outcome:
+      // the keep was accepted, the live authorisation was not overwritten.
+      const { n } = await one(
+        `select count(*)::int as n from public.ns_load_manual_keeps
+          where material_id=$1 and work_date=$2::date`, [mat, day]);
+      assert.equal(n, 1);
+    });
+
+  await record('L11 the lock catches instructions, not cosmetics', async () => {
+    const day = '2027-03-24';
+    const job = await onCarA(await newJob(day));
+    await measure(job, siding, 150);
+    await receive(soap, 300);
+    const plan = await buildPlan('car_a', day);
+    const print = () => one(
+      `select lines_fingerprint as f from public.ns_load_plans where id=$1`,
+      [plan.plan_id]).then((r) => r.f);
+
+    const start = await print();
+    assert.equal(start, plan.lines_fingerprint, 'the stored value is the published one');
+
+    // Re-wording a reason, or Base receiving a delivery, does not change
+    // what the crew is being asked to do.
+    await client.query(
+      `update public.ns_load_plan_lines set reason = reason || ' (reworded)'
+        where plan_id = $1`, [plan.plan_id]);
+    assert.equal(await print(), start, 'a reason is not an instruction');
+    await client.query(
+      `update public.ns_load_plan_lines set available_qty = coalesce(available_qty,0) + 99
+        where plan_id = $1 and level_state is null`, [plan.plan_id]);
+    assert.equal(await print(), start, 'nor is a number Base reports');
+
+    // The action is.
+    const changed = await client.query(
+      `update public.ns_load_plan_lines set action = 'skip'
+        where plan_id = $1 and action in ('add','keep','return')`, [plan.plan_id]);
+    assert.ok(changed.rowCount > 0, 'the probe has to change something');
+    assert.notEqual(await print(), start, 'a changed action is a changed plan');
+  });
 
   // ================================================== report ==============
   await client.end();

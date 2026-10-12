@@ -54,7 +54,16 @@ const FAKE_API = `
       needs_review_count: plan
         ? plan.lines.filter((l) => l.data_state === 'needs_review').length : 0,
       unassigned_job_count: globalThis.__UNASSIGNED ?? 0,
-      day: { work_date: a.workDate, jobs: [], readable_vehicles: clone(globalThis.__LOCATIONS) }
+      // v2.1: which day the backend treated this date as, and whether the
+      // owner has chosen the zone or it fell back to UTC.
+      work_day_timezone: globalThis.__TZ ?? null,
+      work_day_timezone_state: globalThis.__TZ ? 'configured' : 'unconfigured',
+      day: { work_date: a.workDate, jobs: [],
+             work_day_timezone: globalThis.__TZ ?? null,
+             work_day_timezone_state: globalThis.__TZ ? 'configured' : 'unconfigured',
+             window_starts_at: a.workDate + 'T00:00:00Z',
+             window_ends_at: a.workDate + 'T24:00:00Z',
+             readable_vehicles: clone(globalThis.__LOCATIONS) }
     };
   }
   export async function loadDaySummary(a) { push('loadDaySummary', a); return { work_date: a.workDate, jobs: [], readable_vehicles: clone(globalThis.__LOCATIONS) }; }
@@ -86,7 +95,8 @@ const line = (over = {}) => ({
 const PLAN = (over = {}) => ({
   plan_id: 'plan-1', location_code: 'car_a', location_name: 'Car A',
   work_date: '2027-04-05', revision: 2, status: 'current',
-  basis_fingerprint: 'abc123', generated_at: '2027-04-05T07:00:00Z',
+  basis_fingerprint: 'abc123', lines_fingerprint: 'lines-def456',
+  generated_at: '2027-04-05T07:00:00Z',
   confirmed_at: null, closed_at: null,
   lines: [
     line(),
@@ -190,7 +200,8 @@ async function launch() {
         __PLAN: 'plan' in opts ? opts.plan : PLAN(),
         __SUGGESTIONS: opts.suggestions || SUGGESTIONS,
         __CAN_BUILD: 'canBuild' in opts ? opts.canBuild : true,
-        __UNASSIGNED: opts.unassigned ?? 0
+        __UNASSIGNED: opts.unassigned ?? 0,
+        __TZ: 'timezone' in opts ? opts.timezone : null
       },
       options: opts,
       bodySrc: body.toString(),
@@ -235,6 +246,8 @@ async function launch() {
     assert.equal(call.args.expectedRevision, 2,
       'the revision you looked at is the one you confirm');
     assert.equal(call.args.expectedFingerprint, 'abc123');
+    assert.equal(call.args.expectedLinesFingerprint, 'lines-def456',
+      'the recommendation lock is quoted from the plan the screen rendered');
   });
 
   await record('A4 declining the confirm moves nothing', async () => {
@@ -484,6 +497,86 @@ async function launch() {
         });
       assert.ok(out.buttons.includes('Build the plan'));
       assert.match(out.text, /moves nothing/i);
+    });
+
+  /* ======================================================================
+     M. THE SECOND ROUND OF THE SAME REVIEW, on this screen.
+     daily-load contract v2.1: the operating day has to be visible when
+     nobody has set one, an owner-authorised departure has to be visible at
+     all, and a refused confirmation has to leave the operator looking at
+     what the plan says now rather than at the screen that was refused.
+     ====================================================================== */
+  await record('M1 an unset operating timezone is said out loud, not assumed',
+    async () => {
+      const { out } = await withPanel({}, async ({ mount, h }) => {
+        await h.settle(200);
+        return { text: mount.textContent };
+      });
+      assert.match(out.text, /no timezone set/i);
+      assert.match(out.text, /next day/i,
+        'and it says what goes wrong, not just that a setting is missing');
+    });
+
+  await record('M2 a configured operating day says nothing at all', async () => {
+    const { out } = await withPanel({ timezone: 'America/Edmonton' },
+      async ({ mount, h }) => {
+        await h.settle(200);
+        return { text: mount.textContent };
+      });
+    assert.ok(!/no timezone set/i.test(out.text),
+      'a solved problem must not keep nagging');
+  });
+
+  await record('M3 the empty state carries the same warning', async () => {
+    const { out } = await withPanel({ plan: null }, async ({ mount, h }) => {
+      await h.settle(200);
+      return { text: mount.textContent };
+    });
+    assert.match(out.text, /no timezone set/i,
+      'which day a plan would cover matters before one exists too');
+  });
+
+  await record('M4 an owner-authorised set-aside is on the screen, not just in the response',
+    async () => {
+      const { out } = await withPanel({
+        plan: PLAN({ lines: [
+          line({ line_id: 'sk1', action: 'skip', data_state: 'exception',
+                 material_name: 'FIXTURE soft-wash product',
+                 exception_id: 'exc-1',
+                 reason: 'Owner authorised going without it: borrowed one' })
+        ] })
+      }, async ({ mount, h }) => {
+        await h.settle(200);
+        return { text: mount.textContent, buttons: h.buttonTexts(mount) };
+      });
+      assert.match(out.text, /Set aside/i, 'the group exists');
+      assert.match(out.text, /Confirming does not move them/i);
+      assert.match(out.text, /borrowed one/i, 'and the authorisation reason is shown');
+      assert.match(out.text, /Owner authorised/,
+        'badged like Needs review and Estimated, so it is scannable');
+      // A keep is "do not take it off the van"; a skip is the owner saying
+      // go without it. Offering the crew a button that reads as overriding
+      // an authorisation is misleading even though the backend refuses to
+      // overwrite it (batch10-1 L10).
+      assert.ok(!out.buttons.includes('Keep it back'),
+        'an owner-authorised set-aside offers the crew no override');
+    });
+
+  await record('M5 a refused confirmation re-reads, so the operator sees the new plan',
+    async () => {
+      const { calls } = await withPanel(
+        { failNext: 1,
+          failWith: 'What this plan recommends changed after you looked at it' },
+        async ({ mount, h }) => {
+          await h.settle(150);
+          h.button(mount, 'Confirm the load').click();
+          await h.settle(250);
+        });
+      const reads = calls.filter((c) => c.name === 'getLoadPlan').length;
+      assert.ok(reads >= 2,
+        'a refusal leaves the screen stale unless it reloads; it read ' + reads);
+      assert.equal(calls.filter((c) => c.name === 'confirmLoadPlan').length, 1,
+        'and it does not silently retry the confirmation');
     });
 
   await browser.close();

@@ -1356,17 +1356,33 @@ export async function authoriseLoadException({
   }));
 }
 
-/** Posts the transfers. Send the revision you were looking at: a stale one,
- *  or a schedule that moved underneath, is refused with the reason. */
+/** Posts the transfers.
+ *
+ *  THREE THINGS THE CALLER HAS TO QUOTE BACK, all from the plan it was
+ *  showing when the operator pressed the button:
+ *
+ *   * `expectedRevision` -- somebody rebuilt the plan.
+ *   * `expectedFingerprint` (the plan's `basis_fingerprint`) -- the day's
+ *     schedule moved and nobody rebuilt it.
+ *   * `expectedLinesFingerprint` -- a Manual Keep was set or cleared, or
+ *     the owner authorised a departure, so what the plan RECOMMENDS changed
+ *     while the screen was open. The revision and the basis both still
+ *     match in that case, which is why it needs its own value.
+ *
+ *  The revision and the lines fingerprint are required by the backend
+ *  (22023 if absent): a confirmation that cannot say what it saw cannot be
+ *  checked. See docs/daily-load-contract-v1.md v2.1 §6. */
 export async function confirmLoadPlan({
-  clientOperationId, planId, expectedRevision, expectedFingerprint, note
+  clientOperationId, planId, expectedRevision, expectedFingerprint,
+  expectedLinesFingerprint, note
 }) {
   return unwrap(await supabase.rpc('confirm_load_plan', {
     p_client_operation_id: clientOperationId || newOperationId('conf'),
     p_plan_id: planId,
     p_expected_revision: expectedRevision ?? null,
     p_expected_fingerprint: expectedFingerprint || null,
-    p_note: note || null
+    p_note: note || null,
+    p_expected_lines_fingerprint: expectedLinesFingerprint || null
   }));
 }
 
