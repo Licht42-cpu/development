@@ -19,3 +19,5 @@ The implementation/handoff is `tests/field-dispatch.md` on
 
 Browser fixtures and a compiled APK are not backend, delivery, emulator or
 physical-device proof. Those outcomes are explicitly unrun in the handoff.
+The assembly log's trailing whitespace is normalized; its task output and
+result are otherwise unchanged.
