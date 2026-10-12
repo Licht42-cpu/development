@@ -150,3 +150,52 @@ the owner confirms, not a guess.
   screen away from the button that opened them. Both were found by looking
   at the PNG. A probe that measures overflow is necessary and not
   sufficient.
+
+## 9. What the review of `abedf0f` found, and what each finding became
+
+A read-only review on `codex/batch-10-2-prep`
+(`docs/reviews/seasonal-contract-abedf0f.md`, that branch) raised seven
+points against the seasonal work. Every one was checked against the source
+before anything was changed; four were real defects, one was an error in
+the contract document, and two were decisions the contract had not made.
+All seven are corrected forward in
+`20261012090000_batch9_1_corrective_seasonal_review.sql` — the 9.1
+migrations are not edited, because they have been rehearsed and the field
+track reads them. The contract is now v1.1, with the caller-visible
+differences tabulated at its head.
+
+| # | the finding | verdict | what it became |
+|---|---|---|---|
+| 1 | a crew's replay returned before the scope check, and returned the replayed event's set | **real** | one guard, `ns_seasonal_replay_guard`, which checks kind, target and `can_handle_set` before returning anything |
+| 2 | §7's conservation expression was not an invariant for every allowed build/strip | **real** | `built_quantity`/`stripped_quantity` on the set; a strip must reverse a build that provably happened, for the same material, within its quantity; the remainder is named as scrap |
+| 3 | a `:build`/`:strip` key could pick up an unrelated pre-posted movement | **real** | `ns_verify_stock_operation` requires the returned operation to hold exactly the movement asked for |
+| 4 | a set recovered but not released could be retired | **real** | the check now reads `assigned/installed/removed`, agreeing with its own error message and with the open-assignment rule 10.1 depends on |
+| 5 | §11 called an `assigned` set "loaded" on a van | **document** | §11 now points at `docs/daily-load-contract-v1.md` as the authority on van contents, and says why `assigned` is a commercial fact rather than a location |
+| 6 | availability flags could be NULL and could overlap | **real** | every flag `coalesce`d to false; the reasons returned as an ordered `blocking_reasons` list, and the v1.0 claim that exactly one applies retracted |
+| 7 | a state no-op recorded nothing while reporting `replayed`, and replay compared kind but not target | **decision** | `no_op` added to the response, with a table in §4 saying which combination means the key was recorded |
+
+Checks M1–M9 in `tests/db/batch9-1.test.mjs` are one per finding. Each of
+the nine fails when the corrective is removed from that suite's migration
+sequence (67 of 76 passing without it), so the suite proves the corrective
+rather than merely coexisting with it.
+
+**Two things the fix turned up that the review did not.**
+
+* **`blocking_reasons` is complete only because of a trigger somewhere
+  else.** Making the list the whole explanation means it must be empty
+  exactly when the set is available. Six reasons cover every way the four
+  availability legs can fail — but only because
+  `ns_guard_set_matches_assignment` makes `deployed` and an `installed`
+  assignment imply each other, so `with_a_customer` always accounts for a
+  deployed set. A seventh reason was written for "deployed with nothing
+  open" before that trigger was found refusing the state outright; it was
+  removed, and M9 now asserts the correspondence over **every row** of the
+  view *and* asserts the trigger refuses the direct write. Relax the
+  trigger and the suite says a reason is missing.
+* **The admin screen was already right about overlap, and silent about
+  nothing.** `unavailableBecause()` in `seasonal-sets.js` accumulated every
+  reason rather than branching on one, so finding 6 never reached the
+  screen as a wrong sentence. It did have an empty-list path with no
+  output; it now names the status instead, which should be unreachable and
+  is cheaper than the alternative — an unavailable set with no explanation
+  and no button is something an operator can neither act on nor report.

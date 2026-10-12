@@ -117,6 +117,15 @@ function unavailableBecause(row, customerName) {
     reasons.push(row.condition === 'missing' ? 'Last seen missing' : 'Damaged');
   }
   if (row.needs_inspection) reasons.push('Not inspected since it came back');
+
+  /* The view guarantees a reason for every unavailable set and the suite
+   * checks that correspondence (contract §6), so this branch should be
+   * unreachable. It exists because the failure it prevents is an unavailable
+   * set with a blank explanation and no button, which an operator cannot
+   * act on or report. Saying the status is better than saying nothing. */
+  if (!reasons.length && !row.available_for_reuse) {
+    reasons.push(`Not available — ${humanise(row.status)}`);
+  }
   return reasons;
 }
 

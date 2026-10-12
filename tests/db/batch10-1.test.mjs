@@ -42,7 +42,8 @@ const SEQUENCE = [
   '20261011100000_batch9_1_permanent_lighting_materials.sql',
   '20261011101000_batch9_1_kit_and_sheet_operations.sql',
   '20261011110000_batch10_1_load_planning.sql',
-  '20261011111000_batch10_1_load_operations.sql'
+  '20261011111000_batch10_1_load_operations.sql',
+  '20261012090000_batch9_1_corrective_seasonal_review.sql'
 ];
 const migration = (f) => readFileSync(join(MIGRATIONS, f), 'utf8');
 

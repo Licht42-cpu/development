@@ -44,7 +44,8 @@ const SEQUENCE = [
   '20261010140000_batch8_1_reservations_units_and_crew_access.sql',
   '20261010141000_batch8_1_reservation_operations.sql',
   '20261011090000_batch9_1_seasonal_set_identity_and_assignments.sql',
-  '20261011091000_batch9_1_seasonal_operations.sql'
+  '20261011091000_batch9_1_seasonal_operations.sql',
+  '20261012090000_batch9_1_corrective_seasonal_review.sql'
 ];
 const migration = (file) => readFileSync(join(MIGRATIONS, file), 'utf8');
 
@@ -137,7 +138,7 @@ const opId = (tag) => `t9-${tag}-${++opSeq}`;
     });
   }
 
-  await record('A8 the 9.1 migrations are re-runnable', async () => {
+  await record('A9 the 9.1 migrations are re-runnable', async () => {
     for (const file of SEQUENCE.slice(5)) await client.query(migration(file));
     for (const file of SEQUENCE.slice(5)) await client.query(migration(file));
     const { n } = await one(
@@ -154,7 +155,7 @@ const opId = (tag) => `t9-${tag}-${++opSeq}`;
      once, in filename order, and A1-A7 prove that order works from a clean
      database. The check exists so the boundary is a documented fact instead
      of a surprise for whoever next re-runs a migration by hand. */
-  await record('A9 re-applying the 8.1 table migration AFTER 9.1 is refused, by design',
+  await record('A10 re-applying the 8.1 table migration AFTER 9.1 is refused, by design',
     async () => {
       const err = await errorOf(() => client.query(migration(SEQUENCE[0])));
       assert.ok(err, 'if this ever passes, 8.1 has stopped referencing the dropped columns');
@@ -1120,6 +1121,248 @@ const opId = (tag) => `t9-${tag}-${++opSeq}`;
            and p.proname <> 'release_seasonal_set'
            and p.prosrc like '%update public.ns_seasonal_assignments%'`);
       assert.equal(n, 0, 'only release_seasonal_set may set released_at');
+    });
+
+  /* ================== M. the Batch 9.1 corrective ======================
+     One case per finding in docs/reviews/seasonal-contract-abedf0f.md.
+     Every one of these fails against the uncorrected 9.1 migrations; that
+     is the point of writing them. */
+
+  await record('M1 (finding 4) a set cannot be retired while its season is unreleased',
+    async () => {
+      const id = await usableSet('FIXTURE M1');
+      const a = (await rpc(`public.assign_seasonal_set($1,$2,$3,2026,null,null,null)`,
+        [opId('asg'), id, custA])).assignment.assignment_id;
+      await rpc(`public.install_seasonal_set($1,$2,null,null,null)`, [opId('ins'), a]);
+      await rpc(`public.recover_seasonal_set($1,$2,'usable','base',null,null)`,
+        [opId('rec'), a]);
+
+      // Recovered but not released: the assignment is still OPEN, and the
+      // RPC's own message has always said "recover and release".
+      const err = await errorOf(() => rpc(
+        `public.retire_seasonal_set($1,$2,null,null,null,null)`, [opId('ret'), id]));
+      assert.ok(err, 'retiring here leaves a promise open against a gone asset');
+      assert.equal(err.code, '23514');
+      assert.match(err.message, /release it before/i);
+
+      await rpc(`public.inspect_seasonal_set($1,$2,'usable',null)`, [opId('insp'), id]);
+      await rpc(`public.release_seasonal_set($1,$2,null)`, [opId('rel'), a]);
+      const ok = await rpc(`public.retire_seasonal_set($1,$2,null,null,null,null)`,
+        [opId('ret'), id]);
+      assert.equal(ok.set.status, 'retired');
+    });
+
+  await record('M2 (finding 2) a set bought assembled has no debit to reverse',
+    async () => {
+      const id = await usableSet('FIXTURE M2');          // no build quantity
+      const mat = await newMaterial('FIXTURE M2 part');
+      const err = await errorOf(() => rpc(
+        `public.retire_seasonal_set($1,$2,$3,10,'base',null)`, [opId('ret'), id, mat]));
+      assert.ok(err, 'otherwise a positive receipt appears from nowhere');
+      assert.equal(err.code, '23514');
+      assert.match(err.message, /no debit to reverse/i);
+    });
+
+  await record('M3 (finding 2) a strip cannot exceed the build or change material',
+    async () => {
+      const mat = await newMaterial('FIXTURE M3 bulb');
+      await rpc(`public.post_stock_movement($1,$2,'base',500,'received',null,null,null,null,'usable','exact')`,
+        [opId('mv'), mat]);
+      const id = await newSet('FIXTURE M3', { material_id: mat, build_quantity: 200 });
+
+      let err = await errorOf(() => rpc(
+        `public.retire_seasonal_set($1,$2,$3,250,'base',null)`, [opId('ret'), id, mat]));
+      assert.ok(err, '250 out of a 200 build creates 50 from nothing');
+      assert.equal(err.code, '23514');
+
+      const other = await newMaterial('FIXTURE M3 other');
+      err = await errorOf(() => rpc(
+        `public.retire_seasonal_set($1,$2,$3,100,'base',null)`, [opId('ret'), id, other]));
+      assert.ok(err, 'salvage returns what was taken out');
+      assert.equal(err.code, '22023');
+    });
+
+  await record('M4 (finding 2) a partial strip records the scrap, and the invariant holds',
+    async () => {
+      const mat = await newMaterial('FIXTURE M4 bulb');
+      await rpc(`public.post_stock_movement($1,$2,'base',1000,'received',null,null,null,null,'usable','exact')`,
+        [opId('mv'), mat]);
+      const onHand = async () => Number((await one(
+        `select coalesce(on_hand,0) as n from public.ns_material_stock_by_location
+          where material_id=$1 and location_code='base'`, [mat])).n);
+      /* The corrected expression from the contract: stock, plus what sets
+         still hold, plus the scrap a partial strip left behind. */
+      const held = async () => Number((await one(
+        `select coalesce(sum(
+                  case when s.stripped_quantity is null then s.built_quantity
+                       else 0 end), 0) as n
+           from public.ns_rental_sets s where s.material_id = $1`, [mat])).n);
+      const scrap = async () => Number((await one(
+        `select coalesce(sum(s.built_quantity - s.stripped_quantity), 0) as n
+           from public.ns_rental_sets s
+          where s.material_id = $1 and s.stripped_quantity is not null`, [mat])).n);
+
+      const id = await newSet('FIXTURE M4', { material_id: mat, build_quantity: 200 });
+      assert.equal(await onHand(), 800);
+      assert.equal(await held(), 200);
+      assert.equal(await onHand() + await held() + await scrap(), 1000);
+
+      await rpc(`public.retire_seasonal_set($1,$2,$3,150,'base','half of it was cracked')`,
+        [opId('ret'), id, mat]);
+      const s = await setRow(id);
+      assert.equal(Number(s.built_quantity), 200);
+      assert.equal(Number(s.stripped_quantity), 150);
+      assert.equal(await onHand(), 950, 'only what was worth saving came back');
+      assert.equal(await held(), 0);
+      assert.equal(await scrap(), 50, 'and the 50 that did not is named as scrap');
+      assert.equal(await onHand() + await held() + await scrap(), 1000);
+    });
+
+  await record('M5 (finding 3) a key reused for an unrelated movement is caught',
+    async () => {
+      const mat = await newMaterial('FIXTURE M5 bulb');
+      await rpc(`public.post_stock_movement($1,$2,'base',500,'received',null,null,null,null,'usable','exact')`,
+        [opId('mv'), mat]);
+      const key = opId('reg');
+
+      // Somebody posts an ordinary movement under the suffix this call will
+      // derive. post_stock_movement replays it without comparing the
+      // payload, so without the provenance check the set would attach to an
+      // operation that consumed nothing.
+      await rpc(`public.post_stock_movement($1,$2,'base',1,'received',null,null,null,null,'usable','exact')`,
+        [key + ':build', mat]);
+
+      const err = await errorOf(() => rpc(
+        `public.register_seasonal_set($1,'FIXTURE M5','roofline','warm',40,'base',$2,200,null)`,
+        [key, mat]));
+      assert.ok(err, 'the set must not attach to a debit that never happened');
+      assert.equal(err.code, '23505');
+      assert.match(err.message, /not its own/i);
+      const after = Number((await one(
+        `select coalesce(on_hand,0) as n from public.ns_material_stock_by_location
+          where material_id=$1 and location_code='base'`, [mat])).n);
+      assert.equal(after, 501, 'and nothing was consumed');
+    });
+
+  await record('M6 (finding 1) a crew cannot replay a key for the other car\'s set',
+    async () => {
+      const id = await usableSet('FIXTURE M6');
+      const a = (await rpc(`public.assign_seasonal_set($1,$2,$3,2026,null,null,null)`,
+        [opId('asg'), id, custA])).assignment.assignment_id;
+      const key = opId('ins');
+      await rpc(`public.install_seasonal_set($1,$2,null,null,null)`, [key, a]);
+      // Recovered into Car B, where this crew does not work.
+      await rpc(`public.recover_seasonal_set($1,$2,'usable','car_b',null,null)`,
+        [opId('rec'), a]);
+
+      await client.query(
+        `insert into public.ns_crew_members (user_id,role,vehicle_location_id,display_name)
+         values ($1,'crew',(select id from public.ns_stock_locations where code='car_a'),'FIXTURE crew')
+         on conflict (user_id) do update set role='crew', active=true,
+           vehicle_location_id=(select id from public.ns_stock_locations where code='car_a')`,
+        [crewId]);
+      await beCrew();
+      try {
+        const err = await errorOf(() => rpc(
+          `public.install_seasonal_set($1,$2,null,null,null)`, [key, a]));
+        assert.ok(err, 'the replay path must be scoped like every other path');
+        assert.equal(err.code, '42501');
+      } finally {
+        await beOwner();
+      }
+    });
+
+  await record('M7 (finding 7) a key belongs to the thing it was first used on',
+    async () => {
+      const one1 = await usableSet('FIXTURE M7a');
+      const two = await usableSet('FIXTURE M7b');
+      const a1 = (await rpc(`public.assign_seasonal_set($1,$2,$3,2026,null,null,null)`,
+        [opId('asg'), one1, custA])).assignment.assignment_id;
+      const a2 = (await rpc(`public.assign_seasonal_set($1,$2,$3,2026,null,null,null)`,
+        [opId('asg'), two, custB])).assignment.assignment_id;
+
+      const key = opId('ins');
+      await rpc(`public.install_seasonal_set($1,$2,null,null,null)`, [key, a1]);
+      const err = await errorOf(() => rpc(
+        `public.install_seasonal_set($1,$2,null,null,null)`, [key, a2]));
+      assert.ok(err, 'same kind, different target: that is a new request, not a retry');
+      assert.equal(err.code, '23505');
+      assert.match(err.message, /different assignment/i);
+      const t = await setRow(two);
+      assert.notEqual(t.status, 'deployed', 'and the second set was not installed');
+    });
+
+  await record('M8 (finding 7) a state no-op is distinguishable from a key replay',
+    async () => {
+      const id = await usableSet('FIXTURE M8');
+      const a = (await rpc(`public.assign_seasonal_set($1,$2,$3,2026,null,null,null)`,
+        [opId('asg'), id, custA])).assignment.assignment_id;
+      const key = opId('ins');
+      const first = await rpc(`public.install_seasonal_set($1,$2,null,null,null)`, [key, a]);
+      assert.equal(first.replayed, false);
+      assert.equal(first.no_op, false);
+
+      const sameKey = await rpc(`public.install_seasonal_set($1,$2,null,null,null)`, [key, a]);
+      assert.equal(sameKey.replayed, true);
+      assert.equal(sameKey.no_op, false, 'this is the recorded original coming back');
+
+      const freshKey = await rpc(`public.install_seasonal_set($1,$2,null,null,null)`,
+        [opId('ins'), a]);
+      assert.equal(freshKey.replayed, true);
+      assert.equal(freshKey.no_op, true, 'nothing needed doing, and no key was recorded');
+    });
+
+  await record('M9 (finding 6) availability flags are never null, and reasons can overlap',
+    async () => {
+      const free = await usableSet('FIXTURE M9 free');
+      const v = await avail(free);
+      for (const f of ['has_active_assignment', 'awaiting_release', 'needs_inspection',
+                       'needs_repair_or_search', 'out_of_service',
+                       'at_the_repair_bench', 'available_for_reuse']) {
+        assert.notEqual(v[f], null, `${f} must never be null`);
+      }
+      assert.equal(v.awaiting_release, false, 'no assignment is false, not null');
+      assert.deepEqual(v.blocking_reasons, [], 'and nothing blocks it');
+
+      // A damaged set, recovered but not released, sitting at the bench:
+      // three reasons at once. The contract used to claim exactly one.
+      const busy = await usableSet('FIXTURE M9 busy');
+      const a = (await rpc(`public.assign_seasonal_set($1,$2,$3,2026,null,null,null)`,
+        [opId('asg'), busy, custA])).assignment.assignment_id;
+      await rpc(`public.install_seasonal_set($1,$2,null,null,null)`, [opId('ins'), a]);
+      await rpc(`public.recover_seasonal_set($1,$2,'damaged','base',null,null)`,
+        [opId('rec'), a]);
+      await rpc(`public.inspect_seasonal_set($1,$2,'damaged',null)`, [opId('insp'), busy]);
+
+      const w = await avail(busy);
+      assert.equal(w.awaiting_release, true);
+      assert.equal(w.at_the_repair_bench, true);
+      assert.equal(w.needs_repair_or_search, true);
+      assert.ok(w.blocking_reasons.length >= 3,
+        'the response lists every reason that applies, not one');
+      assert.equal(w.blocking_reasons[0], 'awaiting_release',
+        'most decisive first, so a caller can show the top one');
+
+      // The list is what the screen renders as the WHOLE explanation, so it
+      // has to be empty exactly when the set is free -- over every row, not
+      // over the two above.
+      const drift = await one(`
+        select count(*)::int as n
+          from public.ns_seasonal_set_availability
+         where available_for_reuse <> (coalesce(cardinality(blocking_reasons), 0) = 0)`);
+      assert.equal(drift.n, 0,
+        'blocking_reasons is empty if and only if the set is available');
+
+      // 'deployed' has no reason of its own, and the correspondence above
+      // holds only because this trigger rules out 'deployed' with nothing
+      // installed. Asserted here so that relaxing the trigger fails this
+      // check rather than quietly leaving a set unavailable for no stated
+      // reason. A direct write is the point: no RPC can reach the state.
+      const orphan = await errorOf(() => client.query(
+        `update public.ns_rental_sets set status='deployed' where id=$1`, [free]));
+      assert.ok(orphan, 'deployed with nothing installed must be impossible');
+      assert.equal(orphan.code, '23514');
+      assert.match(orphan.message, /nothing is installed/i);
     });
 
   // ================================================== report ==============

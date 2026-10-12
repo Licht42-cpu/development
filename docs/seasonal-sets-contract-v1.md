@@ -1,8 +1,32 @@
-# Nova Shield seasonal sets contract v1 — company-owned Christmas lighting
+# Nova Shield seasonal sets contract v1.1 — company-owned Christmas lighting
 
-**Status: frozen.** This is the snapshot handed to both tracks. Neither side
-invents a counterpart; a change to this document is a new version, agreed
-before either side implements against it.
+**Status: frozen at v1.1.** This is the snapshot handed to both tracks.
+Neither side invents a counterpart; a change to this document is a new
+version, agreed before either side implements against it.
+
+**What changed in v1.1, and why it is a version rather than an edit.** A
+read-only review of `abedf0f` (`docs/reviews/seasonal-contract-abedf0f.md`)
+found seven problems in v1.0. Four were defects in the migrations, one was
+an error in this document, and two were decisions this document had not
+made. All seven are corrected forward in
+`20261012090000_batch9_1_corrective_seasonal_review.sql` — the 9.1
+migrations are not edited, because they have been rehearsed and are read by
+the field track. The caller-visible differences:
+
+| § | v1.0 | v1.1 |
+|---|---|---|
+| 4 | a replay was returned before the caller's scope was checked, and returned the replayed event's set | a replay is returned only after kind, target and scope all match; a key bound to another set or assignment raises `23505` |
+| 4 | "every one of these nine calls appends exactly one keyed event" | false for a state no-op, which appends nothing and now says so |
+| 4 | the suffixed `:build`/`:strip` ledger key was trusted | the operation it returns is verified to contain exactly the movement that was asked for |
+| 5 | response had `replayed` | response has `replayed` **and** `no_op`, plus `built_quantity`, `stripped_quantity` and `blocking_reasons` |
+| 6 | "exactly one of the five reason flags explains why" | flags are non-null and several can be true at once; `blocking_reasons` is the ordered list |
+| 7 | the conservation expression was not an invariant for a partial strip | the expression names the scrap term, and a strip must reverse a build that provably happened |
+| 11 | an `assigned` set was described as "loaded" on a van | what is physically on a van is `docs/daily-load-contract-v1.md`, not this document |
+
+No signature in §3 moved and no grant changed. `ns_seasonal_result` gained a
+fourth argument with a default, and its three-argument form is dropped, so
+nothing outside these RPCs can call the old shape and get a response missing
+`no_op`.
 
 **This is a companion to, not a revision of,
 `docs/operations-contract-v1.md`.** That document (stock movements,
@@ -17,10 +41,14 @@ Defined by:
 
 * `supabase/migrations/20261011090000_batch9_1_seasonal_set_identity_and_assignments.sql`
 * `supabase/migrations/20261011091000_batch9_1_seasonal_operations.sql`
+* `supabase/migrations/20261012090000_batch9_1_corrective_seasonal_review.sql`
+  — the v1.1 corrective. Applies last; it replaces the nine functions and
+  the availability view, and adds two columns.
 
-Proved by `tests/db/batch9-1.test.mjs` (67 checks) against a real
+Proved by `tests/db/batch9-1.test.mjs` (77 checks) against a real
 PostgreSQL, and exercised from the UI side by `tests/phase24.test.mjs`
-(37 checks).
+(37 checks). Checks M1–M9 are one per finding, and each of the nine fails
+when the corrective is removed from the suite's migration sequence.
 
 ---
 
@@ -73,6 +101,15 @@ convention:
    partial unique index `ns_seasonal_assignments_one_open_per_set`, so it
    holds against a second admin screen, a script, or a replay that slipped
    past its key — not only against the RPC.
+
+   **Retirement reads the same list** (v1.1). `retire_seasonal_set` refuses
+   while any assignment on the set is `assigned`, `installed` **or**
+   `removed`. v1.0 checked only the first two, so a set recovered but not
+   released could be retired, destroying the asset while the commercial
+   promise against it was still open — and leaving `ns_rental_sets` and the
+   open-assignment rule that Batch 10.1 depends on disagreeing about
+   whether the season was closed. The error message already said "recover
+   and release it"; the check now agrees with it.
 
 2. **Inspection before release.** `release_seasonal_set` refuses while the
    set's condition is `uninspected`. Release does **not** require `usable`:
@@ -186,10 +223,35 @@ replay ledger are one object and cannot disagree. The log is append-only:
 `UPDATE` and `DELETE` are revoked from `authenticated`, which the migration
 asserts before it finishes.
 
-Reusing a key for a **different** operation raises `23505` and writes
-nothing — the same refusal `post_stock_movement` makes, for the same reason:
-a retry that differs from what landed is a caller bug, and quietly applying
-the second version would be worse than refusing it.
+### What a replay checks before it returns anything (v1.1)
+
+A key is not a password, and a replay is not a read. v1.0 matched the key,
+matched the event *kind*, and returned — which meant two things a caller
+could exploit by accident. A crew holding any key for an `install` got back
+the set that key was first used on, even a set at the other vehicle, and
+before `can_handle_set` ran. And the same kind of key presented against a
+different assignment returned the first one's outcome instead of refusing.
+
+All nine calls now go through one guard, `ns_seasonal_replay_guard`, which
+returns a replay only when **all four** hold:
+
+1. the key exists on `ns_rental_set_events`;
+2. its event is one the call being made would have written (a
+   comma-separated list, because `record_set_renewal` writes two kinds);
+3. the **target matches** — the set id, or the assignment id, that the
+   caller named. A mismatch raises `23505`, naming both: a key belongs to
+   the thing it was first used on, and silently answering about something
+   else is worse than refusing;
+4. `can_handle_set` passes for the set the event is on. A key is not a way
+   round scoping; a crew asking about another vehicle's set gets `42501`,
+   not a row.
+
+Only then is the **current** state of that set and assignment returned with
+`"replayed": true`. Reusing a key for a different operation still raises
+`23505` and writes nothing — the same refusal `post_stock_movement` makes,
+for the same reason: a retry that differs from what landed is a caller bug.
+
+### The suffixed ledger key is verified, not trusted (v1.1)
 
 Two calls post a stock movement as well, and they derive a **suffixed**
 operation id for it so a replay cannot post it twice:
@@ -202,28 +264,59 @@ operation id for it so a replay cannot post it twice:
 Replaying either returns the original and the ledger is untouched; this is
 checked by `batch9-1.test.mjs` I2 and I3.
 
-**Three calls are also idempotent on state**, because a retry under a *new*
-key must not fail on work that already landed: `install_seasonal_set` on an
+The suffix is a convention, not a reserved namespace, and
+`post_stock_movement` replays **any** operation under a matching
+`client_operation_id` without comparing the payload — deliberate behaviour
+in the stock contract §5, which is not changed here. So a movement already
+posted under `<key>:build` would be handed straight back and the set would
+record a debit that never happened for it. v1.1 verifies the dependency at
+the boundary instead: `ns_verify_stock_operation` requires the returned
+operation to contain **exactly one** movement, of the material, location,
+signed quantity and reason that were asked for. Anything else raises
+`23505` and the set is not created. The frozen function's accepted input is
+untouched, so a caller whose own keys contain a colon is unaffected.
+
+### A no-op is not a replay (v1.1)
+
+**Five calls are idempotent on state**, because a retry under a *new* key
+must not fail on work that already landed: `install_seasonal_set` on an
 already-installed assignment, `recover_seasonal_set` on one already
 `removed`/`released`, `release_seasonal_set` on one already `released`,
 `cancel_seasonal_assignment` on one already `cancelled`, and
-`retire_seasonal_set` on an already-retired set all return
-`"replayed": true` rather than raising. `inspect_seasonal_set` does **not**:
-re-inspecting a repaired set is a real second inspection, and the log keeps
-both.
+`retire_seasonal_set` on an already-retired set all return rather than
+raising. `inspect_seasonal_set` does **not**: re-inspecting a repaired set
+is a real second inspection, and the log keeps both.
+
+v1.0 reported those five as `"replayed": true`, which collapsed two
+different facts: *your key was already used* and *the work was already
+done*. They are now distinguishable, and v1.0's claim that "every one of
+these nine calls appends exactly one keyed event" was false for the second
+— a no-op appends nothing, so the key the caller sent is **not** recorded
+and sending it again is not a replay.
+
+| `replayed` | `no_op` | means | was the key recorded? |
+|---|---|---|---|
+| `false` | `false` | the original. Work was done, one keyed event appended | yes |
+| `true` | `false` | this exact key was used before; the guard above passed | yes, by the first call |
+| `true` | `true` | nothing needed doing — the state was already there | **no** |
+
+A caller that wants "did my key land" must read `no_op`. A caller that only
+wants "is the world as I asked" can ignore both.
 
 ## 5. Response shape
 
 ```json
 {
   "replayed": false,
+  "no_op": false,
   "set": {
     "set_id": "…", "set_code": "CHR-014",
     "status": "in_storage", "condition": "usable",
     "run_type": "roofline", "colour": "warm white", "linear_ft": 40,
     "material_id": null, "location_id": "…", "location_code": "base",
     "inspected_at": "2026-01-20T10:00:00Z", "retired_at": null,
-    "built_from_operation": null, "stripped_to_operation": null
+    "built_from_operation": null, "built_quantity": null,
+    "stripped_to_operation": null, "stripped_quantity": null
   },
   "assignment": {
     "assignment_id": "…", "set_id": "…", "customer_id": "…",
@@ -242,7 +335,8 @@ both.
     "needs_inspection": false,
     "needs_repair_or_search": false,
     "out_of_service": false,
-    "at_the_repair_bench": false
+    "at_the_repair_bench": false,
+    "blocking_reasons": []
   }
 }
 ```
@@ -257,6 +351,22 @@ A replay returns the **current** state of the same rows with
 has in the stock contract. It is not a frozen snapshot of the first
 response.
 
+Four fields are new in v1.1, and each exists because a reader could not
+answer a question without re-deriving it from the ledger:
+
+* **`no_op`** — see the table at the end of §4. Always present, never null.
+* **`built_quantity`** — how much material went into the set, or null for
+  one bought assembled. It is non-null exactly when
+  `built_from_operation` is, enforced by
+  `ns_rental_sets_build_quantity_sourced`: a quantity nobody can trace to a
+  movement would be a number, not a fact.
+* **`stripped_quantity`** — how much came back out on retirement. Null
+  until retired, or for a retirement with no strip.
+  `0 < stripped_quantity <= built_quantity`, enforced by
+  `ns_rental_sets_strip_within_build`.
+* **`blocking_reasons`** — an ordered JSON array of the reasons the set
+  cannot go to the next customer. Empty when it can. See §6.
+
 ## 6. Reading availability
 
 `public.ns_seasonal_set_availability` is the single definition of "can this
@@ -270,9 +380,58 @@ select * from ns_seasonal_set_availability where available_for_reuse;
 
 `available_for_reuse` is true only when **all** of: no open assignment, the
 set is `in_storage`, its condition is `usable`, and `inspected_at` is set.
-When it is false, exactly one of the five reason flags explains why, and the
-admin screen prints each as a sentence — an operator who cannot see why will
-ring the office.
+The open-assignment leg reads `status in ('assigned','installed','removed')`
+— the same list as §2 rule 1, so a recovered set is not offered to anybody
+until its season is released.
+
+### The reason flags (corrected in v1.1)
+
+v1.0 said "exactly one of the five reason flags explains why". That was
+wrong twice over, and both errors reached the screen.
+
+**They were not non-null.** The flags derived from the assignment were
+written `a.status = 'removed'`, which is NULL — not false — whenever the
+left join misses, which is every set with no open assignment. A caller
+doing `if (!row.awaiting_release)` was fine; one doing
+`row.awaiting_release === false` was not, and JSON carried the null
+through. Every flag is now wrapped in `coalesce(..., false)`, so each is
+strictly `true` or `false` for every row.
+
+**They were not exclusive.** A damaged set, recovered but not released,
+sitting at the repair bench, makes `awaiting_release`,
+`needs_repair_or_search` and `at_the_repair_bench` all true at once. A
+screen built on the v1.0 sentence would pick whichever it tested first and
+print one third of the truth.
+
+So the reasons are also returned as an ordered array, **most decisive
+first**, and a caller that wants one sentence takes the head of the list
+rather than guessing which flag wins:
+
+```
+out_of_service          retired or lost — not a set to plan with at all
+with_a_customer         assigned or installed
+awaiting_release        recovered, season not closed
+at_the_repair_bench     status is in_repair
+needs_repair_or_search  condition is damaged or missing
+needs_inspection        condition is uninspected
+```
+
+`blocking_reasons` is a `text[]` on the view and a JSON array in the RPC
+response. It is **empty if and only if `available_for_reuse` is true**, so
+it is the whole explanation and not a hint. `batch9-1.test.mjs` M9 asserts
+that correspondence across **every row** of the view, not over a sample, so
+a later change to either side fails the suite rather than quietly shipping
+an unavailable set the screen cannot explain.
+
+Six reasons cover every way the four availability legs can fail, and
+`deployed` needs none of its own — which is only true because of a
+constraint elsewhere, so it is worth writing down. The deferred trigger
+`ns_guard_set_matches_assignment` makes `deployed` and an `installed`
+assignment imply each other in both directions, so `with_a_customer` always
+accounts for a deployed set. M9 asserts that too, by trying the direct
+write: relax the trigger and a seventh reason is needed, and the suite says
+so. The admin screen prints each reason as a sentence; an operator who
+cannot see why will ring the office.
 
 Four other reads:
 
@@ -290,35 +449,75 @@ Four other reads:
 never neither.**
 
 Exactly two operations cross that line, and both record which ledger
-operation did it:
+operation did it **and how much**:
 
 * **Building** a set consumes material — a negative `consumed` movement,
-  remembered in `ns_rental_sets.built_from_operation`.
+  remembered in `ns_rental_sets.built_from_operation` with the amount in
+  `built_quantity`.
 * **Stripping** a retired set returns it — a positive `returned` movement,
-  remembered in `ns_rental_sets.stripped_to_operation`.
+  remembered in `ns_rental_sets.stripped_to_operation` with the amount in
+  `stripped_quantity`.
 
 Assigning, installing, recovering, inspecting and releasing a set move
 **no stock at all**, because nothing crosses the line: the asset is still
 ours, it is just somewhere else. This is why a set out at a customer's
 house does not reduce the ledger — it was never in it.
 
-The invariant, stated so it can be checked rather than believed:
+### The invariant, and what v1.0 got wrong about it
+
+v1.0 wrote it as:
 
 ```
-on_hand(material, location)  +  sum of build quantities of sets
-                                that have not been stripped
+on_hand(material)  +  sum of build quantities of sets
+                      that have not been stripped
+  = constant
+```
+
+That is not an invariant. "Has not been stripped" is a boolean, and a strip
+is a quantity, so a partial strip breaks it: build 200 and strip 150 and
+the left side falls by 50 with nothing accounting for it. Two allowed
+inputs broke it outright — a strip of 250 against a 200 build *created* 50
+units of material, and a set bought assembled (no build at all) could be
+stripped into a receipt reversing a debit that never existed.
+
+v1.1 fixes both halves. The expression is stated over quantities, and the
+part that does not come back is **named** rather than lost:
+
+```
+on_hand(material)
+  + Σ built_quantity        over sets not yet retired
+  + Σ (built_quantity − coalesce(stripped_quantity, 0))
+                            over retired sets
   = constant across every seasonal operation
 ```
 
-`batch9-1.test.mjs` I1 asserts exactly that expression at five points:
-after a 1000-unit receipt, after building a 200-unit set (800 + 200), after
-a whole season of assign → install → recover → inspect → release (still
-800 + 200, and the movement count is unchanged), and after retiring with a
-200-unit strip (1000 + 0). I2 and I3 prove a replayed build or strip does
-not post twice.
+The second sum is **scrap**: the part of a retired set not worth saving. It
+is not stock and never becomes stock, which is why it stays on the right of
+the ledger rather than disappearing from it. A retired set stripped of
+nothing contributes its whole build; one stripped in full contributes zero.
 
-A retired set that was **not** stripped still holds its quantity — it is
-scrap, not stock, and counting it as available would overstate the shelf.
+And a strip must reverse a build it can prove happened. `retire_seasonal_set`
+refuses three ways before it posts anything:
+
+| input | outcome |
+|---|---|
+| strip on a set with no `built_from_operation` | `23514`. Salvage from a bought-assembled set is an ordinary receipt the owner posts deliberately, not a strip |
+| `p_strip_material_id` ≠ the set's own material | `22023`. Salvage returns what was taken out, or it is not a strip |
+| `p_strip_quantity` > `built_quantity` | `23514`, naming both numbers |
+
+`ns_rental_sets_strip_within_build` enforces the third at the table as
+well, so a direct write cannot do what the RPC refuses, and
+`ns_rental_sets_build_quantity_sourced` makes a quantity without a movement
+impossible in either direction.
+
+`batch9-1.test.mjs` I1 asserts the expression at five points: after a
+1000-unit receipt, after building a 200-unit set (800 + 200), after a whole
+season of assign → install → recover → inspect → release (still 800 + 200,
+and the movement count is unchanged), and after retiring with a 200-unit
+strip (1000 + 0). I2 and I3 prove a replayed build or strip does not post
+twice. M2, M3 and M4 cover the three refusals and the partial case: a
+200-unit set stripped of 150 leaves `950 + 50`, and the 50 is scrap the
+expression names.
 
 ## 8. Authorisation
 
@@ -365,11 +564,11 @@ whether the role can execute.
 
 | code | condition | when |
 |---|---|---|
-| `42501` | insufficient_privilege | not an admin; a crew attempting an owner-only call; a set or location outside a crew's scope |
-| `22023` | invalid_parameter_value | blank `client_operation_id`; null `p_season_year`; unknown recovery condition; `'uninspected'` as an inspection result; a build or strip quantity ≤ 0; a build quantity with no material |
+| `42501` | insufficient_privilege | not an admin; a crew attempting an owner-only call; a set or location outside a crew's scope — **including on a replay** (v1.1) |
+| `22023` | invalid_parameter_value | blank `client_operation_id`; null `p_season_year`; unknown recovery condition; `'uninspected'` as an inspection result; a build or strip quantity ≤ 0; a build quantity with no material; a strip naming a material the set was not built from (v1.1) |
 | `P0002` | no_data_found | no such set, assignment, customer or active location |
-| `23505` | unique_violation | a set already held by an open assignment; a set awaiting release; a duplicate set code; a key reused for a different operation |
-| `23514` | check_violation | a transition the lifecycle forbids — installing something not `assigned`, recovering something not `installed`, releasing something still `installed` or not yet inspected, inspecting a deployed set, assigning a set that is uninspected/damaged/lost/retired/at the bench, retiring a set still promised |
+| `23505` | unique_violation | a set already held by an open assignment; a set awaiting release; a duplicate set code; a key reused for a different operation; a key presented against a different set or assignment (v1.1); a `:build`/`:strip` operation that does not contain the movement it was depended on for (v1.1) |
+| `23514` | check_violation | a transition the lifecycle forbids — installing something not `assigned`, recovering something not `installed`, releasing something still `installed` or not yet inspected, inspecting a deployed set, assigning a set that is uninspected/damaged/lost/retired/at the bench, retiring a set still promised (v1.1: including one recovered but not released), stripping a set that was never built, stripping more than it holds (v1.1) |
 | `23503` | foreign_key_violation | deleting a customer that an assignment still references |
 
 `P0002` is PL/pgSQL's `no_data_found`, **not** the SQL-standard `02000`.
@@ -412,9 +611,29 @@ For the daily load and plan work in 10.1/10.2:
 * **"Which sets could this job use"** is
   `ns_seasonal_set_availability where available_for_reuse`.
 * **A set's location while deployed is null**, not the vehicle it rode in. A
-  set listed as being in Car A is a set somebody will look for there. If
-  10.1 needs "what is on the van today", that is the stock ledger plus the
-  assignments whose status is `assigned` — the sets loaded but not yet up.
+  set listed as being in Car A is a set somebody will look for there.
+
+**Corrected in v1.1.** v1.0 ended that last point by saying "what is on the
+van today" is the stock ledger plus the assignments whose status is
+`assigned` — "the sets loaded but not yet up". That was wrong, and worth
+being explicit about because 10.2 would have built against it.
+`assigned` means **promised to a customer for a season**. It is a
+commercial fact, decided by the owner, possibly weeks before anyone drives
+anywhere. It says nothing about which vehicle a set is in, or whether it
+has been picked up at all; a set assigned in October and installed in
+December is `assigned` for two months while it sits on a shelf.
+
+What is physically on a van is now answered by a contract of its own:
+**`docs/daily-load-contract-v1.md`** — `ns_load_plans` and
+`ns_load_plan_lines` for the day's intent, `ns_day_reconciliations` for what
+actually came back. That document is the authority; this one does not
+describe van contents and should not be read as doing so.
+
+The two meet, and only here: a day's plan can carry **set ids** (never
+quantities, never `set_code`), and whether a set is free to be carried at
+all is `ns_seasonal_set_availability`. An `assigned` assignment tells a
+planner *that this set is owed to this customer this season*, which is why
+it must not be handed to another one — not where it is tonight.
 
 ## 12. Deliberately out of scope in this version
 
@@ -437,8 +656,14 @@ Named so neither side builds against an assumption:
 * **Multi-vehicle crews.** One crew today, with the schema able to carry a
   second (`ns_stock_locations` takes another `vehicle` row). Car B is not
   seeded and no fleet behaviour is implied.
-* **The permanent-lighting half of the 9.1 roadmap section** — reviewed
-  material sheets, sealed-kit opening, component availability, compatible
-  product references, worthwhile offcuts, heating-kit selection. The
-  delivered brief for this batch covered only the Christmas side. Flagged
-  here rather than guessed at; see the batch report.
+* ~~**The permanent-lighting half of the 9.1 roadmap section**~~ —
+  **delivered** since v1.0, in the 9.1 corrective
+  (`2b628b3`) and specified by
+  `docs/permanent-lighting-materials-contract-v1.md`: reviewed material
+  sheets, sealed-kit opening, offcut tracking and reuse, heating-kit
+  selection. Supplier specifications remain explicitly unknown there — the
+  `spec_state` column — and an unknown specification prevents a
+  recommendation rather than producing a guessed one. v1.0 flagged this as
+  out of scope because the delivered brief for that batch covered only the
+  Christmas side; it is named here so a reader of v1.0 does not conclude it
+  is still missing.
