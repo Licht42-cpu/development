@@ -336,7 +336,7 @@ async function main() {
       return { found: !!banner, text };
     });
     assert.equal(info.found, true);
-    assert.match(info.text, /Arrived at Site/);
+    assert.match(info.text, /Near scheduled site/);
   });
 
   // ------------------------------------------------- native-path branches --

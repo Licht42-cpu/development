@@ -1,0 +1,49 @@
+(node:1411893) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - all nine authoritative scenarios are pinned byte-identically at b21d082
+PASS - ordered day uses one supported read and retains server stop order
+PASS - initial ordered list keeps panels folded and reads no private property details
+PASS - derived and stale positions stay distinct without client sorting
+PASS - UTC warning, configured day bounds and invalidated confirmed load stay visible
+PASS - two vehicles leave unassigned work outside both stop lists
+PASS - entrance hazards parking and customer/internal audience stay separate
+PASS - geographic and image zones have separate drawings and keyboard-readable vertices
+PASS - missing and invalid coordinates produce no navigation destination
+PASS - navigation is a deliberate external handoff with no provider capability claim
+PASS - arrival requires explicit crew confirmation and changes no backend state
+PASS - no GPS permission or coordinates are inferred by arrival control
+PASS - saved cache excludes access codes and private internal notes
+PASS - offline restart retains operational notes pins zones and ordered day without a basemap
+PASS - offline event removes revealed access code immediately
+PASS - property denial retires saved property cache and never echoes private error text
+PASS - job denial retires saved property cache and never echoes private error text
+PASS - another account cannot read saved dispatch instructions or local arrival
+PASS - cache expires after 24 hours and never substitutes another vehicle or work date
+PASS - offline different work date is refused rather than substituted
+PASS - blocked issue shows attribution and resolution without completion or commercial update
+PASS - breakdown keeps its unknown material and does not automatically block work
+PASS - pending is visible and duplicate taps make one immutable request
+PASS - lost response and restart recover identical original key and payload
+PASS - 23514 conflict/refusal is distinct from accepted and unknown
+PASS - 23505 conflict/refusal is distinct from accepted and unknown
+PASS - 42501 conflict/refusal is distinct from accepted and unknown
+PASS - message unavailable is a distinct provider-double outcome with no automatic sends
+PASS - message accepted is a distinct provider-double outcome with no automatic sends
+PASS - message delivered is a distinct provider-double outcome with no automatic sends
+PASS - message provider_failed is a distinct provider-double outcome with no automatic sends
+PASS - message unknown is a distinct provider-double outcome with no automatic sends
+PASS - route change discards late property response rather than replacing new screen
+PASS - activating second vehicle denial retires an earlier one-vehicle snapshot
+PASS - vehicle scope helper refusal also retires previously saved details
+PASS - unknown message prevents another same-kind tap while issues remain available
+PASS - device storage failure prevents sending any uncommitted request
+PASS - account change prevents late property details appearing for the next crew
+PASS - workspace launcher checks scoped access without replacing the completion path
+PASS - workspace refusal removes previously loaded passport and completion controls
+PASS - missing dispatch backend and malformed envelope do not fabricate an operating day
+PASS - unreachable server with navigator online uses only the scoped saved day
+PASS - visual and keyboard inspection at 390px
+PASS - visual and keyboard inspection at 430px
+PASS - visual and keyboard inspection at 1280px
+45 PASS / 0 FAIL / 0 SKIP

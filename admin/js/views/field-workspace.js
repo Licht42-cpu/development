@@ -13,6 +13,7 @@ import { trySave, describeWriteError } from '../lib/save.js';
 import { readDraft, writeDraft, deleteDraft, retainNoteDraft } from '../lib/field-cache.js';
 import { localAccount } from '../lib/field-identity.js';
 import { createFieldCompletion } from '../components/field-completion.js';
+import { propertyInstructionsLauncher } from '../components/field-property.js';
 
 /* The original four action types this console queues offline:
    Passport/checklist writes, adding a measurement, uploading a photo, and
@@ -612,6 +613,7 @@ export async function renderVisit({ mount, navigate }, jobId) {
               'to include it automatically.' }) : null
     ]),
     refreshStatus,
+    propertyInstructionsLauncher({jobId:job.id,propertyId:job.properties.id,ownerId}),
     passportHost,
     checklistHost,
     sectionsHost,

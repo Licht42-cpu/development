@@ -6,6 +6,7 @@ import { createDictationReview } from '../components/field-dictation.js';
 import { retainNoteDraft } from '../lib/field-cache.js';
 import * as queue from '../lib/offline-queue.js';
 import { createFieldCompletion } from '../components/field-completion.js';
+import { propertyInstructionsLauncher } from '../components/field-property.js';
 
 export async function renderOfflineWork({ mount, navigate, retry }, snapshot, jobId) {
   const banner = el('div', { class: 'warn', role: 'status' }, [
@@ -34,6 +35,7 @@ export async function renderOfflineWork({ mount, navigate, retry }, snapshot, jo
     return;
   }
   const job = structuredClone(data.job);
+  mount.append(propertyInstructionsLauncher({jobId,propertyId:job.properties.id,ownerId:snapshot.id}));
   // Overlay queued property patches so a restart does not hide saved facts.
   const patches = await queue.propertyPatches(jobId);
   for (const patch of patches) Object.assign(job.properties, patch);

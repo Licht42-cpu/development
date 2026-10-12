@@ -13,6 +13,8 @@ import { localAccount, accessDenied } from './lib/field-identity.js';
 import { renderOfflineWork } from './views/field-offline.js';
 import { unavailableLoadRoute } from './lib/field-load-gate.js';
 import { renderFieldLoad } from './views/field-load.js';
+import { renderFieldDispatch } from './views/field-dispatch.js';
+import { retireDispatch } from './lib/field-dispatch-work.js';
 
 setStatusBarTheme();
 
@@ -31,6 +33,7 @@ installUnhandledRejectionToast();
 const viewEl = document.getElementById('view');
 
 const routes = [
+  { pattern: /^\/dispatch(?:\?.*)?$/, render: renderFieldDispatch },
   { pattern: /^\/load(?:\/closing)?(?:\?.*)?$/, render: renderFieldLoad },
   { pattern: /^\/$/,                        render: renderSchedule },
   { pattern: /^\/visit\/([0-9a-f-]+)$/,     render: (ctx, id) => renderVisit(ctx, id) }
@@ -72,6 +75,10 @@ function showMessage(title, body, action, mount = viewEl) {
 let measurementRouteAttempt = 0;
 let cachedAccount = null;
 async function cachedRoute(mount, attempt) {
+  if (/^\/dispatch(?:\?|$)/.test(currentPath())) {
+    await renderFieldDispatch({mount,navigate,offline:true});
+    return true;
+  }
   if (/^\/load(?:\/|\?|$)/.test(currentPath())) {
     await renderFieldLoad({ mount, navigate });
     return true;
@@ -115,6 +122,7 @@ async function router() {
     if (!session) return renderLogin({ mount, onSignedIn: router });
 
     if (!isAdmin) {
+      await retireDispatch(session.user.id,false);
       await forget(session.user.id);
       return showMessage(
         'Account not authorised',
@@ -137,7 +145,10 @@ async function router() {
     await match.r.render({ mount, navigate }, match.m[1]);
   } catch (err) {
     if (attempt !== measurementRouteAttempt) return;
-    if (accessDenied(err)) await forget().catch(() => {});
+    if (accessDenied(err)) {
+      await retireDispatch(await localAccount(),false).catch(() => {});
+      await forget().catch(() => {});
+    }
     else if (offlineQueue.looksOffline(err)) {
       try { if (await cachedRoute(mount, attempt)) return; }
       catch { /* Keep the original connection failure when no cache can open. */ }
@@ -174,6 +185,7 @@ document.getElementById('signOut')?.addEventListener('click', signOut);
 // A denied replay retires the stored snapshot. Also hide a cached screen
 // already on display; deleting IDB alone cannot remove its private DOM.
 window.addEventListener('ns-field-access-denied', event => {
+  void retireDispatch(event.detail?.ownerId,false);
   if (!cachedAccount || cachedAccount !== event.detail?.ownerId) return;
   cachedAccount = null;
   measurementRouteAttempt++;
@@ -181,6 +193,17 @@ window.addEventListener('ns-field-access-denied', event => {
   showMessage('Saved access no longer available',
     'The server refused access to saved work. Your unsent actions and drafts remain on this device. Check the schedule for current work.',
     el('button', { class: 'btn', text: 'Check current work', onClick: () => navigate('/') }));
+});
+// A scoped property refusal also closes the legacy workspace facts already
+// on screen. Its broader getJob read must not route around that refusal.
+window.addEventListener('ns-field-dispatch-denied', event => {
+  if (!event.detail?.closeWorkspace || !/^\/visit\//.test(currentPath()) ||
+      localStorage.getItem('ns-field-active-account') !== event.detail?.ownerId) return;
+  measurementRouteAttempt++;
+  while (dismissTopOverlay()) { /* Remove private workspace controls. */ }
+  showMessage('Visit access unavailable',
+    'Not yours to open. Saved dispatch details retired. Ask the owner to check assignment.',
+    el('button', {class:'btn',text:'Check ordered day',onClick:()=>navigate('/dispatch')}));
 });
 // Auth events may arrive from another tab. Clear private controls immediately;
 // do not await a Supabase call from inside its auth callback/lock.
@@ -197,6 +220,8 @@ supabase.auth.onAuthStateChange?.((event, session) => {
   if (id) localStorage.setItem('ns-field-active-account', id);
   else localStorage.removeItem('ns-field-active-account');
   if (event === 'SIGNED_OUT' || observedAccount !== undefined && id !== observedAccount) {
+    window.dispatchEvent(new CustomEvent('ns-field-auth-changed'));
+    if (observedAccount) void retireDispatch(observedAccount);
     measurementRouteAttempt++;
     while (dismissTopOverlay()) { /* Remove private dialogs and markup. */ }
     clear(viewEl);

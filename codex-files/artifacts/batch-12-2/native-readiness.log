@@ -1,0 +1,30 @@
+(node:1425524) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+Browser: 151.0.7922.173
+PASS - Quantity saving and failure already reach a polite live region
+PASS - A successful quantity save announces completion
+PASS - Quantity recovery restores focus to its input when the button disappears
+PASS - Successful keyboard retry restores quantity focus
+PASS - A failed keyboard quantity retry keeps the renewed recovery button focused
+PASS - A delayed quantity retry does not reclaim focus from the next field
+PASS - Passport save progress has its own live region and busy state
+PASS - Passport preferences have a programmatic label
+PASS - Outbox badge stays a keyboard button and changes have a separate live region
+PASS - Outbox refresh preserves keyboard focus on the next remaining action
+PASS - Notes errors update a persistent live region
+PASS - Keyboard notes retry restores a usable focus target on failure and success
+PASS - Stale visit warning already has a live region and working keyboard Retry
+PASS - At 390px Tab follows header controls and gives the badge a visible focus ring
+PASS - Outbox modal traps Tab, dismisses with Escape and restores badge focus
+PASS - At 390px keyboard traversal reaches the visit controls with visible focus and no unnamed controls
+PASS - Window and winter icon steppers already expose named buttons
+PASS - light: primary save text meets 4.5:1 contrast
+PASS - light: error toast text meets 4.5:1 contrast
+PASS - light: sync states, warning, quantity hint and error text meet 4.5:1
+PASS - dark: primary save text meets 4.5:1 contrast
+PASS - dark: error toast text meets 4.5:1 contrast
+PASS - dark: sync states, warning, quantity hint and error text meet 4.5:1
+PASS - Cold bundled start with external network blocked shows an honest unavailable screen
+
+24/24 passed

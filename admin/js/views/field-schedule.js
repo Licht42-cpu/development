@@ -111,7 +111,7 @@ export async function renderSchedule({ mount, navigate }) {
         'margin-bottom:10px;border:0;cursor:pointer;font:inherit',
       onClick: () => startVisit(job)
     }, [
-      el('strong', { text: '📍 Arrived at Site — Start Visit' })
+      el('strong', { text: '📍 Near scheduled site — Review Visit' })
     ]);
   }
 
@@ -173,6 +173,8 @@ export async function renderSchedule({ mount, navigate }) {
   clear(mount).append(
     el('div', { class: 'page-head', style: 'padding:0 0 10px' }, [
       el('h1', { text: "Today's schedule" }),
+      el('p', { class: 'hint', text: 'Device-calendar visits. Use Ordered day for the server operating-day window and dispatch order. Proximity does not confirm arrival.' }),
+      el('a', { class: 'btn', href: '#/dispatch', text: 'Open ordered dispatch day' }),
       el('p', { text: visits.length
         ? `${visits.length} visit${visits.length === 1 ? '' : 's'} booked for today`
         : 'Nothing booked for today' }),

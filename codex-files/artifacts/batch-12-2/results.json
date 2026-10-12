@@ -1,0 +1,187 @@
+{
+  "passed": 45,
+  "failed": 0,
+  "skipped": 0,
+  "results": [
+    {
+      "name": "all nine authoritative scenarios are pinned byte-identically at b21d082",
+      "ok": true
+    },
+    {
+      "name": "ordered day uses one supported read and retains server stop order",
+      "ok": true
+    },
+    {
+      "name": "initial ordered list keeps panels folded and reads no private property details",
+      "ok": true
+    },
+    {
+      "name": "derived and stale positions stay distinct without client sorting",
+      "ok": true
+    },
+    {
+      "name": "UTC warning, configured day bounds and invalidated confirmed load stay visible",
+      "ok": true
+    },
+    {
+      "name": "two vehicles leave unassigned work outside both stop lists",
+      "ok": true
+    },
+    {
+      "name": "entrance hazards parking and customer/internal audience stay separate",
+      "ok": true
+    },
+    {
+      "name": "geographic and image zones have separate drawings and keyboard-readable vertices",
+      "ok": true
+    },
+    {
+      "name": "missing and invalid coordinates produce no navigation destination",
+      "ok": true
+    },
+    {
+      "name": "navigation is a deliberate external handoff with no provider capability claim",
+      "ok": true
+    },
+    {
+      "name": "arrival requires explicit crew confirmation and changes no backend state",
+      "ok": true
+    },
+    {
+      "name": "no GPS permission or coordinates are inferred by arrival control",
+      "ok": true
+    },
+    {
+      "name": "saved cache excludes access codes and private internal notes",
+      "ok": true
+    },
+    {
+      "name": "offline restart retains operational notes pins zones and ordered day without a basemap",
+      "ok": true
+    },
+    {
+      "name": "offline event removes revealed access code immediately",
+      "ok": true
+    },
+    {
+      "name": "property denial retires saved property cache and never echoes private error text",
+      "ok": true
+    },
+    {
+      "name": "job denial retires saved property cache and never echoes private error text",
+      "ok": true
+    },
+    {
+      "name": "another account cannot read saved dispatch instructions or local arrival",
+      "ok": true
+    },
+    {
+      "name": "cache expires after 24 hours and never substitutes another vehicle or work date",
+      "ok": true
+    },
+    {
+      "name": "offline different work date is refused rather than substituted",
+      "ok": true
+    },
+    {
+      "name": "blocked issue shows attribution and resolution without completion or commercial update",
+      "ok": true
+    },
+    {
+      "name": "breakdown keeps its unknown material and does not automatically block work",
+      "ok": true
+    },
+    {
+      "name": "pending is visible and duplicate taps make one immutable request",
+      "ok": true
+    },
+    {
+      "name": "lost response and restart recover identical original key and payload",
+      "ok": true
+    },
+    {
+      "name": "23514 conflict/refusal is distinct from accepted and unknown",
+      "ok": true
+    },
+    {
+      "name": "23505 conflict/refusal is distinct from accepted and unknown",
+      "ok": true
+    },
+    {
+      "name": "42501 conflict/refusal is distinct from accepted and unknown",
+      "ok": true
+    },
+    {
+      "name": "message unavailable is a distinct provider-double outcome with no automatic sends",
+      "ok": true
+    },
+    {
+      "name": "message accepted is a distinct provider-double outcome with no automatic sends",
+      "ok": true
+    },
+    {
+      "name": "message delivered is a distinct provider-double outcome with no automatic sends",
+      "ok": true
+    },
+    {
+      "name": "message provider_failed is a distinct provider-double outcome with no automatic sends",
+      "ok": true
+    },
+    {
+      "name": "message unknown is a distinct provider-double outcome with no automatic sends",
+      "ok": true
+    },
+    {
+      "name": "route change discards late property response rather than replacing new screen",
+      "ok": true
+    },
+    {
+      "name": "activating second vehicle denial retires an earlier one-vehicle snapshot",
+      "ok": true
+    },
+    {
+      "name": "vehicle scope helper refusal also retires previously saved details",
+      "ok": true
+    },
+    {
+      "name": "unknown message prevents another same-kind tap while issues remain available",
+      "ok": true
+    },
+    {
+      "name": "device storage failure prevents sending any uncommitted request",
+      "ok": true
+    },
+    {
+      "name": "account change prevents late property details appearing for the next crew",
+      "ok": true
+    },
+    {
+      "name": "workspace launcher checks scoped access without replacing the completion path",
+      "ok": true
+    },
+    {
+      "name": "workspace refusal removes previously loaded passport and completion controls",
+      "ok": true
+    },
+    {
+      "name": "missing dispatch backend and malformed envelope do not fabricate an operating day",
+      "ok": true
+    },
+    {
+      "name": "unreachable server with navigator online uses only the scoped saved day",
+      "ok": true
+    },
+    {
+      "name": "visual and keyboard inspection at 390px",
+      "ok": true
+    },
+    {
+      "name": "visual and keyboard inspection at 430px",
+      "ok": true
+    },
+    {
+      "name": "visual and keyboard inspection at 1280px",
+      "ok": true
+    }
+  ]
+}

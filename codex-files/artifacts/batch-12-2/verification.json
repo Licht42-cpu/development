@@ -1,0 +1,110 @@
+{
+  "base_sha": "c8666dd465defc1d8a7250d7253794d4c35f0e01",
+  "claude_contract_sha": "b21d082",
+  "registered": {
+    "passed": 391,
+    "failed": 0,
+    "geofence": "passed"
+  },
+  "standalone_suites": [
+    {
+      "suite": "field-dispatch",
+      "passed": 45,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "field-completion",
+      "passed": 35,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "field-evidence",
+      "passed": 31,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "field-load",
+      "passed": 41,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "load-prep",
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "offline-work",
+      "passed": 47,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "field-resilience",
+      "passed": 27,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "mobile-reliability",
+      "passed": 22,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "native-readiness",
+      "passed": 24,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "native-startup",
+      "passed": 18,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "native-packaging",
+      "passed": 19,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "native-bundle",
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0
+    }
+  ],
+  "counted_local_checks": 726,
+  "normal_failed": 0,
+  "normal_skipped": 0,
+  "declared_fault_injection": {
+    "passed": 0,
+    "expected_failed": 1
+  },
+  "screenshots": {
+    "widths": [
+      390,
+      430,
+      1280
+    ],
+    "count": 12
+  },
+  "mobile_guard_assets": 160,
+  "unrun": [
+    "disposable database and migration rehearsal",
+    "live Supabase",
+    "production",
+    "actual provider delivery",
+    "emulator",
+    "physical Android"
+  ],
+  "no_live_migration": true,
+  "no_merge": true,
+  "apk_published": false
+}

@@ -1,0 +1,11 @@
+.field-dispatch, .field-property { overflow-wrap: anywhere; }
+.field-dispatch .btn-row, .field-property .btn-row { flex-wrap: wrap; }
+.field-dispatch input, .field-dispatch select, .field-property textarea { max-width:100%; box-sizing:border-box; }
+.field-property-map svg { display:block; width:100%; max-height:240px; border:1px solid var(--line); border-radius:8px; background:var(--surface); }
+.field-property-map details { margin:12px 0; }
+.field-property-map summary { min-height:44px; padding:8px 0; cursor:pointer; }
+.field-dispatch summary { min-height:44px; padding:8px 0; cursor:pointer; }
+.field-dispatch summary:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+.field-property details > summary:focus-visible, .field-dispatch a:focus-visible { outline:3px solid var(--accent); outline-offset:3px; }
+.field-property [hidden] { display:none !important; }
+.field-property .dispatch-issue { border-top:1px solid var(--line); margin-top:10px; padding-top:10px; }
