@@ -57,7 +57,7 @@
     "430-evidence.png": "97212b4c3a1f12dac9e1262fad5eb9ac89b464935b21c2d04c5903cfc48e4414",
     "430-registration.png": "bfdc4fcfd425dc2bd9fd24c513834f5e60d679fc341b3653f94ba0f2992f2c1d",
     "430-review.png": "802e75ac21ef97e78de14ef2b977e3ceb2c86229a00fbb8e35aeb510fab408c4",
-    "android-assemble.txt": "d2d4f3c1111383c2b86c8cceeb7913f93d05bf9ddf2129584b23baa5590c3efc",
+    "android-assemble.txt": "f03eb71721430b18f479184c39e83cc735894f22f5b7f7e54fc891d393d13e83",
     "apk-inspection.json": "ce3bc61450f798fc078466137f954317af1f11ccc9eb9787b6a0316561169e62",
     "apk-inspection.txt": "ce3bc61450f798fc078466137f954317af1f11ccc9eb9787b6a0316561169e62",
     "apk-signing.txt": "f61433d05100c08fe4c0fb6ec215e970aed42012ec644c71af7ad15cf76d2399",
@@ -78,5 +78,6 @@
     "offline-work.txt": "41ddc1d312a1eaacd83534401a7441f1b34451a5fe3e211c992ea8d0d34e76bd",
     "results.json": "0ebae8f9781964cd6451e2a63b4963177441272e9870fc4eb711206761cf8c22",
     "verify-mobile.txt": "28072482b6080d8173da7271cc430f93539ae54d69162d350890fc0d6a911ebc"
-  }
+  },
+  "log_normalization": "Android assemble log strips trailing line whitespace only; command output/results unchanged."
 }
