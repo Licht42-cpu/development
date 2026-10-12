@@ -1,6 +1,6 @@
-# Nova Shield seasonal sets contract v1.1 — company-owned Christmas lighting
+# Nova Shield seasonal sets contract v1.2 — company-owned Christmas lighting
 
-**Status: frozen at v1.1.** This is the snapshot handed to both tracks.
+**Status: frozen at v1.2.** This is the snapshot handed to both tracks.
 Neither side invents a counterpart; a change to this document is a new
 version, agreed before either side implements against it.
 
@@ -23,6 +23,24 @@ the field track. The caller-visible differences:
 | 7 | the conservation expression was not an invariant for a partial strip | the expression names the scrap term, and a strip must reverse a build that provably happened |
 | 11 | an `assigned` set was described as "loaded" on a van | what is physically on a van is `docs/daily-load-contract-v1.md`, not this document |
 
+**What changed in v1.2.** Re-reading the same review against the corrected
+SQL found three sub-points still open inside findings 1, 2 and 5 — each one
+a DECISION the review had asked for rather than a line to patch. They are
+closed in `20261013090000_batch11_1_seasonal_corrective_round_two.sql`, and
+each disposition is recorded in
+`docs/reviews/seasonal-abedf0f-dispositions.md`:
+
+| § | v1.1 | v1.2 |
+|---|---|---|
+| 8 | every admin could read every operation key off the event log | `client_operation_id` is revoked from `authenticated` at column level; the owner reads one through `ns_rental_set_operation_key(event_id)`. The assignment history deliberately stays readable, with the reason written down |
+| 7 | a strip had to name the set's own material, but any location | a build records `built_at_location`, and salvage returns there or is refused (`22023`), so the expression holds per (material, location) and not only in total |
+| 11 | nothing recorded a whole set physically moving Base → Car A | `move_seasonal_set(...)` and the view `ns_seasonal_sets_aboard`, which answers per-car aboard status from the set's own location rather than from a promise |
+
+`move_seasonal_set` is a new signature, not a changed one. No existing
+signature, response field, error code or grant moved, and the daily-load
+wire contract is unaffected (see `docs/daily-load-contract-v1.md` v1.1,
+additive).
+
 No signature in §3 moved and no grant changed. `ns_seasonal_result` gained a
 fourth argument with a default, and its three-argument form is dropped, so
 nothing outside these RPCs can call the old shape and get a response missing
@@ -42,13 +60,18 @@ Defined by:
 * `supabase/migrations/20261011090000_batch9_1_seasonal_set_identity_and_assignments.sql`
 * `supabase/migrations/20261011091000_batch9_1_seasonal_operations.sql`
 * `supabase/migrations/20261012090000_batch9_1_corrective_seasonal_review.sql`
-  — the v1.1 corrective. Applies last; it replaces the nine functions and
-  the availability view, and adds two columns.
+  — the v1.1 corrective. Replaces the nine functions and the availability
+  view, and adds two columns.
+* `supabase/migrations/20261013090000_batch11_1_seasonal_corrective_round_two.sql`
+  — the v1.2 corrective. Applies last; it adds `move_seasonal_set`, the
+  aboard view and `built_at_location`, replaces `register_seasonal_set` and
+  `retire_seasonal_set`, and changes the event log's read grants.
 
-Proved by `tests/db/batch9-1.test.mjs` (77 checks) against a real
+Proved by `tests/db/batch9-1.test.mjs` (83 checks) against a real
 PostgreSQL, and exercised from the UI side by `tests/phase24.test.mjs`
-(37 checks). Checks M1–M9 are one per finding, and each of the nine fails
-when the corrective is removed from the suite's migration sequence.
+(37 checks). Checks M1–M9 are one per v1.1 finding, and each of the nine
+fails when that corrective is removed from the suite's migration sequence;
+N1–N5 cover the three v1.2 sub-points.
 
 ---
 

@@ -9,6 +9,7 @@ import { jobSteps, STEP_DONE, STEP_NOW } from '../components/next-step.js';
 import { activityRows, groupByDay } from '../components/job-activity.js';
 import { createJobMaterialsPanel } from '../components/job-materials.js';
 import { createJobMaterialSheetPanel } from '../components/job-material-sheet.js';
+import { jobEvidencePanel } from '../components/job-evidence.js';
 
 const JOB_STATUSES = ['new','reviewing','estimate_drafted','site_visit_scheduled','assessed',
   'quote_sent','accepted','declined','scheduled','in_progress','completed','invoiced','paid',
@@ -320,6 +321,12 @@ export async function renderJob({ mount }, jobId) {
      this says what a person chose, and it is the only thing that reserves
      stock. The two are deliberately adjacent and deliberately separate. */
   const materialSheetPanel = createJobMaterialSheetPanel({ jobId: job.id });
+  /* Batch 11.1. What this job has to PROVE, which is the thing the Mark
+     Job Complete button below now depends on: the backend refuses a
+     completion that is short of a requirement the owner confirmed, so the
+     operator needs to see the shortfall before pressing it rather than as
+     an error afterwards. */
+  const evidencePanel = jobEvidencePanel({ jobId: job.id, onChanged: paintCompletion });
   const nextStepHost = el('div', {});
   const requestedHost = el('div', {});
   const notesHost = el('div', {});
@@ -1051,8 +1058,6 @@ export async function renderJob({ mount }, jobId) {
     await trySave(
       async () => {
         const saved = await api.completeJob(job.id);
-        // completeJob only matches a row whose completed_at is still null, so
-        // a second submit returns null rather than moving the timestamp.
         if (!saved) throw new Error('This job was already marked complete.');
         job.completed_at = saved.completed_at;
         job.status = saved.status;
@@ -1060,6 +1065,11 @@ export async function renderJob({ mount }, jobId) {
       { success: 'Job marked complete', after: reload }
     );
     paintCompletion();
+    /* Batch 11.1: acceptance FREEZES the evidence it rested on, so the panel
+       above is out of date the moment this succeeds -- and if it was refused
+       for a missing requirement, the operator needs the live shortfall in
+       front of them rather than the one they read a minute ago. */
+    evidencePanel.reload().catch(() => {});
   });
 
   const address = [job.properties?.address_line1, job.properties?.city, job.properties?.postal_code]
@@ -1126,6 +1136,7 @@ export async function renderJob({ mount }, jobId) {
     pricingHost,
     materialsPanel.root,
     materialSheetPanel.root,
+    evidencePanel.root,
     el('div', { class: 'card' }, [quotePanel.root]),
     notesHost,
     activityHost

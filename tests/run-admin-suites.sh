@@ -27,7 +27,7 @@ for i in 1 2 3 4 5; do
 done
 
 FAILED=0
-for f in phase22 phase23 phase24 phase25 phase26; do
+for f in phase22 phase23 phase24 phase25 phase26 phase27; do
   echo "===== $f ====="
   if ! node "tests/$f.test.mjs"; then FAILED=1; fi
   echo

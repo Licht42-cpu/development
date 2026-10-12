@@ -62,7 +62,8 @@ const files = readdirSync(MIGRATIONS).filter(f => f.endsWith('.sql')).sort();
   await assertDisposableDatabase(client);
 
   for (const f of ['fixture-schema.sql', 'fixture-schema-batch8-1.sql',
-                   'fixture-schema-batch9-1.sql', 'fixture-schema-batch10-1.sql']) {
+                   'fixture-schema-batch9-1.sql', 'fixture-schema-batch10-1.sql',
+                   'fixture-schema-batch11-1.sql']) {
     await client.query(readFileSync(join(HERE, f), 'utf8'));
   }
   // The contract RPCs are admin-only and the fixture's is_admin() reads a GUC.

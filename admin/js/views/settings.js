@@ -1,6 +1,7 @@
 import * as api from '../lib/api.js';
 import { el, clear } from '../../../shared/dom.js';
 import { money, unitLabel, humanise } from '../../../shared/format.js';
+import { evidencePolicyPanel } from '../components/evidence-policy.js';
 import { settingField, validators, readAll, mergePreserving,
          createSaveControl } from '../lib/settings-form.js';
 
@@ -293,6 +294,13 @@ export async function renderSettings({ mount }) {
     quoteDefaultsCard,
     taxCard,
     adminCard,
-    lightingCard
+    lightingCard,
+
+    /* Batch 11.1. The one place the owner can turn what this system
+       GUESSED a job has to prove into what it actually has to prove. It
+       loads itself, because the rules live in their own table rather than
+       in app_settings -- a requirement with a version, a confirmation date
+       and a name on it is not a settings key. */
+    evidencePolicyPanel().root
   ].filter(Boolean));
 }

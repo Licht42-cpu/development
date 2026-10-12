@@ -1,7 +1,34 @@
-# Nova Shield daily load contract v1
+# Nova Shield daily load contract v1.1
 
-**Status: frozen.** A change to this document is a new version, agreed
-before either side implements against it.
+**Status: frozen at v1.1.** A change to this document is a new version,
+agreed before either side implements against it.
+
+**What changed in v1.1, and why nothing you have written needs editing.**
+The abedf0f seasonal review's finding 5 ended with a point that belonged
+here rather than there: a Keep/Add/Return row needs *authoritative per-car
+aboard status*, and the nine seasonal operations provided no way for a whole
+set to move from Base to a car at all, so "what is on the van tonight" could
+only be inferred from a commercial promise. Batch 11.1 adds the missing
+piece. It is **purely additive**:
+
+| added | what it answers |
+|---|---|
+| `move_seasonal_set(p_client_operation_id text, p_set_id uuid, p_location_code text, p_note text default null)` | records a whole set physically moving. Keyed, crew-scoped on the set AND the destination, refuses a deployed set (that is recovery), reports a no-op when it is already there. Posts no stock — a set is not stock |
+| `public.ns_seasonal_sets_aboard` | per-car aboard status: `aboard_state` in `at_base \| aboard_vehicle \| at_a_property \| at_the_repair_bench \| at_a_location \| out_of_service \| unknown`, plus `promised_to_a_customer` as a SEPARATE column |
+
+**Compatibility, precisely.** No existing signature, parameter, default,
+response field, error code, grant or table in this document changed.
+`build_load_plan`, `set_manual_keep`, `authorise_load_exception`,
+`confirm_load_plan`, `reconcile_day_end`, `ns_next_day_suggestions`,
+`ns_vehicle_day_jobs` and every shape in §3–§8 are byte-identical. A 10.2
+client written against v1.0 continues to work and simply does not use the
+two new objects. The impact is that a seasonal-set line's aboard status can
+now be read from `ns_seasonal_sets_aboard` instead of being guessed; §4's
+`seasonal_set` line still carries `rental_set_id` and no quantity, exactly
+as before.
+
+See `docs/seasonal-sets-contract-v1.md` v1.2 and
+`docs/reviews/seasonal-abedf0f-dispositions.md` finding 5b.
 
 This is the contract Batch 10.2 implements the crew's preparation and
 closing interface against. It is a **companion to**, not a revision of,
@@ -18,6 +45,8 @@ Defined by:
 
 * `supabase/migrations/20261011110000_batch10_1_load_planning.sql`
 * `supabase/migrations/20261011111000_batch10_1_load_operations.sql`
+* `supabase/migrations/20261013090000_batch11_1_seasonal_corrective_round_two.sql`
+  — v1.1's two additions only; it changes nothing above.
 
 Proved by `tests/db/batch10-1.test.mjs` (52 checks) against a real
 PostgreSQL. **Deterministic fixtures: `tests/fixtures/daily-load-v1.json`**,

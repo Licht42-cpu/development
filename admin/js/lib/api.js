@@ -299,22 +299,225 @@ export async function scheduleJob(id, scheduledFor) {
     .update({ scheduled_for: scheduledFor }).eq('id', id).select().single());
 }
 
-/** Marks a job complete, stamping ns_jobs.completed_at.
+/** Marks a job complete.
  *
- *  The timestamp is the point of this: completed_at was never written by any
- *  code path, so it was permanently NULL and the completion report dated
- *  itself with new Date() -- a report regenerated a week later claimed the
- *  wrong completion date.
+ *  REWRITTEN IN BATCH 11.1, SAME SIGNATURE ON PURPOSE. This used to be a
+ *  direct UPDATE:
  *
- *  `is null` in the WHERE clause makes this idempotent against a double
- *  submit: the second call matches no row and returns null rather than
- *  moving the timestamp, so the first completion time is the one that
- *  stands. */
+ *    update ns_jobs set status='completed', completed_at=now()
+ *     where id=$1 and completed_at is null
+ *
+ *  which any admin could issue with no evidence, no material count and no
+ *  way to tell a retry from a second completion. The database now refuses
+ *  it (42501) and `complete_job_with_evidence` is the only way in. See
+ *  docs/completion-evidence-contract-v1.md.
+ *
+ *  The RETURN SHAPE is deliberately unchanged -- `{ id, status,
+ *  completed_at }`, or null -- because the field console calls this and that
+ *  file belongs to the other track. A caller that only wants "mark it done"
+ *  keeps working; a caller that wants the receipt calls
+ *  completeJobWithEvidence() below and reads it.
+ *
+ *  The replay key is minted here rather than by the caller, which means a
+ *  double tap in one session is two keys and the SECOND one is refused as a
+ *  duplicate (23505) rather than silently accepted. That is the right
+ *  outcome for a desk button; a client that needs true retry safety across
+ *  a lost response passes its own key through completeJobWithEvidence. */
 export async function completeJob(id) {
-  const rows = unwrap(await supabase.from('ns_jobs')
-    .update({ status: 'completed', completed_at: new Date().toISOString() })
-    .eq('id', id).is('completed_at', null).select());
-  return rows[0] || null;
+  const receipt = await completeJobWithEvidence({ jobId: id });
+  if (!receipt || !receipt.job) return null;
+  return {
+    id: receipt.job.job_id,
+    status: receipt.job.status,
+    completed_at: receipt.job.completed_at
+  };
+}
+
+/** The full completion call: the receipt, the readiness, the corrections and
+ *  any additional work, as the contract's §5 describes it.
+ *
+ *  `jobLockVersion` and `policyVersion` are read here when the caller does
+ *  not supply them, which is a convenience and not a substitute for the
+ *  conflict check: the server still compares them, so a job somebody else
+ *  moved between this read and the write is refused with 55000 rather than
+ *  overwritten. A caller that already holds the versions it showed the
+ *  operator should pass those, so the check is against what the human saw. */
+export async function completeJobWithEvidence({
+  clientOperationId, jobId, jobLockVersion, policyVersion,
+  workFinishedAt, consumption = [], additionalWork = [], note
+} = {}) {
+  let lock = jobLockVersion;
+  let policy = policyVersion;
+  if (lock === undefined || lock === null || policy === undefined || policy === null) {
+    const [job, version] = await Promise.all([
+      unwrap(await supabase.from('ns_jobs')
+        .select('id,lock_version').eq('id', jobId).single()),
+      unwrap(await supabase.rpc('ns_evidence_policy_version'))
+    ]);
+    if (lock === undefined || lock === null) lock = job.lock_version;
+    if (policy === undefined || policy === null) policy = version;
+  }
+  return unwrap(await supabase.rpc('complete_job_with_evidence', {
+    p_client_operation_id: clientOperationId || newOperationId('done'),
+    p_job_id: jobId,
+    p_job_lock_version: lock,
+    p_policy_version: policy,
+    p_work_finished_at: workFinishedAt || null,
+    p_consumption: consumption,
+    p_additional_work: additionalWork,
+    p_note: note || null
+  }));
+}
+
+/* --------------------------------------------- evidence and completion -- */
+
+/** What this job has to prove, per service, with unknown as its own state.
+ *  `required_count` is NULL for an unconfigured service -- never 0, which
+ *  would read as "nothing needed". */
+export async function jobEvidenceRequirements(jobId) {
+  return unwrap(await supabase.from('ns_job_evidence_requirements')
+    .select('*').eq('job_id', jobId)
+    .order('service_key').order('requirement'));
+}
+
+export async function jobEvidenceReadiness(jobId) {
+  return unwrap(await supabase.from('ns_job_evidence_readiness')
+    .select('*').eq('job_id', jobId).single());
+}
+
+export async function listJobEvidence(jobId) {
+  return unwrap(await supabase.from('ns_job_evidence')
+    .select('*').eq('job_id', jobId).order('received_at'));
+}
+
+/** Registers an already-uploaded attachment against a purpose.
+ *
+ *  By ATTACHMENT ID, never by a storage path: a caller that could name a
+ *  path could name one it had not uploaded. The capture metadata is passed
+ *  through as the device's CLAIM; the server records its own receipt time
+ *  and actor separately and those are the ones a dispute turns on. */
+export async function registerJobEvidence({
+  clientOperationId, jobId, attachmentId, requirement, serviceKey,
+  capturedAt, captureTimeState, lat, lon, accuracyM, gpsState,
+  clientWatermark, source = 'field_console'
+}) {
+  return unwrap(await supabase.rpc('register_job_evidence', {
+    p_client_operation_id: clientOperationId || newOperationId('ev'),
+    p_job_id: jobId,
+    p_attachment_id: attachmentId,
+    p_requirement: requirement,
+    p_service_key: serviceKey || null,
+    p_captured_at: capturedAt || null,
+    p_capture_time_state: captureTimeState || null,
+    p_captured_lat: lat ?? null,
+    p_captured_lon: lon ?? null,
+    p_captured_accuracy_m: accuracyM ?? null,
+    p_gps_state: gpsState || null,
+    p_client_watermark: clientWatermark || null,
+    p_source: source
+  }));
+}
+
+export async function listEvidencePolicies() {
+  return unwrap(await supabase.from('ns_evidence_policies')
+    .select('*, services(key,name)').eq('active', true)
+    .order('service_id').order('requirement'));
+}
+
+export async function evidencePolicyVersion() {
+  return unwrap(await supabase.rpc('ns_evidence_policy_version'));
+}
+
+/** Owner only. Writing a policy IS confirming it: only a confirmed rule may
+ *  be `blocking`, so nothing the system merely proposed can stop a crew. */
+export async function setEvidencePolicy({
+  clientOperationId, serviceKey, requirement, minCount = 1,
+  coverage = 'per_job', requiresGeotag = false, enforcement = 'advisory', note
+}) {
+  return unwrap(await supabase.rpc('set_evidence_policy', {
+    p_client_operation_id: clientOperationId || newOperationId('pol'),
+    p_service_key: serviceKey,
+    p_requirement: requirement,
+    p_min_count: minCount,
+    p_coverage: coverage,
+    p_requires_geotag: requiresGeotag,
+    p_enforcement: enforcement,
+    p_note: note || null
+  }));
+}
+
+export async function retireEvidencePolicy({ clientOperationId, serviceKey, requirement }) {
+  return unwrap(await supabase.rpc('retire_evidence_policy', {
+    p_client_operation_id: clientOperationId || newOperationId('pol'),
+    p_service_key: serviceKey,
+    p_requirement: requirement
+  }));
+}
+
+export async function listEvidenceExceptions(jobId) {
+  return unwrap(await supabase.from('ns_evidence_exceptions')
+    .select('*, services(key,name)').eq('job_id', jobId)
+    .order('authorised_at', { ascending: false }));
+}
+
+/** Owner only, and the reason is not optional: an exception without one is
+ *  the absence of a rule rather than an exception to it. */
+export async function authoriseEvidenceException({
+  clientOperationId, jobId, reason, requirement, serviceKey
+}) {
+  return unwrap(await supabase.rpc('authorise_evidence_exception', {
+    p_client_operation_id: clientOperationId || newOperationId('exc'),
+    p_job_id: jobId,
+    p_reason: reason,
+    p_requirement: requirement || null,
+    p_service_key: serviceKey || null
+  }));
+}
+
+export async function listJobCompletions(jobId) {
+  return unwrap(await supabase.from('ns_job_completions')
+    .select('*').eq('job_id', jobId).order('accepted_at', { ascending: false }));
+}
+
+export async function completionReceipt(completionId) {
+  return unwrap(await supabase.rpc('ns_completion_receipt', {
+    p_completion_id: completionId, p_replayed: false
+  }));
+}
+
+/** Owner only. Appends a reopen with a reason; the receipt is untouched. */
+export async function reopenJobCompletion({ clientOperationId, completionId, reason }) {
+  return unwrap(await supabase.rpc('reopen_job_completion', {
+    p_client_operation_id: clientOperationId || newOperationId('re'),
+    p_completion_id: completionId,
+    p_reason: reason
+  }));
+}
+
+/** Owner only. `quantity` is the SIGNED CHANGE TO THE RECORD: negative for
+ *  what was over-reported, positive for what was missed. The ledger moves
+ *  the other way, which the backend does -- do not pre-negate it here. */
+export async function correctJobConsumption({
+  clientOperationId, completionId, materialId, reason, quantity, level,
+  locationCode = 'base', countPrecision = 'exact', corrects
+}) {
+  return unwrap(await supabase.rpc('correct_job_consumption', {
+    p_client_operation_id: clientOperationId || newOperationId('fix'),
+    p_completion_id: completionId,
+    p_material_id: materialId,
+    p_reason: reason,
+    p_quantity: quantity ?? null,
+    p_level: level || null,
+    p_location_code: locationCode,
+    p_count_precision: countPrecision,
+    p_corrects: corrects || null
+  }));
+}
+
+export async function listJobConsumptions(jobId) {
+  return unwrap(await supabase.from('ns_job_consumptions')
+    .select('*, ns_materials(name,unit)').eq('job_id', jobId)
+    .order('recorded_at'));
 }
 
 export async function updateJob(id, patch) {
@@ -661,23 +864,66 @@ export async function listChangeOrders(quoteId) {
     .select('*').eq('quote_id', quoteId).order('created_at'));
 }
 
-export async function addChangeOrder(quoteId, { description, amount }) {
-  return unwrap(await supabase.from('ns_change_orders')
-    .insert({ quote_id: quoteId, description, amount }).select().single());
+/** REWIRED IN BATCH 11.1. These three were direct table writes, which meant
+ *  a crew could raise a paid change and approve it in two clicks. The table
+ *  grants are gone; both steps are now owner-gated RPCs.
+ *
+ *  `addChangeOrder` keeps its signature for the desk screen, and keeps its
+ *  two steps distinct underneath: a proposal with no price, then the
+ *  owner's decision that sets the figure. Pass no amount and it stays
+ *  unpriced, which is what a crew's observation is. */
+export async function addChangeOrder(quoteId, { description, amount, jobId } = {}) {
+  const proposal = await proposeAdditionalWork({ jobId, description });
+  if (amount === undefined || amount === null || amount === '') {
+    return { id: proposal.change_order_id, description, amount: null,
+             status: 'proposed', pricing_state: 'unpriced' };
+  }
+  const decided = await decideChangeOrder({
+    changeOrderId: proposal.change_order_id, decision: 'approved', amount
+  });
+  return { id: decided.change_order_id, description, amount: decided.amount,
+           status: decided.status, pricing_state: 'priced' };
 }
 
-/** approved | declined. Approving does NOT touch ns_quotes.total -- see the
- *  ns_change_orders migration note. The caller sums approved amounts
+/** A crew may say the gutters need doing. It may not say what that is
+ *  worth, so there is no amount here at all. */
+export async function proposeAdditionalWork({ clientOperationId, jobId, description, note }) {
+  return unwrap(await supabase.rpc('propose_additional_work', {
+    p_client_operation_id: clientOperationId || newOperationId('aw'),
+    p_job_id: jobId,
+    p_description: description,
+    p_note: note || null
+  }));
+}
+
+/** Owner only. Approving sets the figure in the SAME transaction, so there
+ *  is no window in which an approved change order has no price. Approving
+ *  does NOT touch ns_quotes.total -- the caller sums approved amounts
  *  wherever a combined "quote + approved changes" figure is needed. */
-export async function setChangeOrderStatus(id, status) {
-  const patch = { status };
-  if (status === 'approved') patch.approved_at = new Date().toISOString();
-  return unwrap(await supabase.from('ns_change_orders')
-    .update(patch).eq('id', id).select().single());
+export async function decideChangeOrder({
+  clientOperationId, changeOrderId, decision, amount, reason
+}) {
+  return unwrap(await supabase.rpc('decide_change_order', {
+    p_client_operation_id: clientOperationId || newOperationId('dec'),
+    p_change_order_id: changeOrderId,
+    p_decision: decision,
+    p_amount: amount ?? null,
+    p_reason: reason || null
+  }));
 }
 
-export async function deleteChangeOrder(id) {
-  return unwrap(await supabase.from('ns_change_orders').delete().eq('id', id));
+/** Kept for the existing call sites. `approved` needs an amount now, which
+ *  is the point: approved money with no figure is not money. */
+export async function setChangeOrderStatus(id, status, { amount, reason } = {}) {
+  return decideChangeOrder({ changeOrderId: id, decision: status, amount, reason });
+}
+
+/** DELETING IS GONE, and declining replaces it. A change order the customer
+ *  may already have been told about should not vanish from the history; a
+ *  declined one says what happened. The table has no DELETE grant either,
+ *  so this is the only path. */
+export async function declineChangeOrder(id, reason) {
+  return decideChangeOrder({ changeOrderId: id, decision: 'declined', reason });
 }
 
 /* -------------------------------------------------------------- seasonal -- */
@@ -1346,9 +1592,18 @@ export async function listSeasonalAssignments({ setId, openOnly } = {}) {
   return unwrap(await q);
 }
 
+/** Columns, not `*`. Batch 11.1 took `client_operation_id` off the
+ *  authenticated read surface at column level (seasonal contract v1.2 §8),
+ *  so `select=*` now asks for a column the role cannot see and the whole
+ *  query fails. Naming the columns also means a column added later does not
+ *  silently start arriving in the browser. */
+const RENTAL_SET_EVENT_COLUMNS =
+  'id,rental_set_id,event,job_id,customer_id,assignment_id,' +
+  'occurred_at,note,created_at,created_by';
+
 export async function listRentalSetEvents(rentalSetId, limit = 50) {
   return unwrap(await supabase.from('ns_rental_set_events')
-    .select('*').eq('rental_set_id', rentalSetId)
+    .select(RENTAL_SET_EVENT_COLUMNS).eq('rental_set_id', rentalSetId)
     .order('occurred_at', { ascending: false }).limit(limit));
 }
 

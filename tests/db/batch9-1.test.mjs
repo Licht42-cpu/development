@@ -45,7 +45,8 @@ const SEQUENCE = [
   '20261010141000_batch8_1_reservation_operations.sql',
   '20261011090000_batch9_1_seasonal_set_identity_and_assignments.sql',
   '20261011091000_batch9_1_seasonal_operations.sql',
-  '20261012090000_batch9_1_corrective_seasonal_review.sql'
+  '20261012090000_batch9_1_corrective_seasonal_review.sql',
+  '20261013090000_batch11_1_seasonal_corrective_round_two.sql'
 ];
 const migration = (file) => readFileSync(join(MIGRATIONS, file), 'utf8');
 
@@ -138,7 +139,7 @@ const opId = (tag) => `t9-${tag}-${++opSeq}`;
     });
   }
 
-  await record('A9 the 9.1 migrations are re-runnable', async () => {
+  await record('A20 the 9.1 migrations are re-runnable', async () => {
     for (const file of SEQUENCE.slice(5)) await client.query(migration(file));
     for (const file of SEQUENCE.slice(5)) await client.query(migration(file));
     const { n } = await one(
@@ -155,7 +156,7 @@ const opId = (tag) => `t9-${tag}-${++opSeq}`;
      once, in filename order, and A1-A7 prove that order works from a clean
      database. The check exists so the boundary is a documented fact instead
      of a surprise for whoever next re-runs a migration by hand. */
-  await record('A10 re-applying the 8.1 table migration AFTER 9.1 is refused, by design',
+  await record('A21 re-applying the 8.1 table migration AFTER 9.1 is refused, by design',
     async () => {
       const err = await errorOf(() => client.query(migration(SEQUENCE[0])));
       assert.ok(err, 'if this ever passes, 8.1 has stopped referencing the dropped columns');
@@ -1363,6 +1364,155 @@ const opId = (tag) => `t9-${tag}-${++opSeq}`;
       assert.ok(orphan, 'deployed with nothing installed must be impossible');
       assert.equal(orphan.code, '23514');
       assert.match(orphan.message, /nothing is installed/i);
+    });
+
+  // ============== N. the three review tails, closed in Batch 11.1 ========
+  //
+  // 20261013090000. One test per sub-point the first corrective left open.
+
+  await record('N1 (finding 1b) a crew cannot read an operation key off the log',
+    async () => {
+      // Column-level, so the history stays readable and only the credential-
+      // shaped column goes. A table-level grant would have swallowed a
+      // column-level revoke, which is the mistake this asserts against.
+      assert.equal(
+        (await one(`select has_column_privilege('authenticated',
+                      'public.ns_rental_set_events','client_operation_id','select') as p`)).p,
+        false, 'the key is not crew-readable');
+      assert.equal(
+        (await one(`select has_column_privilege('authenticated',
+                      'public.ns_rental_set_events','event','select') as p`)).p,
+        true, 'the rest of the log still is');
+
+      // The owner's audit route works and refuses a crew.
+      const id = await newSet('FIXTURE N1');
+      const ev = await one(
+        `select id from public.ns_rental_set_events
+          where rental_set_id=$1 and event='received'`, [id]);
+      const key = await one(
+        `select public.ns_rental_set_operation_key($1) as k`, [ev.id]);
+      assert.ok(key.k && key.k.length > 0, 'the owner can still audit a replay');
+
+      await beCrew();
+      const err = await errorOf(() => client.query(
+        `select public.ns_rental_set_operation_key($1)`, [ev.id]));
+      await beOwner();
+      assert.ok(err, 'a crew has no business reading keys');
+      assert.equal(err.code, '42501');
+    });
+
+  await record('N2 (finding 2b) a build records where the stock came off',
+    async () => {
+      const mat = await newMaterial('FIXTURE N2 bulb');
+      await rpc(`public.post_stock_movement($1,$2,'base',500,'received',null,null,null,null,'usable','exact')`,
+        [opId('mv'), mat]);
+      const id = await newSet('FIXTURE N2', { material_id: mat, build_quantity: 100 });
+      const s = await setRow(id);
+      assert.ok(s.built_at_location, 'a build without a place cannot be reversed');
+      const base = await one(`select id from public.ns_stock_locations where kind='base' and active`);
+      assert.equal(s.built_at_location, base.id);
+
+      // The pairing is a constraint, not a convention.
+      const err = await errorOf(() => client.query(
+        `update public.ns_rental_sets set built_at_location=null where id=$1`, [id]));
+      assert.ok(err, 'a quantity with no location is not a traceable build');
+      assert.equal(err.code, '23514');
+    });
+
+  await record('N3 (finding 2b) salvage goes back where it came from',
+    async () => {
+      const mat = await newMaterial('FIXTURE N3 bulb');
+      // Stock at BOTH places, so the wrong destination is available rather
+      // than merely absent -- otherwise this would pass for the wrong reason.
+      await rpc(`public.post_stock_movement($1,$2,'base',500,'received',null,null,null,null,'usable','exact')`,
+        [opId('mv'), mat]);
+      await rpc(`public.post_stock_movement($1,$2,'car_a',500,'received',null,null,null,null,'usable','exact')`,
+        [opId('mv'), mat]);
+      const id = await newSet('FIXTURE N3',
+        { material_id: mat, build_quantity: 200, location_code: 'car_a' });
+
+      const err = await errorOf(() => rpc(
+        `public.retire_seasonal_set($1,$2,$3,200,'base',null)`, [opId('ret'), id, mat]));
+      assert.ok(err, '200 off Car A coming back at Base is wrong on both shelves');
+      assert.equal(err.code, '22023');
+      assert.match(err.message, /same place/i);
+
+      const onHand = async (code) => Number((await one(
+        `select coalesce(on_hand,0) as n from public.ns_material_stock_by_location
+          where material_id=$1 and location_code=$2`, [mat, code])).n);
+      assert.equal(await onHand('car_a'), 300, 'the build came off Car A');
+
+      // No destination at all defaults to the build's own location, so the
+      // ordinary call needs no argument.
+      await rpc(`public.retire_seasonal_set($1,$2,null,200,null,null)`, [opId('ret'), id]);
+      assert.equal(await onHand('car_a'), 500, 'and the salvage went back there');
+      assert.equal(await onHand('base'), 500, 'Base never moved');
+    });
+
+  await record('N4 (finding 5b) a set can be put in a car, and that is not a promise',
+    async () => {
+      const id = await usableSet('FIXTURE N4');
+      const aboard = (sid) => one(
+        'select * from public.ns_seasonal_sets_aboard where set_id=$1', [sid]);
+
+      let v = await aboard(id);
+      assert.equal(v.aboard_state, 'at_base');
+      assert.equal(v.promised_to_a_customer, false);
+
+      await rpc(`public.move_seasonal_set($1,$2,'car_a',$3)`,
+        [opId('mv'), id, 'loading for tomorrow']);
+      v = await aboard(id);
+      assert.equal(v.aboard_state, 'aboard_vehicle');
+      assert.equal(v.location_code, 'car_a');
+      assert.equal(v.promised_to_a_customer, false,
+        'aboard is not promised -- that is the whole distinction');
+
+      // Promised and aboard are independent, both directions.
+      const a = (await rpc(`public.assign_seasonal_set($1,$2,$3,2026,null,null,null)`,
+        [opId('asg'), id, custA])).assignment.assignment_id;
+      v = await aboard(id);
+      assert.equal(v.aboard_state, 'aboard_vehicle', 'assigning moved nothing');
+      assert.equal(v.promised_to_a_customer, true);
+
+      await rpc(`public.install_seasonal_set($1,$2,null,null,null)`, [opId('ins'), a]);
+      v = await aboard(id);
+      assert.equal(v.aboard_state, 'at_a_property', 'and now it is up');
+
+      // Relocating a deployed set is recovery, which asks what came back.
+      const err = await errorOf(() => rpc(
+        `public.move_seasonal_set($1,$2,'base',null)`, [opId('mv'), id]));
+      assert.ok(err, 'a set at a property is not relocated, it is recovered');
+      assert.equal(err.code, '23514');
+      assert.match(err.message, /Recover it/i);
+    });
+
+  await record('N5 (finding 5b) a move is scoped, replay-safe and no-op aware',
+    async () => {
+      const id = await usableSet('FIXTURE N5');
+
+      // A no-op says so and records no key.
+      const first = await rpc(`public.move_seasonal_set($1,$2,'base',null)`,
+        [opId('mv'), id]);
+      assert.equal(first.replayed, true);
+      assert.equal(first.no_op, true, 'it was already at Base');
+
+      const key = opId('mv');
+      const moved = await rpc(`public.move_seasonal_set($1,$2,'car_a',null)`, [key, id]);
+      assert.equal(moved.replayed, false);
+      const again = await rpc(`public.move_seasonal_set($1,$2,'car_a',null)`, [key, id]);
+      assert.equal(again.replayed, true);
+      assert.equal(again.no_op, false, 'this is the recorded original coming back');
+
+      // A crew cannot send a set to a location it cannot see. Car B exists
+      // in this fixture and no crew member is assigned to it.
+      await beCrew();
+      const err = await errorOf(() => rpc(
+        `public.move_seasonal_set($1,$2,'car_b',null)`, [opId('mv'), id]));
+      await beOwner();
+      assert.ok(err, 'the destination is scoped like a transfer destination');
+      assert.equal(err.code, '42501');
+
+      assert.ok(carB, 'Car B is a fixture of this suite, never seeded data');
     });
 
   // ================================================== report ==============

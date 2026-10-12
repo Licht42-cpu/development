@@ -14,7 +14,8 @@
     "cap:android": "npm run cap:sync && npx cap open android",
     "cap:ios": "npm run cap:sync && npx cap open ios",
     "test:admin": "bash tests/run-admin-suites.sh",
-    "fixtures:daily-load": "node tests/db/setup-test-db.mjs && node tests/fixtures/build-daily-load-fixtures.mjs"
+    "fixtures:daily-load": "node tests/db/setup-test-db.mjs && node tests/fixtures/build-daily-load-fixtures.mjs",
+    "fixtures:completion": "node tests/db/setup-test-db.mjs && node tests/fixtures/build-completion-fixtures.mjs"
   },
   "repository": {
     "type": "git",
