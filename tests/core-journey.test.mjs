@@ -44,7 +44,7 @@ for(const code of ['car_a','car_b'])await test(`${code}: same-context loading �
   const line=f.closingReceipt.lines[0];
   await f.page.getByLabel(`Usable count (litre) — ${line.material_name}`,{exact:true}).fill(String(line.counted_qty));
   await f.page.getByLabel(`Count accuracy — ${line.material_name}`,{exact:true}).selectOption('estimated');
-  await f.page.getByLabel(`Variance reason — ${line.material_name}`,{exact:true}).selectOption('miscounted');
+  await f.page.getByLabel(`Variance reason — ${line.material_name}`,{exact:true}).selectOption(line.variance_reason || 'other');
   f.load.result=f.closingReceipt;
   await f.page.getByRole('button',{name:'Record observations and close day',exact:true}).click();
   await f.page.getByText('Closing receipt:',{exact:false}).waitFor();
