@@ -12,6 +12,7 @@ import { renderCustomers, renderCustomer } from './views/customers.js';
 import { renderProperty } from './views/property.js';
 import { renderSettings } from './views/settings.js';
 import { renderWinter } from './views/winter.js';
+import { renderInventoryRoute, renderDispatchRoute, mountPropertyAccess, mountJobOperations } from './views/operations-routes.js';
 
 const viewEl = document.getElementById('view');
 const navEl = document.getElementById('nav');
@@ -20,8 +21,32 @@ const topbarEl = document.getElementById('topbar');
 const routes = [
   { pattern: /^\/dashboard$/,        nav: 'dashboard', render: renderDashboard },
   { pattern: /^\/requests$/,         nav: 'requests',  render: renderRequests },
-  { pattern: /^\/jobs$/,             nav: 'jobs',      render: renderJobs },
-  { pattern: /^\/jobs\/([0-9a-f-]+)$/, nav: 'jobs',    render: (ctx, id) => renderJob(ctx, id) },
+  { pattern: /^\/jobs$/,             nav: 'jobs',      render: async ctx => {
+    await renderJobs(ctx);
+    if (ctx.isCurrent()) ctx.mount.querySelector('.page-head')?.append(
+      el('a', { class: 'btn', href: '#/dispatch', text: 'Plan the dispatch day' })
+    );
+  } },
+  { pattern: /^\/jobs\/([0-9a-f-]+)$/, nav: 'jobs',    render: async (ctx, id) => {
+    let completionAvailable = false;
+    const holdCompletion = () => {
+      if (completionAvailable) return;
+      for (const button of ctx.mount.querySelectorAll('button')) {
+        if (button.textContent === 'Mark job complete' && !button.disabled) button.disabled = true;
+      }
+    };
+    const observer = new MutationObserver(holdCompletion);
+    observer.observe(ctx.mount, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled'] });
+    ctx.mount.addEventListener('click', event => {
+      if (!completionAvailable && event.target.closest('button')?.textContent === 'Mark job complete') {
+        event.preventDefault(); event.stopImmediatePropagation();
+      }
+    }, true);
+    await renderJob(ctx, id);
+    if (ctx.isCurrent()) await mountJobOperations({ ...ctx, onCompletionAvailable: () => {
+      completionAvailable = true; observer.disconnect();
+    } }, id);
+  } },
   { pattern: /^\/customers$/,        nav: 'customers', render: renderCustomers },
   { pattern: /^\/customers\/([0-9a-f-]+)$/, nav: 'customers',
     render: (ctx, id) => renderCustomer(ctx, id) },
@@ -29,7 +54,12 @@ const routes = [
   // through the customer who owns it, which is also what makes its Back
   // target unambiguous.
   { pattern: /^\/properties\/([0-9a-f-]+)$/, nav: 'customers',
-    render: (ctx, id) => renderProperty(ctx, id) },
+    render: async (ctx, id) => {
+      await renderProperty(ctx, id);
+      if (ctx.isCurrent()) await mountPropertyAccess(ctx, id);
+    } },
+  { pattern: /^\/inventory$/, nav: 'inventory', render: renderInventoryRoute },
+  { pattern: /^\/dispatch$/, nav: 'dispatch', render: renderDispatchRoute },
   { pattern: /^\/winter$/,           nav: 'winter',    render: renderWinter },
   { pattern: /^\/settings$/,         nav: 'settings',  render: renderSettings }
 ];
@@ -148,6 +178,7 @@ async function router() {
   syncNavDepth();
   contextParentPath = null;
   const { session, isAdmin } = await getSession();
+  if (attempt !== measurementRouteAttempt) return;
 
   if (!session) {
     setChrome(false);
@@ -177,14 +208,20 @@ async function router() {
   }
 
   setChrome(true, match.r.nav);
-  clear(viewEl).append(el('div', { class: 'loading', text: 'Loading…' }));
+  const routeMount = el('div');
+  clear(viewEl).append(routeMount);
+  routeMount.append(el('div', { class: 'loading', text: 'Loading…' }));
 
   try {
     await match.r.render(
-      { mount: viewEl, navigate, params, replaceQuery, setContextParent },
+      { mount: routeMount, navigate, params,
+        replaceQuery: query => { if (attempt === measurementRouteAttempt) replaceQuery(query); },
+        setContextParent: path => { if (attempt === measurementRouteAttempt) setContextParent(path); },
+        isCurrent: () => attempt === measurementRouteAttempt },
       match.m[1]
     );
   } catch (err) {
+    if (attempt !== measurementRouteAttempt) return;
     console.error(err);
     clear(viewEl).append(
       el('div', { class: 'card' }, [

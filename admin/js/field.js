@@ -182,6 +182,14 @@ async function signOut() {
   router();
 }
 document.getElementById('signOut')?.addEventListener('click', signOut);
+// Crossing from the field document to management must preserve the same
+// pending-measurement/discard guard as an in-document route change.
+document.getElementById('managementLink')?.addEventListener('click', async event => {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  const href = event.currentTarget.href;
+  event.preventDefault();
+  if (await flushMeasurementEdits()) window.location.assign(href);
+});
 // A denied replay retires the stored snapshot. Also hide a cached screen
 // already on display; deleting IDB alone cannot remove its private DOM.
 window.addEventListener('ns-field-access-denied', event => {

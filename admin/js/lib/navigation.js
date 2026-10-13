@@ -88,6 +88,8 @@ const PARENTS = [
   [/^\/properties\/[^/]+$/, '/customers'],
   [/^\/requests$/,         ROOT_PATH],
   [/^\/jobs$/,             ROOT_PATH],
+  [/^\/dispatch$/,         '/jobs?bucket=today'],
+  [/^\/inventory$/,        ROOT_PATH],
   [/^\/customers$/,        ROOT_PATH],
   [/^\/properties$/,       '/customers'],
   [/^\/winter$/,           ROOT_PATH],

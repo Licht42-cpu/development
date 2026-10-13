@@ -77,6 +77,13 @@ function auditBundle(www) {
               throw new Error('Native quote link must use the absolute customer URL');
             }
             excluded.push({ source, value: match[1], reason: 'Browser-only quote fallback; native uses publicUrl' });
+          } else if (/function customerQuoteBase\(\)/.test(body)) {
+            // Batch 5's unchanged canonical helper replaced the old split
+            // preview/public URL. Audit its native branch as well.
+            if (!/if \(isNative\(\)\) return `\$\{window.location.origin\}\/`;/.test(body)) {
+              throw new Error('Native quote link must use the absolute customer URL');
+            }
+            excluded.push({ source, value: '../site/', reason: 'Canonical helper: browser-only dev fallback; native uses an absolute origin' });
           }
         }
       }

@@ -69,16 +69,53 @@ export function createQuotePanel({ job, onChange, saveSignatureFn }) {
       return { queued: false };
     });
 
-  // Fetched once per panel for the absolute, customer-facing link that Copy
-  // Link / Copy SMS Text need (unlike the admin's own "Preview quote" tab,
-  // which can stay relative). company.website is the same setting the
-  // send-notifications Edge Function already reads for its quote_ready
-  // email link, so this introduces no second place the production URL lives.
   let company = {};
-  api.getSettings().then(s => { company = s.company || {}; }).catch(() => {});
+  // Kept as a promise, not fire-and-forget: the quote links below are built
+  // during a synchronous render that can run before this resolves, so they
+  // are rebuilt once it does rather than being left on the fallback base.
+  const settingsReady = api.getSettings()
+    .then(s => { company = s.company || {}; })
+    .catch(() => {});
 
-  function canonicalBase() {
-    return (company.website || window.location.origin).replace(/\/$/, '');
+  /** The ONE address of the customer-facing quote document. Every delivery
+   *  path -- Preview, Download PDF / Share, Copy Link, Copy SMS Text and the
+   *  native share sheet -- goes through here, so an admin cannot hand out a
+   *  link that differs from the one the customer is emailed.
+   *
+   *  Batch 5 fix: there used to be two. Copy Link/SMS built an absolute URL,
+   *  while Preview and Download PDF used a relative `../site/quote.html`,
+   *  which 404s in production. From deploy/Caddyfile, production routes
+   *  /shared/* and /admin/* to the repo and sends EVERYTHING else to
+   *  `root * /srv/site`, so the customer page is served at /quote.html --
+   *  and `../site/quote.html`, resolved from /admin/, asks for
+   *  /site/quote.html, i.e. /srv/site/site/quote.html, which does not exist.
+   *
+   *  The local dev server has the opposite layout: tests/run-regression.sh
+   *  serves the repo root, where the page really is at /site/quote.html and
+   *  /quote.html is absent. The two layouts genuinely differ, so the base is
+   *  resolved in exactly one place -- here:
+   *
+   *    - company.website set -> use it. This is the deployed origin, and the
+   *      same single setting the send-notifications Edge Function reads to
+   *      build the link in the customer's quote_ready email, so the copied
+   *      link and the emailed link cannot drift apart.
+   *    - otherwise -> the repo-root layout relative to this page, which is
+   *      what a developer running http.server actually has.
+   */
+  function customerQuoteBase() {
+    const site = String(company.website || '').trim().replace(/\/+$/, '');
+    if (site) return `${site}/`;
+    // Native bundles only admin/ + shared/ (scripts/sync-mobile.js), so a
+    // relative hop to site/ cannot resolve inside the wrapper. With no
+    // configured website the origin is the least-wrong answer there; the web
+    // admin falls back to the dev layout instead.
+    if (isNative()) return `${window.location.origin}/`;
+    return new URL('../site/', window.location.href).href;
+  }
+
+  function customerQuoteUrl(quoteId, { print = false } = {}) {
+    return `${customerQuoteBase()}quote.html?id=${encodeURIComponent(quoteId)}` +
+           (print ? '&print=1' : '');
   }
 
   function adjustmentRow(adj, quote, editable) {
@@ -95,7 +132,21 @@ export function createQuotePanel({ job, onChange, saveSignatureFn }) {
         editable
           ? el('button', {
               class: 'btn btn--sm', text: '×', 'aria-label': `Remove ${adj.label}`,
-              onClick: async () => { await api.deleteAdjustment(adj.id, quote.id); onChange(); }
+              // Removing an adjustment changes the quote total, so it asks
+              // first and reports a failure instead of silently leaving the
+              // row on screen with the old number still showing.
+              onClick: async () => {
+                if (!confirmAction(
+                  `Remove “${adj.label}” (${money(adj.amount)}) from this quote? ` +
+                  'The total will be recalculated.')) return;
+                try {
+                  await api.deleteAdjustment(adj.id, quote.id);
+                  toast('Adjustment removed');
+                  onChange();
+                } catch (err) {
+                  toast(err.message, 'error');
+                }
+              }
             })
           : null
       ])
@@ -120,7 +171,18 @@ export function createQuotePanel({ job, onChange, saveSignatureFn }) {
         editable && line.source === 'manual'
           ? el('button', {
               class: 'btn btn--sm', text: '×', 'aria-label': `Remove ${line.description}`,
-              onClick: async () => { await api.deleteLine(line.id, quote.id); onChange(); }
+              onClick: async () => {
+                if (!confirmAction(
+                  `Remove “${line.description}” (${money(line.amount)}) from this quote? ` +
+                  'The total will be recalculated.')) return;
+                try {
+                  await api.deleteLine(line.id, quote.id);
+                  toast('Line removed');
+                  onChange();
+                } catch (err) {
+                  toast(err.message, 'error');
+                }
+              }
             })
           : null
       ])
@@ -229,6 +291,7 @@ export function createQuotePanel({ job, onChange, saveSignatureFn }) {
       deliveryActions(quote, editable, unapprovedServices),
       signatureSection(quote, unapprovedServices),
       !editable ? changeOrdersSection(quote) : null,
+      customerContentBox(quote, editable),
       internalNotesBox(quote)
     ]);
   }
@@ -438,19 +501,11 @@ export function createQuotePanel({ job, onChange, saveSignatureFn }) {
    *  Duplicate Quote never do, regardless of whether an email exists. */
   function deliveryActions(quote, editable, unapprovedServices = []) {
     const hasEmail = !!(job.customers && job.customers.email);
-    // ?print=1 tells the customer-quote page (the one document, no
-    // duplicate template) to trigger window.print() once it has rendered --
-    // the native browser Save-as-PDF flow, not a generated file.
-    const quoteUrl = `../site/quote.html?id=${quote.id}`;
-    const publicUrl = `${canonicalBase()}/quote.html?id=${quote.id}`;
-    // quoteUrl is relative to this admin page (../site/...) -- correct for
-    // the web admin, which is served from the same site root as site/, but
-    // the native wrapper only bundles admin/ + shared/ (see
-    // scripts/sync-mobile.js), so that path doesn't exist inside it. Native
-    // uses the absolute publicUrl instead, same URL Copy Link already hands
-    // out, which resolves over the real network like any other link.
-    const previewUrl = isNative() ? publicUrl : quoteUrl;
-    const printUrl = `${previewUrl}&print=1`;
+    // Every link below is built by customerQuoteUrl() at the moment it is
+    // needed, so there is one address per deployment and no second code
+    // path. Its ?print=1 variant tells the customer-quote page (the one
+    // document, no duplicate template) to call window.print() once it has
+    // rendered -- the browser's own Save-as-PDF, not a generated file.
 
     // An option-group member is sent as a whole group (one customer email,
     // all siblings at once) via the "Send Option Group" button on its
@@ -504,6 +559,10 @@ export function createQuotePanel({ job, onChange, saveSignatureFn }) {
     const copyLinkButton = el('button', {
       class: 'btn btn--sm', text: 'Copy Link',
       onClick: async () => {
+        // Resolved on click, so a click that lands before settings arrive
+        // still copies the configured production URL rather than a fallback.
+        await settingsReady;
+        const publicUrl = customerQuoteUrl(quote.id);
         const ok = await copyToClipboard(publicUrl);
         toast(ok ? 'Quote URL copied to clipboard' : `Could not copy — here is the link: ${publicUrl}`,
           ok ? 'info' : 'error');
@@ -513,7 +572,8 @@ export function createQuotePanel({ job, onChange, saveSignatureFn }) {
     const copySmsButton = el('button', {
       class: 'btn btn--sm', text: isNative() ? 'Text Quote' : 'Copy SMS Text',
       onClick: async () => {
-        const text = smsText(quote, publicUrl);
+        await settingsReady;
+        const text = smsText(quote, customerQuoteUrl(quote.id));
         // Native: skip the copy-then-paste round trip and open the SMS
         // composer directly, body prefilled -- same sms: scheme the
         // existing "Text"/"Call" buttons elsewhere already rely on to
@@ -532,34 +592,47 @@ export function createQuotePanel({ job, onChange, saveSignatureFn }) {
     const address = [job.properties?.address_line1, job.properties?.city, job.properties?.postal_code]
       .filter(Boolean).join(', ');
 
+    // Real anchors, so middle-click and "open in new tab" keep working. They
+    // need an href during this synchronous render, which may precede the
+    // settings fetch, so both are re-pointed once it resolves.
+    const previewLink = el('a', {
+      // the customer-facing document lives on the public site, not in
+      // here -- an authenticated admin can open any status, a customer
+      // only ever sees one that has actually been sent
+      class: 'btn', href: customerQuoteUrl(quote.id),
+      ...(isNative() ? {} : { target: '_blank', rel: 'noopener' }),
+      text: 'Preview Quote'
+    });
+
+    const printLink = el('a', {
+      class: 'btn', href: customerQuoteUrl(quote.id, { print: true }),
+      ...(isNative() ? {} : { target: '_blank', rel: 'noopener' }),
+      text: isNative() ? 'Share / Print' : 'Download PDF',
+      onClick: (e) => {
+        // Web keeps the plain navigation that already works (new tab,
+        // ?print=1 autoprints). Native has no tab to open and no OS
+        // print sheet, so this hands the link to the share sheet
+        // instead -- whatever the tech picks (Mail, Messages, the
+        // system browser) lands on the same autoprinting page.
+        if (!isNative()) return;
+        e.preventDefault();
+        const printUrl = customerQuoteUrl(quote.id, { print: true });
+        shareOrFallback(
+          { title: 'Nova Shield Quote', url: printUrl },
+          async () => { window.open(printUrl, '_blank', 'noopener'); }
+        );
+      }
+    });
+
+    settingsReady.then(() => {
+      previewLink.href = customerQuoteUrl(quote.id);
+      printLink.href = customerQuoteUrl(quote.id, { print: true });
+    });
+
     return el('div', {}, [
       el('div', { class: 'btn-row', style: 'margin-top:14px' }, [
-        el('a', {
-          // the customer-facing document lives on the public site, not in
-          // here -- an authenticated admin can open any status, a customer
-          // only ever sees one that has actually been sent
-          class: 'btn', href: previewUrl,
-          ...(isNative() ? {} : { target: '_blank', rel: 'noopener' }),
-          text: 'Preview Quote'
-        }),
-        el('a', {
-          class: 'btn', href: printUrl,
-          ...(isNative() ? {} : { target: '_blank', rel: 'noopener' }),
-          text: isNative() ? 'Share / Print' : 'Download PDF',
-          onClick: (e) => {
-            // Web keeps the plain navigation that already works (new tab,
-            // ?print=1 autoprints). Native has no tab to open and no OS
-            // print sheet, so this hands the link to the share sheet
-            // instead -- whatever the tech picks (Mail, Messages, the
-            // system browser) lands on the same autoprinting page.
-            if (!isNative()) return;
-            e.preventDefault();
-            shareOrFallback(
-              { title: 'Nova Shield Quote', url: printUrl },
-              async () => { window.open(printUrl, '_blank', 'noopener'); }
-            );
-          }
-        }),
+        previewLink,
+        printLink,
         copyLinkButton,
         copySmsButton,
         sendButton,
@@ -581,6 +654,106 @@ export function createQuotePanel({ job, onChange, saveSignatureFn }) {
             }) : null
           ])
         : null
+    ]);
+  }
+
+  /** The two customer-facing prose fields on a quote. get_customer_quote()
+   *  returns both, and site/quote.html renders them as its notes and terms
+   *  blocks -- but until Batch 5 nothing in the admin could edit them, so
+   *  whatever create_quote_from_calculation copied out of the
+   *  quote_defaults setting was final and invisible here.
+   *
+   *  Deliberately a separate card from internalNotesBox, with the opposite
+   *  warning on it: these two are the only fields in this panel that the
+   *  customer reads, and internal_notes is the only one they never do.
+   *  Keeping them apart is what stops a private note being typed into a
+   *  public box by accident.
+   *
+   *  Editable only while the quote is a draft. A sent quote is kept exactly
+   *  as the customer saw it, so this reads the text back instead -- the same
+   *  rule the line items and totals already follow. */
+  function customerContentBox(quote, editable) {
+    const field = (label, hint, value, placeholder) => {
+      if (!editable) {
+        return el('div', { style: 'margin-bottom:12px' }, [
+          el('h4', { style: 'margin:0 0 2px;font-size:.9rem', text: label }),
+          value
+            ? el('p', { style: 'margin:0;white-space:pre-wrap', text: value })
+            : el('p', { class: 'hint', style: 'margin:0', text: 'Not set.' })
+        ]);
+      }
+      // <textarea> has no `value` attribute -- the JS property is what
+      // actually sets its content.
+      const textarea = el('textarea', {
+        rows: '3', placeholder,
+        style: 'width:100%;resize:vertical;font:inherit;padding:8px;' +
+               'border:1px solid var(--line);border-radius:8px;box-sizing:border-box'
+      });
+      textarea.value = value || '';
+      // The hint sits OUTSIDE the label on purpose. `.field > span` is a
+      // more specific selector than `.hint`, so a hint span nested in the
+      // label would be painted as another uppercase field caption; and <p>
+      // is not phrasing content, so it cannot live inside a <label> either.
+      return {
+        node: el('div', { style: 'margin:0 0 12px' }, [
+          el('label', { class: 'field', style: 'margin:0' }, [
+            el('span', { text: label }),
+            textarea
+          ]),
+          el('p', { class: 'hint', style: 'margin:4px 0 0', text: hint })
+        ]),
+        textarea
+      };
+    };
+
+    const notes = field(
+      'Note to the customer',
+      'Appears above the terms on their quote page and printed PDF.',
+      quote.customer_notes,
+      'e.g. We can usually start within a week of approval.'
+    );
+    const terms = field(
+      'Terms',
+      'Payment terms and conditions, shown at the bottom of the quote.',
+      quote.terms,
+      'e.g. Payment due within 14 days of completion.'
+    );
+
+    const head = [
+      el('h3', { text: 'Customer-facing content' }),
+      el('p', { class: 'hint', style: 'margin:0 0 10px',
+        text: editable
+          ? 'Shown to the customer on their quote page and PDF. Do not put internal notes here.'
+          : 'Shown to the customer — locked, exactly as they received it.' })
+    ];
+
+    if (!editable) {
+      return el('div', { class: 'section-box', style: 'margin-top:14px' },
+        [...head, notes, terms]);
+    }
+
+    return el('div', { class: 'section-box', style: 'margin-top:14px' }, [
+      ...head,
+      notes.node,
+      terms.node,
+      el('div', { class: 'btn-row' }, [
+        el('button', {
+          class: 'btn btn--sm', text: 'Save customer content',
+          onClick: async () => {
+            try {
+              await api.updateQuote(quote.id, {
+                customer_notes: notes.textarea.value.trim() || null,
+                terms: terms.textarea.value.trim() || null
+              });
+              hapticLight();
+              toast('Customer-facing content saved');
+              onChange();
+            } catch (err) {
+              toast(err.message, 'error');
+            }
+          }
+        })
+      ])
     ]);
   }
 

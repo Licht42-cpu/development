@@ -18,6 +18,14 @@ import sys
 REPO = Path(__file__).resolve().parents[1]
 REQUIRED_CODEX = 'a0b87cdbc949611dfa1597abbdecaa23f1b3a9b1'
 REQUIRED_CLAUDE = 'b21d082'
+SNAPSHOT_MANIFEST = 'codex-files/handoffs/integration-source.json'
+SNAPSHOT_REQUIRED = {
+    'admin/js/lib/api.js', 'admin/js/views/inventory.js',
+    *('admin/js/components/' + name + '.js' for name in
+      ['dispatch-day', 'property-access', 'customer-handover', 'load-plan', 'seasonal-sets', 'kit-sheets']),
+    *('docs/' + name + '-contract-v1.md' for name in
+      ['operations', 'seasonal-sets', 'daily-load', 'completion-evidence', 'dispatch', 'customer-handover', 'permanent-lighting-materials']),
+}
 CASES = {
     'single_crew_day': 'Base → Car A checked load → assigned work → accepted completion → day-end count',
     'two_car_scope': 'Separate Car A/B actors, scarce shared tools, unassigned work and denial retirement',
@@ -52,8 +60,49 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def inventory():
+def claude_snapshot(sha):
+    """Verify an approved copy without falsely requiring a forbidden merge.
+
+    Only committed Git objects count. The manifest is provenance, not proof
+    of functional integration, live migrations, or owner/device approval.
+    The source commit must be locally available to verify its blobs.
+    """
+    try:
+        exists = subprocess.run(['git', 'cat-file', '-e', sha + ':' + SNAPSHOT_MANIFEST],
+                                cwd=REPO, capture_output=True)
+        if exists.returncode:
+            raise ValueError('No committed snapshot manifest')
+        manifest = json.loads(git('show', sha + ':' + SNAPSHOT_MANIFEST))
+        source = manifest['source_sha']
+        if not re.fullmatch(r'[a-f0-9]{40}', source) or not ancestor(REQUIRED_CLAUDE, source):
+            raise ValueError('Source track cannot be verified')
+        files = manifest['files']
+        paths = [row['path'] for row in files]
+        if len(paths) != len(set(paths)) or not SNAPSHOT_REQUIRED.issubset(paths):
+            raise ValueError('Required snapshot files missing or duplicated')
+        for row in files:
+            path = row['path']
+            if Path(path).is_absolute() or '..' in Path(path).parts:
+                raise ValueError('Unsupported source path')
+            blob = git('rev-parse', source + ':' + path)
+            if row['source_git_blob'] != blob or git('rev-parse', sha + ':' + path) != blob:
+                raise ValueError('Snapshot blob changed')
+            raw = subprocess.check_output(['git', 'show', sha + ':' + path], cwd=REPO, stderr=subprocess.DEVNULL)
+            if hashlib.sha256(raw).hexdigest() != row['sha256']:
+                raise ValueError('Snapshot checksum changed')
+        migrations = git('ls-tree', '-r', '--name-only', source, 'supabase/migrations').splitlines()
+        if not migrations or any(git('rev-parse', sha + ':' + path) != git('rev-parse', source + ':' + path)
+                                 for path in migrations):
+            raise ValueError('Migration snapshot incomplete or changed')
+        return {'verified': True, 'source_sha': source, 'files_checked': len(files),
+                'migration_files_checked': len(migrations), 'proof': 'committed_source_only'}
+    except (KeyError, TypeError, ValueError, OSError, subprocess.CalledProcessError):
+        return {'verified': False, 'reason': 'No complete unchanged committed Claude snapshot could be verified. Fetch the pinned source if its Git objects are absent.'}
+
+
+def inventory(authorization_reference=None):
     sha = git('rev-parse', 'HEAD')
+    snapshot = claude_snapshot(sha)
     doctor = subprocess.run([sys.executable, 'scripts/android-build.py', 'doctor'],
                             cwd=REPO, text=True, capture_output=True)
     try:
@@ -88,8 +137,11 @@ def inventory():
             'tracked_changes': git('status', '--porcelain', '--untracked-files=no'),
             'contains_codex_12_2': ancestor(REQUIRED_CODEX, sha),
             'contains_claude_12_1': ancestor(REQUIRED_CLAUDE, sha),
-            'authorization_reference': None,
-            'classification': 'isolated_codex_preparation',
+            'claude_snapshot': snapshot,
+            'authorization_reference': authorization_reference,
+            'classification': 'authorized_integrated_candidate' if authorization_reference and
+                ancestor(REQUIRED_CODEX, sha) and (snapshot['verified'] or ancestor(REQUIRED_CLAUDE, sha))
+                else 'combined_source_candidate_unqualified' if snapshot['verified'] else 'isolated_codex_preparation',
         },
         'apk': {'sha256': digest(apk) if apk.is_file() else None, 'publication': 'none', 'asset_binding': binding},
         'environment': {'android_doctor': setup, 'doctor_exit': doctor.returncode,
@@ -102,7 +154,7 @@ def inventory():
                    'app_version': None, 'operator': None, 'tested_at': None},
         'cases': [{'id': key, 'purpose': purpose, 'status': 'UNRUN', 'steps_run': [],
                    'observed': None, 'evidence': [],
-                   'reason': 'No authorized integrated candidate or Android target supplied.'}
+                   'reason': 'No Android target supplied; source/build evidence does not execute this device case.'}
                   for key, purpose in CASES.items()],
         'qualification': 'NOT_DEVICE_QUALIFIED',
     }
@@ -157,8 +209,8 @@ def device_errors(record):
     sha = candidate.get('sha', '')
     if not re.fullmatch(r'[a-f0-9]{40}', sha):
         errors.append('Exact candidate Git SHA required.')
-    elif not ancestor(REQUIRED_CODEX, sha) or not ancestor(REQUIRED_CLAUDE, sha):
-        errors.append('Candidate does not contain both required tracks; ancestry alone would still not prove integration correctness.')
+    elif not ancestor(REQUIRED_CODEX, sha) or not (ancestor(REQUIRED_CLAUDE, sha) or claude_snapshot(sha)['verified']):
+        errors.append('Candidate does not contain both required tracks by ancestry or a verified unchanged snapshot; source inclusion still does not prove integration correctness.')
     if candidate.get('classification') != 'authorized_integrated_candidate' or not candidate.get('authorization_reference'):
         errors.append('An actual owner-authorized integrated candidate reference is required.')
     if candidate.get('tracked_changes'):
@@ -193,6 +245,7 @@ def main():
     sub = parser.add_subparsers(dest='command', required=True)
     prepare = sub.add_parser('prepare')
     prepare.add_argument('--output', type=Path, required=True)
+    prepare.add_argument('--authorization-reference', help='Record an existing owner authorization; does not create permission or device evidence.')
     check = sub.add_parser('validate')
     check.add_argument('record', type=Path)
     check.add_argument('--require-device-pass', action='store_true')
@@ -201,7 +254,9 @@ def main():
         if args.output.exists():
             parser.error('Output already exists; preserve prior observations and choose a new run file.')
         args.output.parent.mkdir(parents=True, exist_ok=True)
-        record = inventory()
+        record = inventory(args.authorization_reference)
+        if args.authorization_reference and record['candidate']['classification'] != 'authorized_integrated_candidate':
+            parser.error('Cannot bind this authorization to both source tracks. Verify the committed snapshot and fetch its pinned Git source first.')
         args.output.write_text(json.dumps(record, indent=2) + '\n')
         print(json.dumps({'record': str(args.output), 'status': 'PREPARATION_ONLY',
                           'device_qualification': record['qualification']}))

@@ -59,5 +59,9 @@ export async function loadFixture(browser, options = {}) {
     await f.page.goto(`${BASE}/admin/field.html#/load${closing ? '/closing' : ''}?vehicle=${code}&day=${date}`);
     await f.page.getByRole('heading', { name: closing ? 'End-of-day count' : 'Vehicle load', exact: true }).waitFor();
     await f.page.getByText('Window:', { exact: false }).waitFor();
+    // Window paints before asynchronous draft-backed line cards. Wait for
+    // refresh to finish rather than asserting on a partially painted plan.
+    await f.page.waitForFunction(() => [...document.querySelectorAll('button')]
+      .some(button => button.textContent === 'Refresh this day' && !button.disabled));
   }, OWNER };
 }

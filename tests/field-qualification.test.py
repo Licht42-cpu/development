@@ -4,6 +4,10 @@ import importlib.util
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
+import hashlib
+import json
+import subprocess
 
 spec = importlib.util.spec_from_file_location('qualification', Path(__file__).parents[1] / 'scripts/field-qualification.py')
 q = importlib.util.module_from_spec(spec)
@@ -86,6 +90,47 @@ class QualificationRecordTests(unittest.TestCase):
     def test_wrong_metadata_types_fail_with_a_supported_diagnostic(self):
         self.record['candidate'] = []
         self.assertTrue(q.record_errors(self.record, self.directory))
+
+    def synthetic_snapshot(self, *, omit=None, change=False, bad_checksum=False):
+        source, candidate = 'a' * 40, 'b' * 40
+        body = b'Synthetic source provenance fixture, not application or device evidence.\n'
+        blob = hashlib.sha1(b'blob ' + str(len(body)).encode() + b'\0' + body).hexdigest()
+        names = q.SNAPSHOT_REQUIRED - ({omit} if omit else set())
+        manifest = {'source_sha': source, 'files': [
+            {'path': path, 'source_git_blob': blob,
+             'sha256': '0' * 64 if bad_checksum else hashlib.sha256(body).hexdigest()}
+            for path in sorted(names)]}
+
+        def fake_git(*args):
+            if args[0] == 'show':
+                return json.dumps(manifest)
+            if args[0] == 'ls-tree':
+                return 'supabase/migrations/synthetic.sql'
+            if args[0] == 'rev-parse':
+                if change and args[1] == candidate + ':admin/js/lib/api.js':
+                    return 'c' * 40
+                return blob
+            self.fail('Unexpected Git request')
+
+        with patch.object(q, 'git', side_effect=fake_git), \
+             patch.object(q, 'ancestor', return_value=True), \
+             patch.object(q.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0)), \
+             patch.object(q.subprocess, 'check_output', return_value=body):
+            return q.claude_snapshot(candidate)
+
+    def test_verified_snapshot_can_include_a_track_without_merging_it(self):
+        result = self.synthetic_snapshot()
+        self.assertTrue(result['verified'])
+        self.assertEqual(result['proof'], 'committed_source_only')
+
+    def test_snapshot_missing_a_required_component_is_refused(self):
+        self.assertFalse(self.synthetic_snapshot(omit='admin/js/components/customer-handover.js')['verified'])
+
+    def test_modified_imported_api_is_not_an_unchanged_snapshot(self):
+        self.assertFalse(self.synthetic_snapshot(change=True)['verified'])
+
+    def test_snapshot_bad_checksum_is_refused(self):
+        self.assertFalse(self.synthetic_snapshot(bad_checksum=True)['verified'])
 
 
 if __name__ == '__main__':

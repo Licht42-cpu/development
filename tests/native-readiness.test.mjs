@@ -155,6 +155,9 @@ await record('At 390px Tab follows header controls and gives the badge a visible
   // Batch 10.2 adds a real preparation entry between the brand and badge.
   assert.equal(await page.locator('.field-topbar a[href="#/load"]').evaluate(node => node === document.activeElement), true);
   await page.keyboard.press('Tab');
+  // Integration adds the guarded management document handoff.
+  assert.equal(await page.locator('#managementLink').evaluate(node => node === document.activeElement), true);
+  await page.keyboard.press('Tab');
   assert.equal(await page.locator('#syncBadge').evaluate(node => node === document.activeElement), true);
   const ring = await page.locator('#syncBadge').evaluate(node => {
     const s = getComputedStyle(node); return { width: s.outlineWidth, style: s.outlineStyle };
@@ -177,7 +180,11 @@ await record('At 390px keyboard traversal reaches the visit controls with visibl
   assert.ok(controls.length > 20);
   assert.deepEqual(controls.filter(node => !node.name?.value).map(node => node.role.value), []);
   const visited = new Set();
-  for (let i = 0; i < controls.length * 2; i++) {
+  // AX controls and DOM tab stops are different sets (for example links
+  // excluded by an aria-hidden ancestor can still need a Tab step).
+  const tabStops = await page.locator('a[href],button,input,textarea,select,[tabindex]').evaluateAll(nodes =>
+    nodes.filter(node => !node.disabled && node.tabIndex >= 0 && node.getClientRects().length).length);
+  for (let i = 0; i < Math.max(controls.length, tabStops) * 2; i++) {
     await page.keyboard.press('Tab');
     const focus = await page.evaluate(() => {
       const node = document.activeElement, style = getComputedStyle(node);
@@ -189,7 +196,8 @@ await record('At 390px keyboard traversal reaches the visit controls with visibl
     visited.add(focus.text.trim());
     if (visited.has('Save note')) break;
   }
-  assert.ok(visited.has('Quantity')); assert.ok(visited.has('Customer preferences')); assert.ok(visited.has('Save note'));
+  assert.ok(visited.has('Quantity')); assert.ok(visited.has('Customer preferences'));
+  assert.ok(visited.has('Save note'), JSON.stringify({ controls: controls.length, tabStops, visited: [...visited] }));
 }));
 await record('Window and winter icon steppers already expose named buttons', () => visit(async ({ page }) => {
   const labels = await page.evaluate(async () => {

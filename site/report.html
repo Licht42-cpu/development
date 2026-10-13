@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Your Completion Report | Nova Shield</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 128'%3E%3Cpath d='M50 4L94 22V64Q94 96 50 124Q6 96 6 64V22Z' fill='%23071a2b' stroke='%23c9d3d8' stroke-width='7'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/site.css">
+<style>
+  /* Deliberately the same document styling as quote.html: a customer who
+     has seen one of our quotes should recognise this as the same company's
+     paperwork, and a second visual language would read as a phishing page.
+     The rules are duplicated rather than extracted because site.css is
+     shared and this batch does not own it. */
+  body { background: #f4f2ec; color: #16211f; }
+  .doc { width: min(820px, calc(100% - 32px)); margin: 40px auto 80px; }
+  .sheet { background: #fff; border: 1px solid #ddd8cc; border-radius: 14px;
+           padding: clamp(24px, 5vw, 52px); box-shadow: 0 20px 60px rgba(0,0,0,.07); }
+  .sheet-head { display: flex; justify-content: space-between; gap: 24px;
+                flex-wrap: wrap; align-items: flex-start;
+                border-bottom: 1px solid #e6e1d6; padding-bottom: 24px; }
+  /* Same min-width:0 fix as the quote sheet: the company email is one
+     unbreakable token and at 390px it pushed the document sideways. */
+  .sheet-head > div { min-width: 0; }
+  .sheet-head p, .parties p { overflow-wrap: anywhere; }
+  .qlockup { display:block; width:232px; aspect-ratio:2000/667;
+    background:url('assets/brand/nova-shield-logo.png') no-repeat;
+    background-size:contain; background-position:center;
+    border-radius:2px; }
+  @media print { .qlockup { width:200px; } }
+  .meta { text-align: right; font-size: .84rem; color: #6c7772; }
+  .meta strong { display: block; color: #16211f; font-size: 1rem; }
+  .parties { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 28px 0; }
+  .parties h2 { font-family: var(--sans); font-size: .7rem; letter-spacing: .14em;
+                text-transform: uppercase; color: #8a948f; margin: 0 0 6px; }
+  .parties p { margin: 0; font-size: .95rem; }
+  @media (max-width: 520px) { .parties { grid-template-columns: 1fr; } }
+
+  .block { margin-top: 28px; padding-top: 22px; border-top: 1px solid #e6e1d6; }
+  .block h3 { font-family: var(--sans); font-size: .7rem; letter-spacing: .14em;
+              text-transform: uppercase; color: #8a948f; margin: 0 0 10px; }
+  .line { display: flex; justify-content: space-between; gap: 16px;
+          padding: 12px 0; border-bottom: 1px solid #efeade; }
+  /* `span + span`, NOT `span:last-child`. A "what we did" row has ONE span,
+     so :last-child matched the description too and held it on a single
+     unbreakable line -- which pushed this document to 705px at a 390px
+     viewport and scrolled the whole page sideways. The nowrap belongs to the
+     AMOUNT column, and an amount only exists when there is a second span.
+     Found by tests/screenshot-batch13-1.mjs. */
+  .line span + span { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  /* And a flex item defaults to min-width:auto, so it refuses to shrink below
+     its content's min-content width -- the same bug, and the same fix, as
+     .sheet-head here and in quote.html. */
+  .line span:first-child { min-width: 0; overflow-wrap: anywhere; }
+  .line { align-items: baseline; }
+  .line--total { border-top: 2px solid #16211f; border-bottom: 0;
+                 font-size: 1.25rem; font-weight: 800; padding-top: 16px; }
+  .note { font-size: .86rem; color: #5f6a65; margin: 8px 0 0; }
+  .shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+           gap: 14px; }
+  .shot { border: 1px solid #e6e1d6; border-radius: 10px; padding: 10px;
+          background: #fbfaf6; }
+  .shot p { margin: 0; font-size: .86rem; }
+  .shot .hint { color: #8a948f; font-size: .76rem; margin-top: 4px; }
+  .state { padding: 14px 16px; border-radius: 10px; font-size: .9rem; margin-top: 20px; }
+  .state--ok { background: #e9f5ee; color: #1f6b46; }
+  .state--warn { background: #fdf4e3; color: #8a6414; }
+  .center { text-align: center; padding: 80px 20px; color: #6c7772; }
+  .btn { display: inline-flex; align-items: center; justify-content: center;
+         min-height: 46px; padding: 12px 22px; border-radius: 999px; font-weight: 700;
+         border: 1px solid #c9c3b4; background: #fff; color: #16211f; cursor: pointer;
+         font: inherit; font-weight: 700; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 28px; }
+  @media print {
+    @page { size: A4 portrait; margin: 12mm 15mm 12mm 15mm; }
+    html, body { background: #fff; }
+    body { color: #16211f; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .doc { width: auto; margin: 0; }
+    .sheet { box-shadow: none; border: 0; padding: 0; }
+    .actions, .no-print { display: none !important; }
+    .sheet-head, .parties, .parties > div, .line, .block, .state, .shot {
+      break-inside: avoid; page-break-inside: avoid;
+    }
+    .parties h2, .block h3 { break-after: avoid; page-break-after: avoid; }
+  }
+</style>
+
+<meta name="description" content="Your Nova Shield completion report.">
+<!-- A customer document behind a capability. Never indexed. -->
+<meta name="robots" content="noindex,nofollow">
+</head>
+<body>
+<div class="doc" id="doc">
+  <div class="center">Loading your report…</div>
+</div>
+<script type="module" src="js/pages/report.js"></script>
+</body>
+</html>

@@ -50,3 +50,7 @@ ios/DerivedData/
 # Official runtime ESM files are committed source assets, including dist/.
 !/shared/vendor/
 !/shared/vendor/**
+
+# Local Python test caches
+__pycache__/
+*.py[cod]

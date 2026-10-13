@@ -291,9 +291,10 @@ async function main() {
       panel.root.remove();
       return result;
     });
-    assert.equal(info.previewHref, '../site/quote.html?id=quote-1');
+    // Batch 5 canonical URL: the configured website matches customer delivery.
+    assert.equal(info.previewHref, 'https://novashieldmaintenance.com/quote.html?id=quote-1');
     assert.equal(info.previewTarget, '_blank');
-    assert.equal(info.pdfHref, '../site/quote.html?id=quote-1&print=1');
+    assert.equal(info.pdfHref, 'https://novashieldmaintenance.com/quote.html?id=quote-1&print=1');
     assert.equal(info.pdfTarget, '_blank');
     assert.equal(info.pdfText, 'Download PDF');
     assert.equal(info.smsText, 'Copy SMS Text');

@@ -18,6 +18,14 @@
   .sheet-head { display: flex; justify-content: space-between; gap: 24px;
                 flex-wrap: wrap; align-items: flex-start;
                 border-bottom: 1px solid #e6e1d6; padding-bottom: 24px; }
+  /* A flex item defaults to min-width:auto, so it refuses to shrink below
+     its content's min-content width. The company email is one unbreakable
+     token, so at 390px it pushed this document to 463px -- the address ran
+     off the edge of the sheet and the whole page scrolled sideways. Same
+     class of bug, and same fix, as .page-head p in admin.css: let the items
+     shrink, and let a long address break mid-token when it has to. */
+  .sheet-head > div { min-width: 0; }
+  .sheet-head p, .parties p { overflow-wrap: anywhere; }
   /* Same master as site.css .brandart--lockup, so the quote and the website
      carry identical artwork. Letterhead scale keeps print ink sensible. */
   .qlockup { display:block; width:232px; aspect-ratio:2000/667;

@@ -1,0 +1,1643 @@
+// Batch 10.1 -- daily vehicle load planning, against a DEDICATED DISPOSABLE
+// DATABASE.
+//
+//   node tests/db/setup-test-db.mjs
+//   node tests/db/batch10-1.test.mjs
+//
+// What passing proves: the whole pending migration sequence applies; a plan
+// derives Keep/Add/Return across a WHOLE DAY rather than per job; a shared
+// tool is decided once; a no-bleach day returns the removable kit unless a
+// manual Keep or another job holds it; recommendations, commitments,
+// confirmed transfers and consumption stay four distinct things; an
+// obsolete confirmation is refused with the reason; level supplies never
+// acquire a number; and the owner/crew split is enforced in the backend.
+//
+// What it does NOT prove: anything about the live database. NO MIGRATION IN
+// THIS REPOSITORY HAS BEEN APPLIED TO PRODUCTION.
+
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
+import pg from 'pg';
+import {
+  TEST_DB_NAME, assertDisposableTarget, assertDisposableDatabase
+} from './disposable.mjs';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const REPO = join(HERE, '..', '..');
+const MIGRATIONS = join(REPO, 'supabase', 'migrations');
+
+const PGURL = process.env.PGURL
+  || `postgresql://postgres@/${TEST_DB_NAME}?host=/tmp&port=5433`;
+
+const SEQUENCE = [
+  '20261010120000_batch8_1_inventory_and_rental_sets.sql',
+  '20261010121000_batch8_1_estimate_job_materials.sql',
+  '20261010130000_batch8_1_stock_operations_contract_v1.sql',
+  '20261010140000_batch8_1_reservations_units_and_crew_access.sql',
+  '20261010141000_batch8_1_reservation_operations.sql',
+  '20261011090000_batch9_1_seasonal_set_identity_and_assignments.sql',
+  '20261011091000_batch9_1_seasonal_operations.sql',
+  '20261011100000_batch9_1_permanent_lighting_materials.sql',
+  '20261011101000_batch9_1_kit_and_sheet_operations.sql',
+  '20261011110000_batch10_1_load_planning.sql',
+  '20261011111000_batch10_1_load_operations.sql',
+  '20261012090000_batch9_1_corrective_seasonal_review.sql',
+  '20261013090000_batch11_1_seasonal_corrective_round_two.sql',
+  '20261014090000_batch10_1_corrective_load_contract.sql',
+  '20261015090000_batch10_1_corrective_day_boundary_and_lock.sql'
+];
+const migration = (f) => readFileSync(join(MIGRATIONS, f), 'utf8');
+
+const results = [];
+async function record(name, fn) {
+  try { await fn(); results.push({ name, ok: true }); }
+  catch (err) { results.push({ name, ok: false, err: err && err.message }); }
+}
+async function errorOf(fn) {
+  try { await fn(); return null; } catch (err) { return err; }
+}
+
+let seq = 0;
+const opId = (tag) => `ld-${tag}-${++seq}`;
+const DAY = '2026-11-12';
+const OTHER_DAY = '2026-11-13';
+
+(async () => {
+  assertDisposableTarget(PGURL);
+  const client = new pg.Client({ connectionString: PGURL });
+  await client.connect();
+  await assertDisposableDatabase(client);
+
+  const one = async (sql, params) => (await client.query(sql, params)).rows[0];
+  const all = async (sql, params) => (await client.query(sql, params)).rows;
+  const rpc = async (fn, params) => (await one(`select ${fn} as r`, params)).r;
+
+  await client.query(`
+    drop table if exists public.ns_day_reconciliation_lines cascade;
+    drop table if exists public.ns_day_reconciliations cascade;
+    drop table if exists public.ns_load_exceptions cascade;
+    drop table if exists public.ns_load_plan_lines cascade;
+    drop table if exists public.ns_load_plans cascade;
+    drop table if exists public.ns_load_manual_keeps cascade;
+    drop table if exists public.ns_vehicle_baselines cascade;
+    drop table if exists public.ns_job_vehicle_assignments cascade;
+    drop table if exists public.ns_job_load_overrides cascade;
+    drop table if exists public.ns_service_load_rules cascade;
+    drop view  if exists public.ns_load_plan_view cascade;
+    drop view  if exists public.ns_material_piece_availability cascade;
+    drop table if exists public.ns_job_material_sheet_lines cascade;
+    drop table if exists public.ns_job_material_sheets cascade;
+    drop table if exists public.ns_material_offcuts cascade;
+    drop table if exists public.ns_kit_sheet_lines cascade;
+    drop table if exists public.ns_kit_sheets cascade;
+    drop view  if exists public.ns_seasonal_set_availability cascade;
+    drop table if exists public.ns_seasonal_assignments cascade;
+    drop view  if exists public.ns_material_stock cascade;
+    drop view  if exists public.ns_material_stock_by_location cascade;
+    drop table if exists public.ns_stock_reservations cascade;
+    drop table if exists public.ns_material_stock_moves cascade;
+    drop table if exists public.ns_service_material_usage cascade;
+    drop table if exists public.ns_purchase_order_lines cascade;
+    drop table if exists public.ns_purchase_orders cascade;
+    drop table if exists public.ns_rental_set_events cascade;
+    drop table if exists public.ns_rental_sets cascade;
+    drop table if exists public.ns_material_levels cascade;
+    drop table if exists public.ns_materials cascade;
+    drop table if exists public.ns_suppliers cascade;
+    drop table if exists public.ns_stock_operations cascade;
+    drop table if exists public.ns_crew_members cascade;
+    drop table if exists public.ns_stock_locations cascade;
+    drop schema if exists ns_drop_helpers cascade;
+  `);
+  // Functions are dropped wholesale: this suite applies the entire sequence
+  // and anything left from a previous run would be tested instead of it.
+  await client.query(`
+    do $$
+    declare r record;
+    begin
+      for r in
+        select p.oid::regprocedure::text as sig
+          from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+         where n.nspname = 'public'
+           and (p.proname like 'ns\\_%' or p.proname in (
+             'post_stock_movement','post_stock_transfer','reserve_stock',
+             'release_stock_reservation','consume_stock_reservation',
+             'estimate_job_materials','is_owner','current_crew_vehicle',
+             'can_see_location','can_handle_set','open_sealed_kit',
+             'record_offcut','consume_offcut','scrap_offcut',
+             'select_job_material','review_job_material_sheet',
+             'reserve_job_material_sheet','register_seasonal_set',
+             'assign_seasonal_set','cancel_seasonal_assignment',
+             'install_seasonal_set','recover_seasonal_set',
+             'inspect_seasonal_set','release_seasonal_set',
+             'record_set_renewal','retire_seasonal_set','build_load_plan',
+             'set_manual_keep','authorise_load_exception','confirm_load_plan',
+             'reconcile_day_end'))
+      loop
+        execute 'drop function if exists ' || r.sig || ' cascade';
+      end loop;
+    end $$;
+  `);
+
+  await client.query(readFileSync(join(HERE, 'fixture-schema-batch8-1.sql'), 'utf8'));
+  await client.query(readFileSync(join(HERE, 'fixture-schema-batch9-1.sql'), 'utf8'));
+  await client.query(readFileSync(join(HERE, 'fixture-schema-batch10-1.sql'), 'utf8'));
+
+  // ================================================= A. migrations ========
+  for (const [i, file] of SEQUENCE.entries()) {
+    await record(`A${i + 1} ${file} applies in sequence`, async () => {
+      await client.query(migration(file));
+    });
+  }
+  await record('A30 the 10.1 migrations are re-runnable', async () => {
+    for (const f of SEQUENCE.slice(9)) await client.query(migration(f));
+    for (const f of SEQUENCE.slice(9)) await client.query(migration(f));
+  });
+
+  const ownerId = (await one('insert into auth.users default values returning id')).id;
+  const crewId  = (await one('insert into auth.users default values returning id')).id;
+  await client.query(`select set_config('nova.is_admin','on',false)`);
+  await client.query(`select set_config('nova.actor_id',$1,false)`, [ownerId]);
+  const beOwner = () => client.query(`select set_config('nova.actor_id',$1,false)`, [ownerId]);
+  const beCrew  = () => client.query(`select set_config('nova.actor_id',$1,false)`, [crewId]);
+
+  const supplierId = (await one('select id from public.ns_suppliers limit 1')).id;
+  const custA = (await one(
+    `insert into public.customers (name) values ('FIXTURE Load Customer') returning id`)).id;
+
+  const newMaterial = async (name, over = {}) => (await one(
+    `insert into public.ns_materials
+       (name,category,unit,supplier_id,pack_quantity,reorder_point,reorder_qty,tracking_mode)
+     values ($1,$2,$3,$4,1,0,0,$5) returning id`,
+    [name, over.category || 'tool', over.unit || 'each', supplierId,
+     over.tracking_mode || 'quantity'])).id;
+
+  const svc = async (key, name) => (await one(
+    `insert into public.services (key,name,unit) values ($1,$2,'sq_ft')
+     on conflict (key) do update set name=excluded.name returning id`, [key, name])).id;
+
+  const newJob = async (when, over = {}) => (await one(
+    `insert into public.ns_jobs (customer_id, scheduled_for, status)
+     values ($1,$2,$3) returning id`,
+    [custA, `${when}T14:00:00Z`, over.status || 'scheduled'])).id;
+
+  const measure = (jobId, serviceId, q) => client.query(
+    `insert into public.job_measurements (job_id, service_id, quantity, unit)
+     values ($1,$2,$3,'sq_ft')`, [jobId, serviceId, q]);
+
+  const rule = (serviceId, materialId, over = {}) => client.query(
+    `insert into public.ns_service_load_rules
+       (service_id, material_id, rule_kind, quantity_fixed, quantity_per_unit,
+        allowance_state, removable, always_keep)
+     values ($1,$2,$3,$4,$5,$6,$7,$8)
+     on conflict (service_id, material_id) do update
+        set rule_kind=excluded.rule_kind, quantity_fixed=excluded.quantity_fixed,
+            quantity_per_unit=excluded.quantity_per_unit,
+            allowance_state=excluded.allowance_state,
+            removable=excluded.removable, always_keep=excluded.always_keep`,
+    [serviceId, materialId, over.kind || 'equipment', over.fixed ?? null,
+     over.perUnit ?? null, over.allowance || 'reviewed',
+     over.removable ?? false, over.alwaysKeep ?? false]);
+
+  const receive = (matId, qty, loc = 'base') => rpc(
+    `public.post_stock_movement($1,$2,$3,$4,'received',null,null,null,null,'usable','exact')`,
+    [opId('mv'), matId, loc, qty]);
+
+  const buildPlan = (code, day) => rpc(
+    `public.build_load_plan($1,$2,$3::date,null)`, [opId('plan'), code, day]);
+
+  const lineFor = (plan, name) =>
+    plan.lines.find((l) => l.material_name === name);
+
+  // The two real services this business runs on, named as the roadmap does.
+  const siding = await svc('siding_soft_wash', 'Siding Soft Washing');
+  const windows = await svc('window_cleaning', 'Window Cleaning');
+
+  const washer = await newMaterial('FIXTURE pressure washer');
+  const bleachKit = await newMaterial('FIXTURE removable bleach kit');
+  const toolKit = await newMaterial('FIXTURE standard tool kit');
+  const soap = await newMaterial('FIXTURE soft-wash product', {
+    category: 'consumable', unit: 'litre' });
+  // A level-tracked supply must carry unit 'level' -- Batch 8.1 ties the two
+  // together so a product cannot be counted in litres AND reported as "Low".
+  const rinseAid = await newMaterial('FIXTURE rinse aid', {
+    category: 'consumable', unit: 'level', tracking_mode: 'level' });
+
+  await rule(siding, washer);                              // shared tool
+  await rule(siding, bleachKit, { removable: true });       // comes off on a dry day
+  await rule(windows, toolKit, { alwaysKeep: true });       // never leaves
+  await rule(siding, soap, { kind: 'consumable', perUnit: 0.01 });
+  await rule(siding, rinseAid, { kind: 'consumable', fixed: 1 });
+
+  await receive(washer, 1);
+  await receive(bleachKit, 1);
+  await receive(toolKit, 1);
+  await receive(soap, 200);
+
+  // ============================================ B. the day's plan =========
+  await record('B1 a plan is for a vehicle, never for Base', async () => {
+    const err = await errorOf(() => buildPlan('base', DAY));
+    assert.ok(err); assert.equal(err.code, '22023');
+    assert.match(err.message, /loaded FROM/i);
+  });
+
+  await record('B2 a siding day puts the washer and the soft-wash product on the van',
+    async () => {
+      const j = await newJob(DAY);
+      await measure(j, siding, 1000);
+      const plan = await buildPlan('car_a', DAY);
+      assert.equal(plan.revision, 1);
+      const w = lineFor(plan, 'FIXTURE pressure washer');
+      assert.ok(w, 'the washer must be on the plan');
+      assert.equal(w.action, 'add');
+      assert.equal(w.line_kind, 'equipment');
+      const s = lineFor(plan, 'FIXTURE soft-wash product');
+      assert.equal(s.line_kind, 'consumable');
+      assert.equal(Number(s.required_qty), 10, '1000 sq ft at 0.01 L each');
+      assert.equal(s.action, 'add');
+    });
+
+  await record('B3 a shared tool is decided ONCE for the day, not once per job',
+    async () => {
+      const j2 = await newJob(DAY);
+      const j3 = await newJob(DAY);
+      await measure(j2, siding, 500);
+      await measure(j3, siding, 500);
+      const plan = await buildPlan('car_a', DAY);
+      const washerLines = plan.lines.filter(
+        (l) => l.material_name === 'FIXTURE pressure washer');
+      assert.equal(washerLines.length, 1,
+        'three siding stops is still one washer decision');
+      assert.ok(washerLines[0].job_ids.length >= 2,
+        'and it names the stops that need it');
+    });
+
+  await record('B4 consumables are summed across the day, tools are not', async () => {
+    const plan = await buildPlan('car_a', DAY);
+    const s = lineFor(plan, 'FIXTURE soft-wash product');
+    assert.equal(Number(s.required_qty), 20, '2000 sq ft total at 0.01 L each');
+  });
+
+  await record('B5 an always-keep item stays aboard with no job needing it', async () => {
+    const plan = await buildPlan('car_a', DAY);
+    const t = lineFor(plan, 'FIXTURE standard tool kit');
+    assert.ok(t, 'the standard kit is on every plan');
+    assert.match(t.reason, /always keep/i);
+    assert.notEqual(t.action, 'return');
+  });
+
+  await record('B6 a level-tracked supply gets a level and NEVER a number', async () => {
+    await client.query(
+      `insert into public.ns_material_levels (material_id, location_id, state)
+       values ($1,(select id from public.ns_stock_locations where code='car_a'),'low')
+       on conflict (material_id,location_id) do update set state='low'`, [rinseAid]);
+    const plan = await buildPlan('car_a', DAY);
+    const r = lineFor(plan, 'FIXTURE rinse aid');
+    assert.ok(r);
+    assert.equal(r.level_state, 'low');
+    for (const f of ['required_qty', 'aboard_qty', 'available_qty', 'shortage_qty']) {
+      assert.equal(r[f], null, `${f} must stay null for a level supply`);
+    }
+  });
+
+  await record('B7 the six quantities are reported separately', async () => {
+    const plan = await buildPlan('car_a', DAY);
+    const s = lineFor(plan, 'FIXTURE soft-wash product');
+    for (const f of ['required_qty', 'aboard_qty', 'reserved_qty', 'available_qty',
+                     'damaged_qty', 'shortage_qty']) {
+      assert.ok(f in s, `${f} is missing from the line`);
+    }
+    assert.equal(Number(s.aboard_qty), 0);
+    assert.equal(Number(s.available_qty), 200, 'Base can cover it');
+    assert.equal(Number(s.shortage_qty), 0);
+  });
+
+  await record('B8 a shortage is reported when nobody has it', async () => {
+    const scarce = await newMaterial('FIXTURE scarce product', {
+      category: 'consumable', unit: 'litre' });
+    await rule(siding, scarce, { kind: 'consumable', fixed: 50 });
+    const plan = await buildPlan('car_a', DAY);
+    const sc = lineFor(plan, 'FIXTURE scarce product');
+    assert.ok(Number(sc.shortage_qty) > 0);
+    assert.equal(sc.data_state, 'complete', 'a known shortage is not missing data');
+    await client.query(`delete from public.ns_service_load_rules
+                         where material_id=$1`, [scarce]);
+  });
+
+  await record('B9 an unreviewed allowance is flagged, not presented as a figure',
+    async () => {
+      const guess = await newMaterial('FIXTURE unreviewed product', {
+        category: 'consumable', unit: 'litre' });
+      await rule(siding, guess, {
+        kind: 'consumable', fixed: 5, allowance: 'provisional' });
+      const plan = await buildPlan('car_a', DAY);
+      const g = lineFor(plan, 'FIXTURE unreviewed product');
+      assert.equal(g.data_state, 'needs_review');
+      assert.equal(g.precision, 'estimated');
+      assert.match(g.reason, /not reviewed/i);
+      await client.query(`delete from public.ns_service_load_rules
+                           where material_id=$1`, [guess]);
+    });
+
+  await record('B10 a required consumable with no allowance reads as unknown', async () => {
+    const noAllowance = await newMaterial('FIXTURE no allowance', {
+      category: 'consumable', unit: 'litre' });
+    await rule(siding, noAllowance, { kind: 'consumable' });
+    const plan = await buildPlan('car_a', DAY);
+    const n = lineFor(plan, 'FIXTURE no allowance');
+    assert.equal(n.data_state, 'needs_review');
+    assert.match(n.reason, /amount is unknown/i);
+    assert.equal(n.required_qty, null,
+      'zero would claim the job needs none of it; null says nobody knows');
+    assert.equal(n.shortage_qty, null,
+      'and a shortage against an unknown requirement is not calculable');
+    assert.equal(n.action, 'add', 'it is still needed');
+    await client.query(`delete from public.ns_service_load_rules
+                         where material_id=$1`, [noAllowance]);
+  });
+
+  // ======================================== C. the no-bleach day ==========
+  await record('C1 a day with no bleach work returns the removable kit', async () => {
+    // Load the bleach kit into the car, then plan a windows-only day.
+    await rpc(`public.post_stock_transfer($1,$2,1,'base','car_a',true,null,null)`,
+      [opId('tx'), bleachKit]);
+    const j = await newJob(OTHER_DAY);
+    await measure(j, windows, 20);
+    const plan = await buildPlan('car_a', OTHER_DAY);
+    const b = lineFor(plan, 'FIXTURE removable bleach kit');
+    assert.ok(b, 'it is in the car, so it must appear');
+    assert.equal(b.action, 'return');
+    assert.match(b.reason, /no job today needs it/i);
+  });
+
+  await record('C2 the standard tool kit is never returned, bleach day or not', async () => {
+    await rpc(`public.post_stock_transfer($1,$2,1,'base','car_a',true,null,null)`,
+      [opId('tx'), toolKit]);
+    const plan = await buildPlan('car_a', OTHER_DAY);
+    const t = lineFor(plan, 'FIXTURE standard tool kit');
+    assert.notEqual(t.action, 'return', 'always_keep outranks the quiet day');
+  });
+
+  await record('C3 a manual Keep turns a Return into a Keep, and survives a rebuild',
+    async () => {
+      await rpc(`public.set_manual_keep($1,'car_a',$2::date,$3,true,'rain forecast')`,
+        [opId('keep'), OTHER_DAY, bleachKit]);
+      let plan = await buildPlan('car_a', OTHER_DAY);
+      let b = lineFor(plan, 'FIXTURE removable bleach kit');
+      assert.equal(b.action, 'keep');
+      assert.equal(b.manual_keep, true);
+      assert.match(b.reason, /rain forecast/);
+
+      // Rebuild again: the keep is keyed by day, not by plan line.
+      plan = await buildPlan('car_a', OTHER_DAY);
+      b = lineFor(plan, 'FIXTURE removable bleach kit');
+      assert.equal(b.action, 'keep', 'a regeneration must not wipe a manual keep');
+      assert.equal(b.manual_keep, true);
+    });
+
+  await record('C4 clearing the manual Keep lets it be returned again', async () => {
+    await rpc(`public.set_manual_keep($1,'car_a',$2::date,$3,false,null)`,
+      [opId('keep'), OTHER_DAY, bleachKit]);
+    const plan = await buildPlan('car_a', OTHER_DAY);
+    const b = lineFor(plan, 'FIXTURE removable bleach kit');
+    assert.equal(b.action, 'return');
+  });
+
+  await record('C5 a second job needing the kit keeps it aboard without a manual keep',
+    async () => {
+      const j = await newJob(OTHER_DAY);
+      await measure(j, siding, 100);
+      const plan = await buildPlan('car_a', OTHER_DAY);
+      const b = lineFor(plan, 'FIXTURE removable bleach kit');
+      assert.equal(b.action, 'keep', 'one siding stop is enough to hold the kit');
+      assert.equal(b.manual_keep, false, 'and it is not a manual keep');
+    });
+
+  // =========================================== D. revisions ===============
+  await record('D1 every build makes a new revision and supersedes the last', async () => {
+    const a = await buildPlan('car_a', DAY);
+    const b = await buildPlan('car_a', DAY);
+    assert.equal(b.revision, a.revision + 1);
+    const old = await one(`select status from public.ns_load_plans where id=$1`, [a.plan_id]);
+    assert.equal(old.status, 'superseded');
+    const live = await all(
+      `select id from public.ns_load_plans
+        where work_date=$1::date and status in ('current','confirmed')
+          and location_id=(select id from public.ns_stock_locations where code='car_a')`,
+      [DAY]);
+    assert.equal(live.length, 1, 'exactly one live plan per car per day');
+  });
+
+  await record('D2 building a plan is replay-safe', async () => {
+    const key = opId('plan');
+    const a = await rpc(`public.build_load_plan($1,'car_a',$2::date,null)`, [key, DAY]);
+    const b = await rpc(`public.build_load_plan($1,'car_a',$2::date,null)`, [key, DAY]);
+    assert.equal(a.replayed, false);
+    assert.equal(b.replayed, true);
+    assert.equal(b.plan_id, a.plan_id);
+    assert.equal(b.revision, a.revision, 'a retry did not make a second revision');
+  });
+
+  await record('D3 confirming the wrong revision is refused, with the right one',
+    async () => {
+      const plan = await buildPlan('car_a', DAY);
+      const err = await errorOf(() => rpc(
+        `public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+        [opId('conf'), plan.plan_id, plan.revision - 1, plan.lines_fingerprint]));
+      assert.ok(err); assert.equal(err.code, '23514');
+      assert.match(err.message, new RegExp(`current one is ${plan.revision}`));
+    });
+
+  await record('D4 a schedule change after the build blocks confirmation', async () => {
+    const plan = await buildPlan('car_a', DAY);
+    // A late cancellation: the revision has not moved, but the plan is wrong.
+    const j = await newJob(DAY);
+    await measure(j, siding, 300);
+    const err = await errorOf(() => rpc(
+      `public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+      [opId('conf'), plan.plan_id, plan.revision, plan.lines_fingerprint]));
+    assert.ok(err, 'the revision matched, so only the fingerprint can catch this');
+    assert.equal(err.code, '23514');
+    assert.match(err.message, /changed after this plan was built/i);
+  });
+
+  await record('D5 a superseded plan cannot be confirmed', async () => {
+    const a = await buildPlan('car_a', DAY);
+    await buildPlan('car_a', DAY);
+    const err = await errorOf(() => rpc(
+      `public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+      [opId('conf'), a.plan_id, a.revision, a.lines_fingerprint]));
+    assert.ok(err); assert.equal(err.code, '23514');
+    assert.match(err.message, /newer one exists/i);
+  });
+
+  // ================================ E. recommendation vs movement =========
+  await record('E1 building a plan moves no stock at all', async () => {
+    const before = Number((await one(
+      `select count(*)::int as n from public.ns_material_stock_moves`)).n);
+    await buildPlan('car_a', DAY);
+    const after = Number((await one(
+      `select count(*)::int as n from public.ns_material_stock_moves`)).n);
+    assert.equal(after, before, 'a recommendation is not a movement');
+  });
+
+  await record('E2 confirming posts transfers, and that is the only thing that moves stock',
+    async () => {
+      const plan = await buildPlan('car_a', DAY);
+      const soapBefore = Number((await one(
+        `select coalesce(on_hand,0) as n from public.ns_material_stock_by_location
+          where material_id=$1 and location_code='car_a'`, [soap])).n);
+      const r = await rpc(`public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+        [opId('conf'), plan.plan_id, plan.revision, plan.lines_fingerprint]);
+      assert.equal(r.status, 'confirmed');
+      assert.ok(r.transfers_posted > 0);
+      const soapAfter = Number((await one(
+        `select coalesce(on_hand,0) as n from public.ns_material_stock_by_location
+          where material_id=$1 and location_code='car_a'`, [soap])).n);
+      assert.ok(soapAfter > soapBefore, 'the product is now in the van');
+
+      const kinds = await all(
+        `select distinct o.kind from public.ns_stock_operations o
+           join public.ns_material_stock_moves mv on mv.operation_id=o.id
+          where mv.material_id=$1 and o.kind='transfer'`, [soap]);
+      assert.equal(kinds.length, 1,
+        'the move is an ordinary transfer, not an invented operation kind');
+    });
+
+  await record('E3 a retried confirmation does not move stock twice', async () => {
+    const plan = await buildPlan('car_a', OTHER_DAY);
+    const key = opId('conf');
+    const a = await rpc(`public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+      [key, plan.plan_id, plan.revision, plan.lines_fingerprint]);
+    const before = Number((await one(
+      `select count(*)::int as n from public.ns_material_stock_moves`)).n);
+    const b = await rpc(`public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+      [key, plan.plan_id, plan.revision, plan.lines_fingerprint]);
+    const after = Number((await one(
+      `select count(*)::int as n from public.ns_material_stock_moves`)).n);
+    assert.equal(b.replayed, true);
+    assert.equal(after, before, 'the second confirmation posted nothing');
+    assert.ok(a.plan_id);
+  });
+
+  await record('E4 a reservation is a commitment, not a load', async () => {
+    const mat = await newMaterial('FIXTURE reserved product', {
+      category: 'consumable', unit: 'litre' });
+    await receive(mat, 100);
+    const job = await newJob(DAY);
+    await rpc(`public.reserve_stock($1,$2,'base',30,$3,null,null)`,
+      [opId('res'), mat, job]);
+    const bal = await one(
+      `select on_hand, reserved, available from public.ns_material_stock_by_location
+        where material_id=$1 and location_code='base'`, [mat]);
+    assert.equal(Number(bal.on_hand), 100, 'reserving moved nothing');
+    assert.equal(Number(bal.reserved), 30);
+    assert.equal(Number(bal.available), 70, 'but it is no longer free');
+  });
+
+  // ============================================ F. seasonal sets ==========
+  await record('F1 a promised Christmas set is on the plan by id, with no quantity',
+    async () => {
+      const setId = (await rpc(
+        `public.register_seasonal_set($1,'FIXTURE LOAD SET','roofline','warm',40,'base',null,null,null)`,
+        [opId('set')])).set.set_id;
+      await rpc(`public.inspect_seasonal_set($1,$2,'usable',null)`, [opId('insp'), setId]);
+      const job = await newJob(DAY);
+      await measure(job, siding, 10);
+      await rpc(`public.assign_seasonal_set($1,$2,$3,2026,null,$4,null)`,
+        [opId('asg'), setId, custA, job]);
+
+      const plan = await buildPlan('car_a', DAY);
+      const line = plan.lines.find((l) => l.rental_set_id === setId);
+      assert.ok(line, 'the set the crew must take is on the plan');
+      assert.equal(line.line_kind, 'seasonal_set');
+      assert.equal(line.action, 'add');
+      assert.equal(line.material_id, null, 'a set is not a material');
+      assert.equal(line.required_qty, null, 'and it has no quantity');
+      assert.ok(line.set_code);
+    });
+
+  await record('F2 confirming does not try to transfer a set as if it were stock',
+    async () => {
+      const plan = await buildPlan('car_a', DAY);
+      const setLine = plan.lines.find((l) => l.rental_set_id !== null);
+      assert.ok(setLine);
+      const r = await rpc(`public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+        [opId('conf'), plan.plan_id, plan.revision, plan.lines_fingerprint]);
+      const after = r.lines.find((l) => l.line_id === setLine.line_id);
+      assert.equal(after.confirmed_operation, null,
+        'a set is an asset the crew carries, not a balance that moves');
+    });
+
+  // ========================================== G. two vehicles =============
+  await record('G1 Car B is not seeded, and one vehicle means unassigned jobs are ours',
+    async () => {
+      const vehicles = await all(
+        `select code from public.ns_stock_locations where kind='vehicle' and active`);
+      assert.deepEqual(vehicles.map(v => v.code), ['car_a'],
+        'no migration may seed a second vehicle');
+      const plan = await buildPlan('car_a', DAY);
+      assert.ok(plan.lines.length > 0, 'unassigned jobs belong to the only car');
+      assert.equal(Number(plan.unassigned_jobs), 0);
+    });
+
+  await record('G2 with two vehicles an unassigned job belongs to NEITHER plan',
+    async () => {
+      await client.query(
+        `insert into public.ns_stock_locations (code,name,kind,sort_order)
+         values ('car_b','Car B','vehicle',2) on conflict do nothing`);
+      try {
+        const plan = await buildPlan('car_a', DAY);
+        assert.ok(Number(plan.unassigned_jobs) > 0,
+          'the ambiguity is reported, never guessed at');
+        assert.match(plan.note || '', /not assigned to a vehicle/i);
+        assert.equal(plan.lines.filter((l) => l.line_kind === 'consumable').length, 0,
+          'nothing a job needs is planned while nobody knows which car it is on');
+      } finally {
+        await client.query(`delete from public.ns_stock_locations where code='car_b'`);
+      }
+    });
+
+  /** Car B is torn down between cases, and everything that points at it has
+   *  to go first -- which is itself the on-delete-restrict rule doing its
+   *  job: a vehicle with work assigned to it cannot simply vanish. */
+  const dropCarB = async () => {
+    await client.query(`delete from public.ns_job_vehicle_assignments
+      where location_id in (select id from public.ns_stock_locations where code='car_b')`);
+    await client.query(`delete from public.ns_load_plan_lines where plan_id in
+      (select id from public.ns_load_plans where location_id in
+        (select id from public.ns_stock_locations where code='car_b'))`);
+    await client.query(`delete from public.ns_load_plans where location_id in
+      (select id from public.ns_stock_locations where code='car_b')`);
+    await client.query(`delete from public.ns_stock_locations where code='car_b'`);
+  };
+
+  await record('G3 an explicit assignment puts the job on that car only', async () => {
+    await client.query(
+      `insert into public.ns_stock_locations (code,name,kind,sort_order)
+       values ('car_b','Car B','vehicle',2) on conflict do nothing`);
+    try {
+      const job = await newJob('2026-11-20');
+      await measure(job, siding, 800);
+      await client.query(
+        `insert into public.ns_job_vehicle_assignments (job_id, location_id)
+         values ($1,(select id from public.ns_stock_locations where code='car_b'))`, [job]);
+
+      const a = await buildPlan('car_a', '2026-11-20');
+      const b = await buildPlan('car_b', '2026-11-20');
+      assert.equal(a.lines.filter((l) => l.line_kind === 'consumable').length, 0,
+        'Car A is not loading for Car B\'s job');
+      assert.ok(b.lines.some((l) => l.material_name === 'FIXTURE pressure washer'));
+      assert.equal(Number(b.unassigned_jobs), 0);
+    } finally {
+      await dropCarB();
+    }
+  });
+
+  // ====================================== H. end-of-day reconciliation ====
+  await record('H1 an unexplained variance is refused', async () => {
+    const err = await errorOf(() => rpc(
+      `public.reconcile_day_end($1,'car_a',$2::date,$3::jsonb,null)`,
+      [opId('rec'), DAY,
+       JSON.stringify([{ material_id: soap, counted_qty: 1 }])]));
+    assert.ok(err); assert.equal(err.code, '23514');
+    assert.match(err.message, /Say why/i);
+  });
+
+  await record('H2 an explained variance posts a correction and closes the day',
+    async () => {
+      const before = Number((await one(
+        `select coalesce(on_hand,0) as n from public.ns_material_stock_by_location
+          where material_id=$1 and location_code='car_a'`, [soap])).n);
+      const r = await rpc(
+        `public.reconcile_day_end($1,'car_a',$2::date,$3::jsonb,'end of day')`,
+        [opId('rec'), DAY, JSON.stringify([
+          { material_id: soap, counted_qty: before - 2,
+            variance_reason: 'used_more', precision: 'estimated' }
+        ])]);
+      assert.equal(r.lines.length, 1);
+      assert.equal(Number(r.lines[0].variance_qty), -2);
+      const after = Number((await one(
+        `select coalesce(on_hand,0) as n from public.ns_material_stock_by_location
+          where material_id=$1 and location_code='car_a'`, [soap])).n);
+      assert.equal(after, before - 2, 'the ledger now agrees with the van');
+    });
+
+  await record('H3 a level supply is counted as a level, posting no movement', async () => {
+    const before = Number((await one(
+      `select count(*)::int as n from public.ns_material_stock_moves
+        where material_id=$1`, [rinseAid])).n);
+    await rpc(`public.reconcile_day_end($1,'car_a',$2::date,$3::jsonb,null)`,
+      [opId('rec'), '2026-11-25', JSON.stringify([
+        { material_id: rinseAid, level_state: 'empty' }
+      ])]);
+    const after = Number((await one(
+      `select count(*)::int as n from public.ns_material_stock_moves
+        where material_id=$1`, [rinseAid])).n);
+    assert.equal(after, before, 'a level is an observation, not a quantity');
+    const lv = await one(
+      `select state from public.ns_material_levels
+        where material_id=$1 and location_id=(select id from public.ns_stock_locations where code='car_a')`,
+      [rinseAid]);
+    assert.equal(lv.state, 'empty');
+  });
+
+  await record('H4 reconciliation is replay-safe', async () => {
+    const key = opId('rec');
+    const a = await rpc(`public.reconcile_day_end($1,'car_a',$2::date,$3::jsonb,null)`,
+      [key, '2026-11-26', JSON.stringify([{ material_id: rinseAid, level_state: 'low' }])]);
+    const b = await rpc(`public.reconcile_day_end($1,'car_a',$2::date,$3::jsonb,null)`,
+      [key, '2026-11-26', JSON.stringify([{ material_id: rinseAid, level_state: 'low' }])]);
+    assert.equal(a.replayed, false);
+    assert.equal(b.replayed, true);
+    assert.equal(b.reconciliation_id, a.reconciliation_id);
+  });
+
+  // =========================================== I. suggestions =============
+  await record('I1 next-day suggestions report shortages and gaps, and reserve nothing',
+    async () => {
+      await client.query(
+        `insert into public.ns_vehicle_baselines (location_id, material_id, target_qty)
+         values ((select id from public.ns_stock_locations where code='car_a'),$1,500)
+         on conflict (location_id, material_id) do update set target_qty=500`, [soap]);
+      await buildPlan('car_a', DAY);
+      const s = await rpc(`public.ns_next_day_suggestions('car_a',$1::date)`, [DAY]);
+      assert.ok(Array.isArray(s.baseline_gaps));
+      assert.ok(s.baseline_gaps.some((g) => g.material_id === soap));
+      assert.match(s.note, /reserves, orders or moves/i);
+      const held = await all(
+        `select id from public.ns_stock_reservations where status='held' and job_id is null`);
+      assert.equal(held.length, 0, 'a suggestion commits nothing');
+    });
+
+  // ======================================== J. owner and crew =============
+  await record('J1 a crew confirms and counts, but does not plan or authorise',
+    async () => {
+      await client.query(
+        `insert into public.ns_crew_members (user_id,role,vehicle_location_id,display_name)
+         values ($1,'crew',(select id from public.ns_stock_locations where code='car_a'),'FIXTURE crew')
+         on conflict (user_id) do update set role='crew', active=true`, [crewId]);
+      await beCrew();
+      try {
+        assert.equal((await one('select public.is_owner() as o')).o, false);
+
+        // Allowed: hold something back, count the day.
+        await rpc(`public.set_manual_keep($1,'car_a',$2::date,$3,true,'crew call')`,
+          [opId('keep'), '2026-11-27', bleachKit]);
+        await rpc(`public.reconcile_day_end($1,'car_a',$2::date,$3::jsonb,null)`,
+          [opId('rec'), '2026-11-27',
+           JSON.stringify([{ material_id: rinseAid, level_state: 'enough' }])]);
+
+        // Refused: deciding what the day needs, or authorising a departure.
+        let err = await errorOf(() => buildPlan('car_a', '2026-11-28'));
+        assert.ok(err); assert.equal(err.code, '42501');
+        assert.match(err.message, /whole day/i);
+
+        err = await errorOf(() => rpc(
+          `public.authorise_load_exception($1,'car_a',$2::date,'skip_required','no room',$3,null)`,
+          [opId('exc'), '2026-11-27', washer]));
+        assert.ok(err); assert.equal(err.code, '42501');
+      } finally {
+        await beOwner();
+      }
+    });
+
+  await record('J2 a crew cannot confirm the other car\'s plan', async () => {
+    await client.query(
+      `insert into public.ns_stock_locations (code,name,kind,sort_order)
+       values ('car_b','Car B','vehicle',2) on conflict do nothing`);
+    try {
+      const plan = await buildPlan('car_b', '2026-12-01');
+      await beCrew();
+      const err = await errorOf(() => rpc(
+        `public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+        [opId('conf'), plan.plan_id, plan.revision, plan.lines_fingerprint]));
+      assert.ok(err); assert.equal(err.code, '42501');
+      assert.match(err.message, /do not work from/i);
+    } finally {
+      await beOwner();
+      await dropCarB();
+    }
+  });
+
+  await record('J3 an exception needs a reason and an owner', async () => {
+    let err = await errorOf(() => rpc(
+      `public.authorise_load_exception($1,'car_a',$2::date,'skip_required','',$3,null)`,
+      [opId('exc'), DAY, washer]));
+    assert.ok(err); assert.equal(err.code, '22023');
+
+    const ok = await rpc(
+      `public.authorise_load_exception($1,'car_a',$2::date,'skip_required','borrowed one',$3,null)`,
+      [opId('exc'), DAY, washer]);
+    assert.ok(ok.exception_id);
+    assert.equal(ok.replayed, false);
+  });
+
+  await record('J4 a non-admin gets nowhere', async () => {
+    await client.query(`select set_config('nova.is_admin','off',false)`);
+    try {
+      for (const [sql, extra] of [
+        [`public.build_load_plan($1,'car_a',$2::date,null)`, [DAY]],
+        [`public.set_manual_keep($1,'car_a',$2::date,$3,true,null)`, [DAY, washer]],
+        [`public.confirm_load_plan($1,'00000000-0000-0000-0000-000000000000',null,null,null)`, []],
+        [`public.reconcile_day_end($1,'car_a',$2::date,'[]'::jsonb,null)`, [DAY]]
+      ]) {
+        const err = await errorOf(() => rpc(sql, [opId('anon'), ...extra]));
+        assert.ok(err, sql); assert.equal(err.code, '42501', sql);
+      }
+    } finally {
+      await client.query(`select set_config('nova.is_admin','on',false)`);
+    }
+  });
+
+  await record('J5 anon holds no execute, and authenticated cannot write plans by hand',
+    async () => {
+      for (const f of [
+        'public.build_load_plan(text,text,date,text)',
+        'public.set_manual_keep(text,text,date,uuid,boolean,text)',
+        'public.authorise_load_exception(text,text,date,text,text,uuid,uuid,numeric)',
+        'public.confirm_load_plan(text,uuid,integer,text,text,text)',
+        'public.reconcile_day_end(text,text,date,jsonb,text)'
+      ]) {
+        const { ok } = await one(
+          `select has_function_privilege('anon',$1,'execute') as ok`, [f]);
+        assert.equal(ok, false, `anon can execute ${f}`);
+      }
+      for (const [t, p] of [
+        ['public.ns_load_plans', 'INSERT'], ['public.ns_load_plan_lines', 'UPDATE'],
+        ['public.ns_load_manual_keeps', 'INSERT'], ['public.ns_load_exceptions', 'INSERT'],
+        ['public.ns_day_reconciliations', 'INSERT']
+      ]) {
+        const { ok } = await one(
+          `select has_table_privilege('authenticated',$1,$2) as ok`, [t, p]);
+        assert.equal(ok, false, `authenticated holds ${p} on ${t}`);
+      }
+    });
+
+  await record('J6 RLS is on and plans are scoped to the vehicles a crew can see',
+    async () => {
+      const { enabled } = await one(
+        `select relrowsecurity as enabled from pg_class
+          where oid='public.ns_load_plans'::regclass`);
+      assert.equal(enabled, true);
+      const names = (await all(
+        `select polname from pg_policy where polrelid='public.ns_load_plans'::regclass`))
+        .map(r => r.polname);
+      assert.ok(names.includes('ns_load_plans_read'));
+    });
+
+  // ========= K. the six findings from the 1ffafc2 review, closed ==========
+  //
+  // 20261014090000. One check per finding. Four of the six were backend
+  // defects, so each of those is written to FAIL against the original 10.1
+  // SQL and pass against the corrective.
+
+  const KDAY = '2027-02-10';
+  // Section G creates and drops Car B as it goes, so the K block makes its
+  // own. Still a FIXTURE, never seeded data.
+  //
+  // THIS CHANGES THE RULES FOR EVERY K JOB, which is worth saying out loud
+  // because it cost an hour: with TWO vehicles, 10.1's G2 rule means an
+  // UNASSIGNED job belongs to neither plan. So every job below is assigned
+  // to Car A explicitly. A K test that forgot would build a plan with no
+  // job lines in it and fail somewhere unrelated.
+  await client.query(
+    `insert into public.ns_stock_locations (code,name,kind,sort_order)
+     values ('car_b','Car B','vehicle',2) on conflict do nothing`);
+
+  const onCarA = async (jobId) => {
+    await client.query(
+      `insert into public.ns_job_vehicle_assignments (job_id, location_id)
+       values ($1,(select id from public.ns_stock_locations where code='car_a'))
+       on conflict (job_id) do update set location_id = excluded.location_id`,
+      [jobId]);
+    return jobId;
+  };
+  const asCrew = async () => {
+    await client.query(
+      `insert into public.ns_crew_members (user_id,role,vehicle_location_id,display_name)
+       values ($1,'crew',(select id from public.ns_stock_locations where code='car_a'),'FIXTURE crew')
+       on conflict (user_id) do update set role='crew', active=true,
+         vehicle_location_id=(select id from public.ns_stock_locations where code='car_a')`,
+      [crewId]);
+    await beCrew();
+  };
+
+  await record('K1 (finding 1) the crew read path is a function, and it is complete',
+    async () => {
+      const job = await onCarA(await newJob(KDAY));
+      await measure(job, siding, 500);
+      await receive(soap, 200);
+      await buildPlan('car_a', KDAY);
+
+      const read = await rpc(`public.get_load_plan('car_a',$1::date)`, [KDAY]);
+
+      // The four fields the old api.js DTO dropped.
+      assert.ok(read.location_id, 'location_id, which the old DTO omitted');
+      assert.equal(typeof read.needs_review_count, 'number');
+      assert.equal(typeof read.unassigned_job_count, 'number');
+      assert.ok('note' in read.plan, 'the plan note');
+
+      assert.equal(read.state, 'current');
+      assert.equal(read.can_build, true, 'the owner may build one');
+      assert.ok(read.plan.lines.length > 0);
+      assert.ok(Array.isArray(read.day.jobs), 'the day\'s authorised visits');
+      assert.ok(read.day.readable_vehicles.some((v) => v.code === 'car_a'));
+
+      // A day with no plan is a STATE, not an error and not an empty plan.
+      const empty = await rpc(`public.get_load_plan('car_a',$1::date)`, ['2027-02-28']);
+      assert.equal(empty.state, 'none');
+      assert.equal(empty.plan, null);
+
+      // A crew gets told it cannot build, rather than shown a button that
+      // will refuse it -- and cannot read the other car at all.
+      await asCrew();
+      const asCrewRead = await rpc(`public.get_load_plan('car_a',$1::date)`, [KDAY]);
+      const err = await errorOf(() => rpc(
+        `public.get_load_plan('car_b',$1::date)`, [KDAY]));
+      await beOwner();
+      assert.equal(asCrewRead.can_build, false);
+      assert.ok(err, 'a crew cannot read the other vehicle\'s plan');
+      assert.equal(err.code, '42501');
+    });
+
+  await record('K2 (finding 1) a closed day is still readable', async () => {
+    const job = await onCarA(await newJob('2027-02-11'));
+    await measure(job, siding, 300);
+    await buildPlan('car_a', '2027-02-11');
+    await rpc(`public.reconcile_day_end($1,'car_a',$2::date,'[]'::jsonb,'counted')`,
+      [opId('rec'), '2027-02-11']);
+
+    const read = await rpc(`public.get_load_plan('car_a',$1::date)`, ['2027-02-11']);
+    assert.equal(read.state, 'closed',
+      'the old DTO filtered closed plans out, so last night was unreadable');
+    assert.ok(read.plan, 'and the plan comes back with it');
+  });
+
+  await record('K3 (finding 2) clearing a Manual Keep restores the recommendation',
+    async () => {
+      // A dry day: the removable bleach kit is aboard and nothing needs it,
+      // so the plan says Return.
+      const day = '2027-02-12';
+      await client.query(
+        `insert into public.ns_load_manual_keeps (location_id, work_date, material_id, reason)
+         select id,$1::date,$2,'fixture' from public.ns_stock_locations where code='car_a'
+         on conflict do nothing`, [day, bleachKit]);
+      await client.query(
+        `delete from public.ns_load_manual_keeps where work_date=$1::date`, [day]);
+      await receive(bleachKit, 1, 'car_a');
+      let plan = await buildPlan('car_a', day);
+      let line = lineFor(plan, 'FIXTURE removable bleach kit');
+      assert.equal(line.action, 'return', 'nothing today needs it');
+
+      // Keep it back...
+      await rpc(`public.set_manual_keep($1,'car_a',$2::date,$3,true,'rain tomorrow')`,
+        [opId('keep'), day, bleachKit]);
+      let read = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+      line = read.plan.lines.find((l) => l.material_id === bleachKit);
+      assert.equal(line.action, 'keep');
+      assert.equal(line.manual_keep, true);
+
+      // ...and change your mind. THE DEFECT: the old version deleted the
+      // durable keep and left action 'keep' with the "Kept back on purpose"
+      // reason and manual_keep false -- a Keep nobody had recommended,
+      // which confirmation then skipped. Rebuilding would have corrected
+      // it, but building is owner-only, so a crew could not undo its own
+      // keep at all.
+      await rpc(`public.set_manual_keep($1,'car_a',$2::date,$3,false,null)`,
+        [opId('keep'), day, bleachKit]);
+      read = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+      line = read.plan.lines.find((l) => l.material_id === bleachKit);
+      assert.equal(line.manual_keep, false);
+      assert.equal(line.action, 'return',
+        'the recommendation comes back, not a stale Keep');
+      assert.doesNotMatch(line.reason, /Kept back on purpose/,
+        'and so does its reason');
+    });
+
+  await record('K4 (finding 3) a late Manual Keep retry does not re-apply it',
+    async () => {
+      const day = '2027-02-13';
+      await receive(bleachKit, 1, 'car_a');
+      await buildPlan('car_a', day);
+
+      const key = opId('keep');
+      await rpc(`public.set_manual_keep($1,'car_a',$2::date,$3,true,'rain')`,
+        [key, day, bleachKit]);
+      await rpc(`public.set_manual_keep($1,'car_a',$2::date,$3,false,null)`,
+        [opId('keep'), day, bleachKit]);
+
+      // THE DEFECT: the original validated the key and never stored it, so
+      // this retry -- arriving after the keep was cleared -- re-applied it.
+      const retry = await rpc(
+        `public.set_manual_keep($1,'car_a',$2::date,$3,true,'rain')`,
+        [key, day, bleachKit]);
+      assert.equal(retry.replayed, true, 'it is a retry, and it is recognised');
+      assert.equal(
+        (await one(`select count(*)::int as n from public.ns_load_manual_keeps
+                     where work_date=$1::date and material_id=$2`, [day, bleachKit])).n,
+        0, 'and the cleared keep stays cleared');
+
+      // A changed payload under the same key is refused, not applied.
+      const err = await errorOf(() => rpc(
+        `public.set_manual_keep($1,'car_a',$2::date,$3,true,'different reason')`,
+        [key, day, bleachKit]));
+      assert.ok(err);
+      assert.equal(err.code, '23505');
+      assert.match(err.message, /request differs/i);
+    });
+
+  await record('K5 (finding 3) reconciliation checks scope BEFORE it replays',
+    async () => {
+      const day = '2027-02-14';
+      await receive(soap, 50, 'car_b');
+      const key = opId('rec');
+      await rpc(`public.reconcile_day_end($1,'car_b',$2::date,'[]'::jsonb,'owner count')`,
+        [key, day]);
+
+      // THE DEFECT: the original returned the stored receipt on a matching
+      // key before calling can_see_location, so a crew holding another
+      // vehicle's key could read that vehicle's closing count.
+      await asCrew();
+      const err = await errorOf(() => rpc(
+        `public.reconcile_day_end($1,'car_b',$2::date,'[]'::jsonb,'owner count')`,
+        [key, day]));
+      await beOwner();
+      assert.ok(err, 'a replay is not a way past the scope check');
+      assert.equal(err.code, '42501');
+    });
+
+  await record('K6 (finding 3) a confirmation is keyed on its key, not on plan status',
+    async () => {
+      const day = '2027-02-16';
+      const job = await onCarA(await newJob(day));
+      await measure(job, siding, 400);
+      await receive(soap, 300);
+      const plan = await buildPlan('car_a', day);
+
+      const key = opId('conf');
+      const first = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
+        [key, plan.plan_id, plan.revision, plan.basis_fingerprint,
+         plan.lines_fingerprint]);
+      assert.equal(first.replayed, false);
+
+      const same = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
+        [key, plan.plan_id, plan.revision, plan.basis_fingerprint,
+         plan.lines_fingerprint]);
+      assert.equal(same.replayed, true, 'the same key is a retry');
+      assert.equal(same.transfers_posted, first.transfers_posted,
+        'and returns the receipt it returned the first time');
+
+      // THE DEFECT: the original returned a cheerful replay for ANY call
+      // once the plan was confirmed, so a second confirmation carrying a
+      // STALE revision was answered rather than refused.
+      const err = await errorOf(() => rpc(
+        `public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
+        [opId('conf'), plan.plan_id, plan.revision - 1, plan.basis_fingerprint,
+         plan.lines_fingerprint]));
+      assert.ok(err, 'a different key with a stale revision is not a retry');
+      assert.equal(err.code, '23505');
+      assert.match(err.message, /already confirmed/i);
+    });
+
+  await record('K7 (finding 4) every mutation receipt is complete and stored',
+    async () => {
+      const day = '2027-02-17';
+      await receive(bleachKit, 1, 'car_a');
+      await buildPlan('car_a', day);
+
+      const keep = await rpc(
+        `public.set_manual_keep($1,'car_a',$2::date,$3,true,'rain')`,
+        [opId('keep'), day, bleachKit]);
+      for (const f of ['location_id', 'location_code', 'work_date', 'material_id',
+                       'manual_keep', 'reason', 'replayed', 'line']) {
+        assert.ok(f in keep, `the Keep receipt must carry ${f}`);
+      }
+      assert.ok(keep.line.line_id, 'including what the line now says');
+      assert.equal(keep.line.action, 'keep');
+      assert.equal(keep.line.pre_keep_action, 'return',
+        'and what it will go back to');
+
+      const exc = await rpc(
+        `public.authorise_load_exception($1,'car_a',$2::date,'skip_required','van is full',$3,null,null)`,
+        [opId('exc'), day, bleachKit]);
+      for (const f of ['exception_id', 'replayed', 'kind', 'reason', 'location_id',
+                       'work_date', 'plan_id', 'lines_affected', 'line_added']) {
+        assert.ok(f in exc, `the exception receipt must carry ${f}`);
+      }
+
+      const rec = await rpc(
+        `public.reconcile_day_end($1,'car_a',$2::date,'[]'::jsonb,'counted')`,
+        [opId('rec'), day]);
+      assert.equal(rec.variance_basis, 'live_usable_on_hand',
+        'the closing-count basis is named rather than inferred');
+      assert.equal(typeof rec.lines_counted, 'number');
+
+      // Stored, which is what makes a replay byte-identical.
+      assert.equal(
+        (await one(`select count(*)::int as n from public.ns_load_operations
+                     where work_date=$1::date`, [day])).n,
+        3, 'all three mutations recorded their key and receipt');
+    });
+
+  await record('K8 (finding 5) a damaged closing variance moves the right pools',
+    async () => {
+      const day = '2027-02-18';
+      const mat = await newMaterial('FIXTURE K8 product',
+        { category: 'consumable', unit: 'litre' });
+      await receive(mat, 10, 'car_a');
+
+      const pools = async () => {
+        const r = await one(
+          `select coalesce(on_hand,0) as usable, coalesce(damaged_on_hand,0) as damaged
+             from public.ns_material_stock_by_location
+            where material_id=$1 and location_code='car_a'`, [mat]);
+        return { usable: Number(r.usable), damaged: Number(r.damaged) };
+      };
+      assert.deepEqual(await pools(), { usable: 10, damaged: 0 });
+
+      await rpc(`public.reconcile_day_end($1,'car_a',$2::date,$3::jsonb,null)`,
+        [opId('rec'), day,
+         JSON.stringify([{ material_id: mat, counted_qty: 8,
+                           variance_reason: 'damaged' }])]);
+
+      /* THE ACCOUNTING BUG. `on_hand` in the 8.1 view is the USABLE pool,
+         so the variance is a usable variance -- but the original posted it
+         with condition 'damaged', leaving usable at 10 and damaged at MINUS
+         2. Both figures wrong and a pool driven negative. Two units became
+         unusable: usable falls by two, damaged rises by two, and the total
+         on the van does not change, because the items are still there. */
+      assert.deepEqual(await pools(), { usable: 8, damaged: 2 },
+        'off usable, onto damaged -- not minus two damaged');
+
+      const moves = await all(
+        `select delta, condition from public.ns_material_stock_moves
+          where material_id=$1 and reason='adjustment' order by condition`, [mat]);
+      assert.equal(moves.length, 2, 'a damaged shortfall is TWO movements');
+      assert.equal(Number(moves.find((m) => m.condition === 'damaged').delta), 2);
+      assert.equal(Number(moves.find((m) => m.condition === 'usable').delta), -2);
+
+      // A SURPLUS called damaged cannot be honoured: damaged stock reduces
+      // what is usable, and guessing between "found some" and "wrong
+      // reason" is how a pool goes negative in the first place.
+      const err = await errorOf(() => rpc(
+        `public.reconcile_day_end($1,'car_a',$2::date,$3::jsonb,null)`,
+        [opId('rec'), '2027-02-19',
+         JSON.stringify([{ material_id: mat, counted_qty: 20,
+                           variance_reason: 'damaged' }])]));
+      assert.ok(err);
+      assert.equal(err.code, '23514');
+      assert.match(err.message, /cannot explain it/i);
+    });
+
+  await record('K9 (finding 5) every other reason still adjusts usable only',
+    async () => {
+      const mat = await newMaterial('FIXTURE K9 product',
+        { category: 'consumable', unit: 'litre' });
+      await receive(mat, 10, 'car_a');
+      await rpc(`public.reconcile_day_end($1,'car_a',$2::date,$3::jsonb,null)`,
+        [opId('rec'), '2027-02-20',
+         JSON.stringify([{ material_id: mat, counted_qty: 7,
+                           variance_reason: 'used_more' }])]);
+      const r = await one(
+        `select coalesce(on_hand,0) as usable, coalesce(damaged_on_hand,0) as damaged
+           from public.ns_material_stock_by_location
+          where material_id=$1 and location_code='car_a'`, [mat]);
+      assert.equal(Number(r.usable), 7);
+      assert.equal(Number(r.damaged), 0, 'nothing became damaged');
+    });
+
+  await record('K10 (finding 6) an authorised skip is not transferred',
+    async () => {
+      const day = '2027-02-23';
+      const mat = await newMaterial('FIXTURE K10 product',
+        { category: 'consumable', unit: 'litre' });
+      await rule(siding, mat, { kind: 'consumable', fixed: 5 });
+      await receive(mat, 100);
+      const job = await onCarA(await newJob(day));
+      await measure(job, siding, 100);
+      const plan = await buildPlan('car_a', day);
+      const built = lineFor(plan, 'FIXTURE K10 product');
+      assert.ok(built, `built lines: ${JSON.stringify(
+        plan.lines.map((l) => [l.material_name, l.action, l.line_kind]))}`);
+      assert.equal(built.action, 'add');
+
+      const baseBefore = Number((await one(
+        `select on_hand from public.ns_material_stock_by_location
+          where material_id=$1 and location_code='base'`, [mat])).on_hand);
+
+      await rpc(
+        `public.authorise_load_exception($1,'car_a',$2::date,'skip_required','already a part jug on the van',$3,null,null)`,
+        [opId('exc'), day, mat]);
+
+      const read = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+      const line = read.plan.lines.find((l) => l.material_id === mat);
+      assert.ok(line, `no line for the material; got ${JSON.stringify(
+        read.plan.lines.map((l) => [l.material_name, l.action]))} state=${read.state}`);
+      assert.equal(line.action, 'skip', 'the line is set aside');
+      assert.equal(line.data_state, 'exception');
+      assert.ok(line.exception_id, 'and the response exposes the exception');
+
+      const fresh = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+      const conf = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
+        [opId('conf'), fresh.plan.plan_id, fresh.plan.revision,
+         fresh.plan.basis_fingerprint, fresh.plan.lines_fingerprint]);
+
+      /* THE DEFECT: the exception was stored, linked to the line, and then
+         confirmation transferred the item anyway -- so an authorised "go
+         without it" moved the stock onto the van regardless. */
+      assert.equal(conf.lines_skipped_by_exception, 1, 'and it says so');
+      assert.equal(Number((await one(
+        `select on_hand from public.ns_material_stock_by_location
+          where material_id=$1 and location_code='base'`, [mat])).on_hand),
+        baseBefore, 'the skipped item never left Base');
+    });
+
+  await record('K11 (finding 6) a carry_extra absent from the plan is carried',
+    async () => {
+      const day = '2027-02-24';
+      const mat = await newMaterial('FIXTURE K11 product',
+        { category: 'consumable', unit: 'litre' });
+      await receive(mat, 40);
+      const job = await onCarA(await newJob(day));
+      await measure(job, siding, 100);
+      await receive(soap, 300);
+      await buildPlan('car_a', day);
+
+      // No plan line for it at all, which is the case the review asked
+      // about: confirmation only walks plan lines, so an extra item had no
+      // way to be carried.
+      let read = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+      assert.equal(read.plan.lines.filter((l) => l.material_id === mat).length, 0);
+
+      // And it has to say how much: an authorisation with no amount is not
+      // something a confirmation can act on.
+      let err = await errorOf(() => rpc(
+        `public.authorise_load_exception($1,'car_a',$2::date,'carry_extra','spare jug',$3,null,null)`,
+        [opId('exc'), day, mat]));
+      assert.ok(err);
+      assert.equal(err.code, '22023');
+      assert.match(err.message, /how much extra/i);
+
+      const exc = await rpc(
+        `public.authorise_load_exception($1,'car_a',$2::date,'carry_extra','spare jug',$3,null,6)`,
+        [opId('exc'), day, mat]);
+      assert.equal(exc.line_added, true);
+      assert.equal(exc.lines_affected, 1);
+
+      read = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+      const line = read.plan.lines.find((l) => l.material_id === mat);
+      assert.equal(line.action, 'add');
+      assert.equal(Number(line.required_qty), 6);
+      assert.equal(line.data_state, 'exception');
+
+      const conf = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
+        [opId('conf'), read.plan.plan_id, read.plan.revision,
+         read.plan.basis_fingerprint, read.plan.lines_fingerprint]);
+      assert.ok(conf.transfers_posted >= 1);
+      assert.equal(Number((await one(
+        `select on_hand from public.ns_material_stock_by_location
+          where material_id=$1 and location_code='car_a'`, [mat])).on_hand),
+        6, 'the extra actually got on the van');
+    });
+
+  await record('K12 (finding 3) only the owner authorises, and keys are scoped',
+    async () => {
+      await asCrew();
+      const err = await errorOf(() => rpc(
+        `public.authorise_load_exception($1,'car_a',$2::date,'skip_required','because',$3,null,null)`,
+        [opId('exc'), '2027-02-25', bleachKit]));
+      await beOwner();
+      assert.ok(err, 'owner-authorised means owner-authorised');
+      assert.equal(err.code, '42501');
+
+      // A key used for one kind of operation cannot be presented as another.
+      const key = opId('mixed');
+      await rpc(`public.set_manual_keep($1,'car_a',$2::date,$3,true,'rain')`,
+        [key, '2027-02-26', bleachKit]);
+      const err2 = await errorOf(() => rpc(
+        `public.reconcile_day_end($1,'car_a',$2::date,'[]'::jsonb,null)`,
+        [key, '2027-02-26']));
+      assert.ok(err2);
+      assert.equal(err2.code, '23505');
+      assert.match(err2.message, /already used for a manual_keep/i);
+    });
+
+  /* ======================================================================
+     L. THE SECOND ROUND OF THE SAME REVIEW.
+     Findings 1, 2 and 4 left two things undone, and
+     20261015090000_batch10_1_corrective_day_boundary_and_lock.sql is what
+     this block tests:
+
+       * WHICH DAY IS THE WORK DATE. It was never stated, and the code's
+         unchosen answer (the UTC calendar date) disagrees with the field
+         console's own day boundary (the device's local midnight) for every
+         late-afternoon job west of Greenwich.
+
+       * WHAT THE CREW WAS LOOKING AT. A Manual Keep or an authorised
+         exception changes what the plan recommends without moving its
+         revision or its basis fingerprint, so a confirmation could transfer
+         a set of lines nobody had agreed to.
+
+     Every check here fails against the sequence without that migration.
+     ====================================================================== */
+  const LDAY   = '2027-03-09';
+  const LEVE   = '2027-03-10T01:30:00Z';  // 18:30 on the 9th in Edmonton
+  const setZone = (zone) => client.query(
+    `insert into public.app_settings (key, value)
+     values ('operations', jsonb_build_object('work_day_timezone', $1::text))
+     on conflict (key) do update set value = excluded.value`, [zone]);
+  const clearZone = () => client.query(
+    `delete from public.app_settings where key = 'operations'`);
+  const dayJobIds = async (day) => (await all(
+    `select job_id from public.ns_vehicle_day_jobs(
+       (select id from public.ns_stock_locations where code='car_a'), $1::date)`,
+    [day])).map((r) => r.job_id);
+
+  await record('L1 (finding 1) an unset operating timezone is reported, not guessed',
+    async () => {
+      await clearZone();
+      const read = await rpc(`public.get_load_plan('car_a',$1::date)`, [LDAY]);
+      assert.equal(read.work_day_timezone, null);
+      assert.equal(read.work_day_timezone_state, 'unconfigured',
+        'unknown is a state the screen can show, not a silent default');
+      // And the window it actually used is published, so a client that
+      // bounds its own day can see whether the two agree.
+      assert.equal(read.day.work_day_timezone_state, 'unconfigured');
+      assert.ok(read.day.window_starts_at, 'the window is not a mystery');
+      assert.ok(read.day.window_ends_at);
+    });
+
+  await record('L2 (finding 1) the work date is the configured operating day, not UTC',
+    async () => {
+      const evening = await onCarA(await newJob(LDAY));
+      await client.query(
+        `update public.ns_jobs set scheduled_for = $2 where id = $1`,
+        [evening, LEVE]);
+      await measure(evening, siding, 100);
+
+      /* THE DEFECT. With no zone configured the backend buckets by the UTC
+         calendar date, so an 18:30 visit on the 9th belongs to the 10th --
+         while the field console's visit list, which bounds the day at the
+         DEVICE's local midnight, shows it on the 9th. The van is loaded for
+         a day that does not contain the job. */
+      assert.ok(!(await dayJobIds(LDAY)).includes(evening),
+        'UTC bucketing puts the evening job on the next day');
+      assert.ok((await dayJobIds('2027-03-10')).includes(evening));
+
+      try {
+        await setZone('America/Edmonton');
+        const read = await rpc(`public.get_load_plan('car_a',$1::date)`, [LDAY]);
+        assert.equal(read.work_day_timezone, 'America/Edmonton');
+        assert.equal(read.work_day_timezone_state, 'configured');
+        assert.ok((await dayJobIds(LDAY)).includes(evening),
+          'the evening visit is on the operating day the owner set');
+        assert.ok(!(await dayJobIds('2027-03-10')).includes(evening),
+          'and it is on exactly one day, not both');
+      } finally {
+        await clearZone();
+      }
+    });
+
+  await record('L3 (finding 1) a zone name PostgreSQL does not know is treated as unset',
+    async () => {
+      try {
+        await setZone('Mars/Olympus_Mons');
+        const read = await rpc(`public.get_load_plan('car_a',$1::date)`, [LDAY]);
+        assert.equal(read.work_day_timezone, null);
+        assert.equal(read.work_day_timezone_state, 'unconfigured',
+          'one bad settings row must not stop the crew seeing the day');
+      } finally {
+        await clearZone();
+      }
+    });
+
+  await record('L4 (finding 2) clearing a Keep restores a WHOLE-DAY recommendation',
+    async () => {
+      const day = '2027-03-16';
+      const needed = await newMaterial('FIXTURE L needed tool');
+      const spare  = await newMaterial('FIXTURE L spare tool');
+      await rule(siding, needed, { kind: 'equipment', removable: true });
+      // The spare is removable kit for WINDOW cleaning, which is not booked
+      // today -- so the plan's own derivation says Return.
+      await rule(windows, spare, { kind: 'equipment', removable: true });
+      const job = await onCarA(await newJob(day));
+      await measure(job, siding, 120);
+      await receive(needed, 1); await receive(spare, 1);
+      await rpc(`public.post_stock_transfer($1,$2,1,'base','car_a',true,'L setup',null)`,
+        [opId('mv'), needed]);
+      await rpc(`public.post_stock_transfer($1,$2,1,'base','car_a',true,'L setup',null)`,
+        [opId('mv'), spare]);
+
+      const plan = await buildPlan('car_a', day);
+      const of = (p, m) => p.lines.find((l) => l.material_id === m);
+      assert.equal(of(plan, needed).action, 'keep', 'today needs it');
+      assert.equal(of(plan, spare).action, 'return', 'nothing today needs it');
+
+      for (const m of [needed, spare]) {
+        await rpc(`public.set_manual_keep($1,'car_a',$2::date,$3,true,'rain coming')`,
+          [opId('keep'), day, m]);
+      }
+      const held = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+      assert.equal(of(held.plan, needed).action, 'keep');
+      assert.equal(of(held.plan, spare).action, 'keep', 'the hold overrides Return');
+
+      for (const m of [needed, spare]) {
+        await rpc(`public.set_manual_keep($1,'car_a',$2::date,$3,false,null)`,
+          [opId('keep'), day, m]);
+      }
+      const cleared = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+      // NOT "everything cleared becomes Return": the item another stop
+      // needs stays aboard, and only the one nothing needs goes back.
+      assert.equal(of(cleared.plan, needed).action, 'keep',
+        'something the day still needs must not be sent back to Base');
+      assert.match(of(cleared.plan, needed).reason, /Siding/i,
+        'and it carries the derived reason again, not the hold wording');
+      assert.equal(of(cleared.plan, spare).action, 'return');
+      assert.equal(of(cleared.plan, needed).manual_keep, false);
+      assert.equal(of(cleared.plan, needed).pre_keep_action, null,
+        'the remembered recommendation is spent once it is restored');
+    });
+
+  await record('L5 (finding 4) a confirmation must say which revision AND which lines it saw',
+    async () => {
+      const day = '2027-03-17';
+      const job = await onCarA(await newJob(day));
+      await measure(job, siding, 150);
+      await receive(soap, 300);
+      const plan = await buildPlan('car_a', day);
+
+      const noRev = await errorOf(() => rpc(
+        `public.confirm_load_plan($1,$2,null,null,null,$3)`,
+        [opId('conf'), plan.plan_id, plan.lines_fingerprint]));
+      assert.ok(noRev); assert.equal(noRev.code, '22023');
+      assert.match(noRev.message, /revision you were shown/i);
+
+      const noLines = await errorOf(() => rpc(
+        `public.confirm_load_plan($1,$2,$3,null,null,null)`,
+        [opId('conf'), plan.plan_id, plan.revision]));
+      assert.ok(noLines); assert.equal(noLines.code, '22023');
+      assert.match(noLines.message, /lines_fingerprint you were shown/i);
+
+      assert.ok(plan.lines_fingerprint, 'and the value is in the response to quote');
+    });
+
+  await record('L6 (finding 2) a Keep set after the crew looked blocks the confirmation',
+    async () => {
+      const day = '2027-03-18';
+      const job = await onCarA(await newJob(day));
+      await measure(job, siding, 150);
+      await receive(soap, 300);
+      const seen = await buildPlan('car_a', day);
+
+      // Somebody else holds the bleach kit back while the crew is still
+      // looking at the screen. The revision has not moved and the schedule
+      // has not changed, so only the lines fingerprint can catch this.
+      await rpc(`public.set_manual_keep($1,'car_a',$2::date,$3,true,'rain')`,
+        [opId('keep'), day, bleachKit]);
+
+      const err = await errorOf(() => rpc(
+        `public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
+        [opId('conf'), seen.plan_id, seen.revision, seen.basis_fingerprint,
+         seen.lines_fingerprint]));
+      assert.ok(err, 'the stale recommendation was accepted before this fix');
+      assert.equal(err.code, '23514');
+      assert.match(err.message, /recommends changed after you looked/i);
+
+      const fresh = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+      assert.notEqual(fresh.plan.lines_fingerprint, seen.lines_fingerprint);
+      const ok = await rpc(`public.confirm_load_plan($1,$2,$3,$4,null,$5)`,
+        [opId('conf'), fresh.plan.plan_id, fresh.plan.revision,
+         fresh.plan.basis_fingerprint, fresh.plan.lines_fingerprint]);
+      assert.equal(ok.status, 'confirmed', 'reloading is the recovery');
+      assert.equal(ok.confirmed_lines_fingerprint, fresh.plan.lines_fingerprint,
+        'and the receipt says what it was checked against');
+    });
+
+  await record('L7 (finding 6) an authorised skip after the crew looked blocks it too',
+    async () => {
+      const day = '2027-03-19';
+      const job = await onCarA(await newJob(day));
+      await measure(job, siding, 150);
+      await receive(soap, 300);
+      const seen = await buildPlan('car_a', day);
+
+      await rpc(
+        `public.authorise_load_exception($1,'car_a',$2::date,'skip_required',
+           'left it at the last property',$3,null,null)`,
+        [opId('exc'), day, soap]);
+
+      const err = await errorOf(() => rpc(
+        `public.confirm_load_plan($1,$2,$3,null,null,$4)`,
+        [opId('conf'), seen.plan_id, seen.revision, seen.lines_fingerprint]));
+      assert.ok(err); assert.equal(err.code, '23514');
+      assert.match(err.message, /owner authorised a departure/i);
+    });
+
+  await record('L8 (finding 3) two confirmations at once move the stock once',
+    async () => {
+      const day = '2027-03-20';
+      // Its own material, stocked only at Base, so the confirmation
+      // certainly has a transfer to post.
+      const race = await newMaterial('FIXTURE L race tool');
+      await rule(siding, race, { kind: 'equipment' });
+      await receive(race, 5);
+      const job = await onCarA(await newJob(day));
+      await measure(job, siding, 150);
+      const plan = await buildPlan('car_a', day);
+      const key = opId('conf');
+      const args = [key, plan.plan_id, plan.revision, plan.lines_fingerprint];
+
+      const other = new pg.Client({ connectionString: PGURL });
+      await other.connect();
+      try {
+        await other.query(`select set_config('nova.is_admin','on',false)`);
+        await other.query(`select set_config('nova.actor_id',$1,false)`, [ownerId]);
+
+        await client.query('begin');
+        const first = await rpc(
+          `public.confirm_load_plan($1,$2,$3,null,null,$4)`, args);
+        assert.equal(first.replayed, false);
+
+        // The second caller is already inside the function, blocked on the
+        // plan row, when the first commits.
+        const racing = other.query(
+          `select public.confirm_load_plan($1,$2,$3,null,null,$4) as r`, args)
+          .then(() => null, (e) => e);
+        await new Promise((r) => setTimeout(r, 150));
+        await client.query('commit');
+        const err = await racing;
+
+        assert.ok(err, 'a concurrent duplicate is a conflict, not a second load');
+        assert.equal(err.code, '23505');
+
+        const moves = Number((await one(
+          `select count(*)::int as n from public.ns_material_stock_moves mv
+             join public.ns_stock_operations o on o.id = mv.operation_id
+            where o.client_operation_id like $1`, [`${key}:%`])).n);
+        assert.ok(moves > 0, 'the accepted confirmation did post transfers');
+        const ops = Number((await one(
+          `select count(*)::int as n from public.ns_load_operations
+            where client_operation_id = $1`, [key])).n);
+        assert.equal(ops, 1, 'one key, one ledger entry');
+
+        // And a LATER retry of the same key is still a retry.
+        const replay = await rpc(
+          `public.confirm_load_plan($1,$2,$3,null,null,$4)`, args);
+        assert.equal(replay.replayed, true);
+        assert.equal(replay.transfers_posted, first.transfers_posted);
+      } finally {
+        await other.end();
+      }
+    });
+
+  await record('L9 (finding 5) a day closes with no confirmed plan, and an estimate stays an estimate',
+    async () => {
+      const day = '2027-03-23';
+      await receive(soap, 40, 'car_a');
+      const before = Number((await one(
+        `select coalesce(on_hand,0) as n from public.ns_material_stock_by_location
+          where material_id=$1 and location_code='car_a'`, [soap])).n);
+
+      // No plan was ever built for this day, let alone confirmed. A closing
+      // count is a physical observation and does not depend on one.
+      const recKey = opId('rec');
+      const r = await rpc(
+        `public.reconcile_day_end($1,'car_a',$2::date,$3::jsonb,'counted at the yard')`,
+        [recKey, day, JSON.stringify([
+          { material_id: soap, counted_qty: before - 3,
+            variance_reason: 'used_more', precision: 'estimated' }
+        ])]);
+      assert.equal(r.replayed, false);
+      assert.equal(r.plan_id, null, 'and the receipt says there was no plan');
+      assert.equal(r.variance_basis, 'live_usable_on_hand');
+      assert.equal(Number(r.lines[0].variance_qty), -3);
+
+      const mv = await one(
+        `select mv.count_precision, mv.condition from public.ns_material_stock_moves mv
+           join public.ns_stock_operations o on o.id = mv.operation_id
+          where o.client_operation_id like $1 and mv.material_id = $2
+          order by mv.created_at desc limit 1`, [`${recKey}%`, soap]);
+      assert.equal(mv ? mv.condition : null, 'usable',
+        'a used_more variance is a usable-pool adjustment');
+      assert.equal(mv.count_precision, 'estimated',
+        'an estimated count must not be recorded as an exact one');
+    });
+
+  await record('L10 (finding 6) a crew keep does not overwrite an owner authorisation',
+    async () => {
+      const day = '2027-03-25';
+      const mat = await newMaterial('FIXTURE L authorised product',
+        { category: 'consumable', unit: 'litre' });
+      await rule(siding, mat, { kind: 'consumable', fixed: 5 });
+      await receive(mat, 50);
+      const job = await onCarA(await newJob(day));
+      await measure(job, siding, 100);
+      await buildPlan('car_a', day);
+      await rpc(
+        `public.authorise_load_exception($1,'car_a',$2::date,'skip_required',
+           'borrowed one from the shop next door',$3,null,null)`,
+        [opId('exc'), day, mat]);
+
+      const keep = await rpc(
+        `public.set_manual_keep($1,'car_a',$2::date,$3,true,'crew wants it anyway')`,
+        [opId('keep'), day, mat]);
+      assert.equal(keep.manual_keep, true, 'the durable keep is still recorded');
+
+      const read = await rpc(`public.get_load_plan('car_a',$1::date)`, [day]);
+      const line = read.plan.lines.find((l) => l.material_id === mat);
+      assert.equal(line.action, 'skip', 'the owner\'s decision stands');
+      assert.match(line.reason, /borrowed one from the shop next door/,
+        'and so does the wording of the authorisation');
+      assert.ok(line.exception_id);
+      // It IS on record for the next build, which is the honest outcome:
+      // the keep was accepted, the live authorisation was not overwritten.
+      const { n } = await one(
+        `select count(*)::int as n from public.ns_load_manual_keeps
+          where material_id=$1 and work_date=$2::date`, [mat, day]);
+      assert.equal(n, 1);
+    });
+
+  await record('L11 the lock catches instructions, not cosmetics', async () => {
+    const day = '2027-03-24';
+    const job = await onCarA(await newJob(day));
+    await measure(job, siding, 150);
+    await receive(soap, 300);
+    const plan = await buildPlan('car_a', day);
+    const print = () => one(
+      `select lines_fingerprint as f from public.ns_load_plans where id=$1`,
+      [plan.plan_id]).then((r) => r.f);
+
+    const start = await print();
+    assert.equal(start, plan.lines_fingerprint, 'the stored value is the published one');
+
+    // Re-wording a reason, or Base receiving a delivery, does not change
+    // what the crew is being asked to do.
+    await client.query(
+      `update public.ns_load_plan_lines set reason = reason || ' (reworded)'
+        where plan_id = $1`, [plan.plan_id]);
+    assert.equal(await print(), start, 'a reason is not an instruction');
+    await client.query(
+      `update public.ns_load_plan_lines set available_qty = coalesce(available_qty,0) + 99
+        where plan_id = $1 and level_state is null`, [plan.plan_id]);
+    assert.equal(await print(), start, 'nor is a number Base reports');
+
+    // The action is.
+    const changed = await client.query(
+      `update public.ns_load_plan_lines set action = 'skip'
+        where plan_id = $1 and action in ('add','keep','return')`, [plan.plan_id]);
+    assert.ok(changed.rowCount > 0, 'the probe has to change something');
+    assert.notEqual(await print(), start, 'a changed action is a changed plan');
+  });
+
+  // ================================================== report ==============
+  await client.end();
+  const failed = results.filter(r => !r.ok);
+  for (const r of results) {
+    console.log(`${r.ok ? 'PASS' : 'FAIL'}  ${r.name}${r.ok ? '' : `\n      ${r.err}`}`);
+  }
+  console.log(`\n${results.length - failed.length}/${results.length} checks passed`);
+  if (failed.length) process.exit(1);
+})().catch((err) => { console.error(err); process.exit(1); });

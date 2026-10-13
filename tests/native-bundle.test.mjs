@@ -56,7 +56,9 @@ try {
   record('Native quote preview cannot fall back to the excluded site directory', () => {
     assert.equal(report.excluded.length, 1);
     const file = join(scratch, 'admin/js/views/quote.js'), body = readFileSync(file, 'utf8');
-    writeFileSync(file, body.replace('isNative() ? publicUrl : quoteUrl', 'quoteUrl'));
+    writeFileSync(file, body.includes('function customerQuoteBase()')
+      ? body.replace('if (isNative()) return `${window.location.origin}/`;', '')
+      : body.replace('isNative() ? publicUrl : quoteUrl', 'quoteUrl'));
     try { assert.throws(() => auditBundle(scratch), /Native quote link/); } finally { writeFileSync(file, body); }
   });
   record('Core, Supabase and all seven lazy plugins are local audited dependencies', () => {
