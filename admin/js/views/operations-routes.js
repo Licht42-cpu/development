@@ -76,7 +76,9 @@ export async function renderDispatchRoute(ctx) {
   const rawDay = ctx.params?.get('day');
   let day = rawDay || deviceDay();
   let code = ctx.params?.get('location') || 'car_a';
-  if (!validDay(day) || !/^[a-z][a-z0-9_]*$/.test(code)) {
+  // Location codes are data: the schema requires nonblank text, not slugs.
+  // Authorization and whether this is an existing vehicle stay server-side.
+  if (!validDay(day) || !code.trim()) {
     clear(ctx.mount).append(el('section', { class: 'card' }, [
       el('h1', { text: 'Dispatch selection is invalid' }),
       el('p', { text: 'Choose a valid calendar day and an existing vehicle.' }),

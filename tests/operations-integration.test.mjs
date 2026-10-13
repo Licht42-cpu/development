@@ -61,6 +61,13 @@ await check('Invalid calendar dates do not probe or silently choose another day'
   assert.deepEqual(await page.evaluate(() => __checks), []);
 }));
 
+await check('An existing vehicle code is data rather than an invented slug format',()=>fixture({hash:'#/dispatch?location=Car+B&day=2027-07-06',config:{__values:{getDispatchDay:{location_code:'Car B',work_date:'2027-07-06',revision:1,can_plan:true,stops:[],unassigned_jobs:[],readable_vehicles:[{code:'Car B',name:'Car B'}],work_day_timezone_state:'unconfigured'}}}},async({page})=>{
+  await page.getByRole('heading',{name:'Dispatch',exact:true}).waitFor();
+  const calls=await page.evaluate(()=>__checks);
+  assert.equal(calls.find(call=>call.name==='get_dispatch_day').args.p_location_code,'Car B');
+  assert.match(page.url(),/location=Car\+B/);
+}));
+
 await check('Property access mounts on the passport and keeps the customer Back parent', () => fixture({hash:`#/properties/${PROPERTY}`}, async ({page}) => {
   await page.getByLabel('Entrance',{exact:true}).waitFor();
   assert.equal(await page.getByLabel('Entrance',{exact:true}).inputValue(),'Use the front gate');
