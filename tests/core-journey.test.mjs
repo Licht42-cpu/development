@@ -51,6 +51,7 @@ for(const code of ['car_a','car_b'])await test(`${code}: same-context loading �
   const closing=f.load.calls.find(c=>c.name==='reconcile_day_end');
   assert.equal(closing.args.p_location_code,f.code);assert.equal(closing.args.p_work_date,f.date);
   assert.equal(closing.args.p_lines[0].precision,'estimated');assert.equal(f.load.effects,2);assert.equal(f.completion.effects,1);
+  await f.page.evaluate(()=>window.scrollTo(0,0));
   await f.page.screenshot({path:join(folder,`${code}-closing.png`),fullPage:true});
 },{code}));
 await test('confirmed load → offline reviewed finish → restart → replay retains original key',()=>fixture(async f=>{
