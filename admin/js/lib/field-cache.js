@@ -9,6 +9,16 @@ export const UPCOMING_DAYS = 7;
 const MAX_BYTES = 10 * 1024 * 1024;
 const DB = 'ns-field-work';
 const deniedAccounts = new Set();
+export const LOCAL_DRAFT_FLUSH = Symbol.for('nova-shield.local-draft.flush');
+
+// A document handoff must await the visible editors' own persistence chains.
+// Callbacks live on their DOM nodes, so detached views do not form a registry
+// holding old customers' inputs. This creates no new outbox action type.
+export async function flushVisibleDrafts(root) {
+  for (const node of root.querySelectorAll('[data-local-draft]')) {
+    if (typeof node[LOCAL_DRAFT_FLUSH] === 'function') await node[LOCAL_DRAFT_FLUSH]();
+  }
+}
 const deniedKey = id => `ns-field-cache-retired:${id}`;
 function retired(id) {
   return deniedAccounts.has(id) || localStorage.getItem(deniedKey(id)) === 'yes';
@@ -201,6 +211,8 @@ export async function retainNoteDraft(jobId, input, visibility, status) {
   };
   input.addEventListener('input', save);
   visibility.addEventListener('change', save);
+  input.dataset.localDraft = 'note';
+  input[LOCAL_DRAFT_FLUSH] = () => chain;
   const clear = async () => { await chain; await deleteDraft(jobId, 'note', owner); };
   // Review tools can wait for the existing note draft to commit before
   // clearing their own buffer. No second note writer or delivery path.

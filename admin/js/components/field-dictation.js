@@ -1,6 +1,6 @@
 import { el } from '../../../shared/dom.js';
 import { localAccount } from '../lib/field-identity.js';
-import { readDraft, writeDraft, deleteDraft } from '../lib/field-cache.js';
+import { readDraft, writeDraft, deleteDraft, LOCAL_DRAFT_FLUSH } from '../lib/field-cache.js';
 
 // Speech changes only a local review buffer. It cannot call addNote/save/queue.
 export function createDictationReview({ jobId, ownerId, target, visibility, flushDraft }) {
@@ -19,6 +19,11 @@ export function createDictationReview({ jobId, ownerId, target, visibility, flus
   let applying = false;
   let speechError = null;
   let speechSequence = 0;
+  root.dataset.localDraft = 'dictation';
+  root[LOCAL_DRAFT_FLUSH] = async () => {
+    await writing;
+    if (writeError) throw writeError;
+  };
   const start = el('button', { class: 'btn', type: 'button', text: 'Start dictation', disabled: !Recognition });
   const stop = el('button', { class: 'btn', type: 'button', text: 'Stop dictation', disabled: true });
   const apply = el('button', { class: 'btn', type: 'button', text: 'Add reviewed text to note', disabled: true });

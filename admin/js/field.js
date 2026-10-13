@@ -8,7 +8,7 @@ import * as offlineQueue from './lib/offline-queue.js';
 import { setStatusBarTheme, isNative, loadAppPlugin } from './lib/native.js';
 import { installUnhandledRejectionToast } from './lib/save.js';
 import { installBackHandler, installEscapeHandler, fieldParentOf, pushOverlay, dismissTopOverlay } from './lib/navigation.js';
-import { usableSnapshot, forget } from './lib/field-cache.js';
+import { usableSnapshot, forget, flushVisibleDrafts } from './lib/field-cache.js';
 import { localAccount, accessDenied } from './lib/field-identity.js';
 import { renderOfflineWork } from './views/field-offline.js';
 import { unavailableLoadRoute } from './lib/field-load-gate.js';
@@ -188,7 +188,11 @@ document.getElementById('managementLink')?.addEventListener('click', async event
   if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
   const href = event.currentTarget.href;
   event.preventDefault();
-  if (await flushMeasurementEdits()) window.location.assign(href);
+  if (!await flushMeasurementEdits()) return;
+  if (offlineQueue.syncState().syncing) return toast('Wait for sync to finish before opening Management.', 'error');
+  try { await flushVisibleDrafts(viewEl); }
+  catch { return toast('Finish saving or retry the current draft before opening Management.', 'error'); }
+  window.location.assign(href);
 });
 // A denied replay retires the stored snapshot. Also hide a cached screen
 // already on display; deleting IDB alone cannot remove its private DOM.

@@ -54,6 +54,14 @@ await check('A note cannot be edited before its draft listener is ready',()=>fix
   await pollBrowser(f.page,async id=>(await(await import('/admin/js/lib/field-cache.js')).readDraft(id,'note'))?.value.body==='A safely retained early observation',JOB);
   assert.equal(await f.page.getByLabel('Who can see it',{exact:true}).isEnabled(),true);
 }));
+await check('Management handoff commits a newly typed note before changing documents',()=>fixture(async f=>{
+  await f.prepare();await f.offline();await f.page.reload();await f.visit();
+  await f.page.getByLabel('Note',{exact:true}).fill('Retain across the management document handoff');
+  await f.page.getByRole('link',{name:'Management',exact:true}).click();
+  await f.page.waitForURL('**/admin/index.html#/inventory');
+  const saved=await f.page.evaluate(async id=>(await(await import('/admin/js/lib/field-cache.js')).readDraft(id,'note'))?.value.body,JOB);
+  assert.equal(saved,'Retain across the management document handoff');
+}));
 await check('Offline passport saves survive restart as pending property facts',()=>fixture(async f=>{
   await f.prepare();await f.offline();await f.page.reload();await f.visit();
   await f.page.getByLabel('Customer preferences',{exact:true}).fill('Rear gate must stay shut');await f.page.getByRole('button',{name:'Save passport',exact:true}).click();
