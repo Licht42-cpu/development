@@ -2,7 +2,7 @@
 // backend: independent generated snapshots are normalized for a UI journey.
 import {offlineFixture,BASE,JOB,SECOND,OWNER} from './offline-work-fixture.mjs';
 import {loadFixture,scenarios as loads,envelopeFor} from './field-load-fixture.mjs';
-import {completionFixture} from './field-completion-fixture.mjs';
+import {completionFixture,scenarios as completions,receiptFor} from './field-completion-fixture.mjs';
 import {dispatchFixture} from './field-dispatch-fixture.mjs';
 export {BASE,JOB,SECOND,OWNER};
 const clone=value=>structuredClone(value);
@@ -24,11 +24,14 @@ export async function coreJourneyFixture(browser,{code='car_a',width=390}={}) {
   dispatch.dispatch.day.stops=[{...dispatch.dispatch.day.stops[0],job_id:JOB,property_id:'property-'+JOB,customer_name:'Saved Customer A',assigned:code==='car_b'}];
   Object.assign(dispatch.dispatch.day,{location_code:code,location_name:code==='car_a'?'Car A':'Car B',location_id:code==='car_a'?'car-a-id':'car-b-id',work_date:date,
     readable_vehicles:vehicles.map(v=>({code:v.code,name:v.name,location_id:v.location_id}))});
-  // Retain the existing clean fixture readiness envelope; the completion
-  // receipt is still from its generated scenario, never a device assertion.
-  completion.completion.readiness.blocking_shortfalls=0;
-  completion.completion.readiness.evidence_state='unconfigured';
-  completion.completion.requirements=[];
+  // One consistent generated completion scenario; unconfigured remains
+  // unconfigured, never a fabricated satisfied proof requirement.
+  completion.completion.requirements=clone(completions.unconfigured_is_not_satisfied.requirements);
+  // Generated readiness is post-acceptance: normalize its pre-submit lock
+  // and open state, as the existing completion fixture does for its case.
+  completion.completion.readiness={...clone(completions.unconfigured_is_not_satisfied.readiness),job_id:JOB,
+    lock_version:1,completion_open:false,latest_completion_id:null};
+  completion.completion.receipt=receiptFor(completions.unconfigured_is_not_satisfied.accepted);
   await base.context.route('**/shared/supabase.js',route=>route.fulfill({contentType:'application/javascript',body:`
     const callbacks=[];const session=()=>localStorage.getItem('fixture-owner')?{user:{id:localStorage.getItem('fixture-owner')}}:null;
     window.__switchAccount=id=>{localStorage.setItem('fixture-owner',id||'');callbacks.forEach(cb=>cb(id?'SIGNED_IN':'SIGNED_OUT',session()));};
