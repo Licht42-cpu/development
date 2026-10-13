@@ -1,0 +1,5 @@
+{
+  "status": "RECORD_CONSISTENT",
+  "errors": [],
+  "proof_limit": "Checks record consistency, not the truth of manual observations."
+}

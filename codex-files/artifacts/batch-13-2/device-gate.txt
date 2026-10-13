@@ -1,0 +1,16 @@
+{
+  "status": "REJECTED",
+  "errors": [
+    "Candidate does not contain both required tracks; ancestry alone would still not prove integration correctness.",
+    "An actual owner-authorized integrated candidate reference is required.",
+    "Emulator/browser/build outcomes are not physical Android qualification.",
+    "Actual target model required.",
+    "Actual target os_version required.",
+    "Actual target app_version required.",
+    "Actual target operator required.",
+    "Actual Android API level >= 24 required.",
+    "Actual test timestamp with timezone required; cannot be in the future.",
+    "Every required device case must pass; UNRUN/SKIPPED/expected failures do not qualify it."
+  ],
+  "proof_limit": "Checks record consistency, not the truth of manual observations."
+}

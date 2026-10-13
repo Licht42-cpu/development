@@ -1,0 +1,37 @@
+{
+  "base_sha": "a0b87cdbc949611dfa1597abbdecaa23f1b3a9b1",
+  "tested_candidate_sha": "03ead8a59162e91585c406fc33ddf10635c684a1",
+  "qualification": "PREPARATION_ONLY",
+  "browser_doubles": {
+    "new_core_journey": 5,
+    "affected_regression": 121,
+    "failed": 0,
+    "skipped": 0
+  },
+  "record_validation_unit_checks": {
+    "passed": 14,
+    "failed": 0
+  },
+  "sdk_gradle_checks": {
+    "passed": 6,
+    "failed": 0
+  },
+  "expected_rejections": {
+    "work_date_restored": 1,
+    "gradle_stale_assets": 1,
+    "device_qualification_gate": 1
+  },
+  "required_physical_cases": {
+    "passed": 0,
+    "failed": 0,
+    "skipped": 0,
+    "unrun": 16
+  },
+  "integrated_backend": "UNRUN",
+  "emulator": "UNRUN",
+  "live_supabase": "UNRUN",
+  "production": "UNRUN",
+  "no_merge": true,
+  "no_live_migration": true,
+  "apk_published": false
+}

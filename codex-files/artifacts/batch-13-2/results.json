@@ -1,0 +1,30 @@
+{
+  "kind": "browser-doubles",
+  "android_device_result": "UNRUN",
+  "integrated_backend_result": "UNRUN",
+  "passed": 5,
+  "failed": 0,
+  "skipped": 0,
+  "results": [
+    {
+      "name": "dispatch-to-load preserves the selected operating date on a clean device",
+      "ok": true
+    },
+    {
+      "name": "car_a: same-context loading → visit → accepted completion → closing",
+      "ok": true
+    },
+    {
+      "name": "car_b: same-context loading → visit → accepted completion → closing",
+      "ok": true
+    },
+    {
+      "name": "confirmed load → offline reviewed finish → restart → replay retains original key",
+      "ok": true
+    },
+    {
+      "name": "lost completion response requires deliberate recovery with no second backend-double effect",
+      "ok": true
+    }
+  ]
+}

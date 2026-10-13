@@ -1,0 +1,9 @@
+(node:1470495) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - dispatch-to-load preserves the selected operating date on a clean device
+PASS - car_a: same-context loading → visit → accepted completion → closing
+PASS - car_b: same-context loading → visit → accepted completion → closing
+PASS - confirmed load → offline reviewed finish → restart → replay retains original key
+PASS - lost completion response requires deliberate recovery with no second backend-double effect
+5 PASS / 0 FAIL / 0 SKIP

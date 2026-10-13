@@ -1,0 +1,201 @@
+{
+  "schema_version": 1,
+  "created_at": "2026-10-13T00:14:04.314641+00:00",
+  "candidate": {
+    "sha": "52ad5ee3676f3ee5e2efe2ff1cee147cf31f7f2a",
+    "branch": "codex/batch-13-2",
+    "tracked_changes": "",
+    "contains_codex_12_2": true,
+    "contains_claude_12_1": false,
+    "authorization_reference": null,
+    "classification": "isolated_codex_preparation"
+  },
+  "apk": {
+    "sha256": "25401ae742d404258b01a74a42c6338c494b79f44249ecf0c7a6c4aa03afc0ef",
+    "publication": "none",
+    "asset_binding": {
+      "candidate_sha": "52ad5ee3676f3ee5e2efe2ff1cee147cf31f7f2a",
+      "assets_match_commit": true,
+      "apk_matches_staging": true
+    }
+  },
+  "environment": {
+    "android_doctor": {
+      "java_major": 21,
+      "javac_major": 21,
+      "selected_java_home": "/workspace/.nova-shield/jdk/jdk-21.0.12.1+1",
+      "java_home_has_compiler": true,
+      "sdk_root": "/workspace/.nova-shield/android-sdk",
+      "missing_sdk_files": [],
+      "staged_assets_current": true,
+      "asset_guard_result": "Verified 160 fresh assets, Android copy and resources",
+      "build_prerequisites_ready": true,
+      "adb_configuration_directory": "/home/agent/.android",
+      "adb_configuration_writable": false,
+      "adb_blocker": "adb requires a writable .android directory in the real home; HOME is preserved",
+      "emulator_available": false,
+      "device_validation": "unrun; diagnostics do not install or launch an app"
+    },
+    "doctor_exit": 0,
+    "kvm_present": false,
+    "usb_bus_present": false,
+    "installed_system_images": [],
+    "device_probe": "UNRUN; no device supplied, no adb server started"
+  },
+  "target": {
+    "kind": null,
+    "model": null,
+    "os_version": null,
+    "android_api": null,
+    "app_version": null,
+    "operator": null,
+    "tested_at": null
+  },
+  "cases": [
+    {
+      "id": "single_crew_day",
+      "purpose": "Base \u2192 Car A checked load \u2192 assigned work \u2192 accepted completion \u2192 day-end count",
+      "status": "UNRUN",
+      "steps_run": [],
+      "observed": null,
+      "evidence": [],
+      "reason": "No authorized integrated candidate or Android target supplied."
+    },
+    {
+      "id": "two_car_scope",
+      "purpose": "Separate Car A/B actors, scarce shared tools, unassigned work and denial retirement",
+      "status": "UNRUN",
+      "steps_run": [],
+      "observed": null,
+      "evidence": [],
+      "reason": "No authorized integrated candidate or Android target supplied."
+    },
+    {
+      "id": "startup_recovery",
+      "purpose": "Cold start, missing asset recovery and unsent-byte preservation",
+      "status": "UNRUN",
+      "steps_run": [],
+      "observed": null,
+      "evidence": [],
+      "reason": "No authorized integrated candidate or Android target supplied."
+    },
+    {
+      "id": "back_keyboard",
+      "purpose": "Hardware/gesture Back, keyboard, review cancellation and overlay focus",
+      "status": "UNRUN",
+      "steps_run": [],
+      "observed": null,
+      "evidence": [],
+      "reason": "No authorized integrated candidate or Android target supplied."
+    },
+    {
+      "id": "cached_restart",
+      "purpose": "Prepare work, offline process death/restart, expiry and reconnect",
+      "status": "UNRUN",
+      "steps_run": [],
+      "observed": null,
+      "evidence": [],
+      "reason": "No authorized integrated candidate or Android target supplied."
+    },
+    {
+      "id": "camera_originals",
+      "purpose": "Camera/cancel/actual permission prompts, original bytes and interrupted upload",
+      "status": "UNRUN",
+      "steps_run": [],
+      "observed": null,
+      "evidence": [],
+      "reason": "No authorized integrated candidate or Android target supplied."
+    },
+    {
+      "id": "storage_pressure",
+      "purpose": "Quota/eviction and unsupported store upgrade without silent loss",
+      "status": "UNRUN",
+      "steps_run": [],
+      "observed": null,
+      "evidence": [],
+      "reason": "No authorized integrated candidate or Android target supplied."
+    },
+    {
+      "id": "share_uri",
+      "purpose": "Real Android share sheet, cancelled handoff and private FileProvider URI access",
+      "status": "UNRUN",
+      "steps_run": [],
+      "observed": null,
+      "evidence": [],
+      "reason": "No authorized integrated candidate or Android target supplied."
+    },
+    {
+      "id": "location_states",
+      "purpose": "Denied/approximate/missing/stale location, explicit local arrival and unknown metadata",
+      "status": "UNRUN",
+      "steps_run": [],
+      "observed": null,
+      "evidence": [],
+      "reason": "No authorized integrated candidate or Android target supplied."
+    },
+    {
+      "id": "talkback",
+      "purpose": "Actual TalkBack traversal of loading, instructions, issues, photos and completion",
+      "status": "UNRUN",
+      "steps_run": [],
+      "observed": null,
+      "evidence": [],
+      "reason": "No authorized integrated candidate or Android target supplied."
+    },
+    {
+      "id": "bad_cellular",
+      "purpose": "Real transport delay/drop/lost response and original-key recovery",
+      "status": "UNRUN",
+      "steps_run": [],
+      "observed": null,
+      "evidence": [],
+      "reason": "No authorized integrated candidate or Android target supplied."
+    },
+    {
+      "id": "offline_sync",
+      "purpose": "Provisional finish, reconnect and one accepted receipt without double effects",
+      "status": "UNRUN",
+      "steps_run": [],
+      "observed": null,
+      "evidence": [],
+      "reason": "No authorized integrated candidate or Android target supplied."
+    },
+    {
+      "id": "upgrade_replay",
+      "purpose": "Existing outbox formats, downgrade refusal and payload/Blob retention",
+      "status": "UNRUN",
+      "steps_run": [],
+      "observed": null,
+      "evidence": [],
+      "reason": "No authorized integrated candidate or Android target supplied."
+    },
+    {
+      "id": "account_separation",
+      "purpose": "Sign-out/switch/revocation, private reads and original-account pending actions",
+      "status": "UNRUN",
+      "steps_run": [],
+      "observed": null,
+      "evidence": [],
+      "reason": "No authorized integrated candidate or Android target supplied."
+    },
+    {
+      "id": "closing_accounting",
+      "purpose": "Live usable basis, estimate/damaged/level semantics and no duplicate job debit",
+      "status": "UNRUN",
+      "steps_run": [],
+      "observed": null,
+      "evidence": [],
+      "reason": "No authorized integrated candidate or Android target supplied."
+    },
+    {
+      "id": "frozen_history",
+      "purpose": "Accepted completion/evidence and quote freeze; corrections remain attributable",
+      "status": "UNRUN",
+      "steps_run": [],
+      "observed": null,
+      "evidence": [],
+      "reason": "No authorized integrated candidate or Android target supplied."
+    }
+  ],
+  "qualification": "NOT_DEVICE_QUALIFIED"
+}

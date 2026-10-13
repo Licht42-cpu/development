@@ -1,0 +1,15 @@
+{
+  "kind": "browser-doubles",
+  "android_device_result": "UNRUN",
+  "integrated_backend_result": "UNRUN",
+  "passed": 0,
+  "failed": 1,
+  "skipped": 0,
+  "results": [
+    {
+      "name": "dispatch-to-load preserves the selected operating date on a clean device",
+      "ok": false,
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ '2026-10-13'\n- '2027-08-02'\n      ^\n\n    at file:///workspace/nova-shield/tests/core-journey.test.mjs:31:10\n    at async fixture (file:///workspace/nova-shield/tests/core-journey.test.mjs:19:7)\n    at async test (file:///workspace/nova-shield/tests/core-journey.test.mjs:11:7)\n    at async file:///workspace/nova-shield/tests/core-journey.test.mjs:28:1"
+    }
+  ]
+}

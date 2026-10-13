@@ -1,0 +1,45 @@
+(node:1452947) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - fixture snapshot is byte-identical to b7f0a22 and contains 24 v2.1 scenarios
+PASS - siding: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - no_bleach_day: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - no_bleach_day_with_manual_keep: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - mixed_services: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - permanent_lighting_with_offcut: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - named_christmas_set: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - winter_replenishment: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - repeated_jobs: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - car_b_assigned: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - car_a_with_unassigned_job: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - shortage_and_incomplete: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - frozen_read_envelope: none means no built plan, crew cannot build, closing still available
+PASS - closed_day_is_readable: closed plan shows lines without preparation mutations
+PASS - operating_day_timezone: report UTC warning and configured bounds without rebucketing visits
+PASS - confirm quotes the rendered plan’s six parameters without a pre-confirm read
+PASS - late_schedule_change: 23514 sentence remains visible after automatic re-read; no automatic retry
+PASS - recommendation_lock: 23514 sentence remains visible after automatic re-read; no automatic retry
+PASS - manual_keep_clear_restores_recommendation: set and clear from same card; reload current state
+PASS - keep_clear_whole_day: clearing does not turn a still-needed item into Return
+PASS - duplicate_retry: owner build is explicit, never a cold-open side effect, replay keeps its key
+PASS - exception_affects_confirmation: fourth skip group has owner reason and no crew override
+PASS - crew_permission_failures: visible exception attempt receives honest 42501 refusal
+PASS - per_operation_retries: lost response survives reload and exact key/payload replay has one effect
+PASS - 23505 changed-intent conflict is distinct from unknown response and accepted
+PASS - malformed acceptance response stays unknown and preserves original request
+PASS - per_operation_retries: late Keep replay receipt does not replace the current recommendation
+PASS - real browser process restart preserves the unanswered immutable request and recovers one receipt
+PASS - device commit failure prevents any mutation; account change hides saved request
+PASS - unknown saved journal format is retained and fails closed
+PASS - carry_extra accepts a catalogue item absent from the plan with a required operating quantity
+PASS - closing_without_confirmation: estimate and blank untouched items; no plan needed; receipt uses live basis
+PASS - damaged_variance_pools: positive damaged refusal preserved, no client variance calculation
+PASS - level closing has only Empty/Low/Enough, no number or quantity in request
+PASS - no signal: cached read is review-only and drafts remain separate per vehicle
+PASS - addresses/access notes remain in preparation; no client day re-bucketing
+PASS - Car B crew bootstrap asks backend permission rather than choosing first readable metadata
+PASS - airplane-mode transition disables new sends immediately; reconnect requires refresh
+PASS - touch and keyboard preparation, exception, closing and no horizontal overflow at 390px
+PASS - touch and keyboard preparation, exception, closing and no horizontal overflow at 430px
+PASS - touch and keyboard preparation, exception, closing and no horizontal overflow at 1200px
+41 PASS / 0 FAIL

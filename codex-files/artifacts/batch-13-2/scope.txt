@@ -1,0 +1,2 @@
+Compared against a0b87cd: admin/js/lib/api.js, admin/js/main.js, admin/css/admin.css, supabase, docs/dispatch-contract-v1.md, docs/daily-load-contract-v1.md, docs/completion-evidence-contract-v1.md, tests/db, tests/fixtures, tests/run-regression.sh, package.json, package-lock.json, shared
+No changes.
