@@ -17,7 +17,7 @@ const source=`
  export async function getSession(){return {session:session(),isAdmin:!!session()};}
 `;
 export async function completionFixture(browser,options={}) {
-  const f=await offlineFixture(browser,{open:false,...options});
+  const f=options.baseFixture || await offlineFixture(browser,{open:false,...options});
   const state=options.completionState || {calls:[],effects:0,records:new Map(),lost:false,fail:null,hold:false,registerFail:null,registerLost:false,registrations:0,evidence:[],
     requirements:clone(scenarios.cleaning_before_and_after.requirements_before_any_evidence),
     readiness:{...receiptFor(scenarios.cleaning_before_and_after.accepted).readiness,completion_open:false,latest_completion_id:null,lock_version:1,evidence_state:'blocked',blocking_shortfalls:2},

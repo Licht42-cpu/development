@@ -12,7 +12,7 @@ const source=`
  export async function getSession(){return {session:session(),isAdmin:!!session()};}
 `;
 export async function dispatchFixture(browser,options={}) {
-  const f=await offlineFixture(browser,{...options,open:false});
+  const f=options.baseFixture || await offlineFixture(browser,{...options,open:false});
   const day=clone(scenarios.one_car_default_and_manual_order.read_after);
   day.stops=day.stops.map((stop,i)=>({...stop,job_id:i===0?SECOND:JOB,property_id:'property-'+(i===0?SECOND:JOB),customer_name:i===0?'Saved Customer B':'Saved Customer A'}));
   const state={day,property:clone(scenarios.property_instructions_and_private_codes.owner_read),calls:[],issues:[],requests:[],

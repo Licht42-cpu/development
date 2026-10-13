@@ -31,7 +31,7 @@ const source = `
  export async function getSession(){return {session:session(),isAdmin:!!session()};}
 `;
 export async function loadFixture(browser, options = {}) {
-  const f = await offlineFixture(browser, { open: false, ...options });
+  const f = options.baseFixture || await offlineFixture(browser, { open: false, ...options });
   const state = options.loadState || { read: clone(scenarios.frozen_read_envelope.current), catalogue: [], calls: [], receipts: new Map(), effects: 0, lost: null, fail: null, result: null, held: null };
   if (!options.loadState) state.read.can_build = false;
   await f.context.route('**/shared/supabase.js', route => route.fulfill({ contentType: 'application/javascript', body: source }));

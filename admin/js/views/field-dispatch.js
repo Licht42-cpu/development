@@ -35,7 +35,7 @@ export async function renderFieldDispatch({mount,navigate,offline=false}) {
       el('p',{text:value.work_day_timezone_state==='configured'?`Operating day: ${value.work_day_timezone}.`:'Operating timezone unconfigured — day boundaries are UTC.'}),
       el('p',{class:'hint',text:`Window: ${value.window_starts_at} to ${value.window_ends_at}.`}),
       el('p',{text:`Load: ${value.load_plan.state}${value.load_plan.needs_rebuild?' — owner rebuild required':''}. ${value.load_plan.invalidated_reason||''}`}),
-      el('a',{class:'btn',href:`#/load?vehicle=${encodeURIComponent(value.location_code)}&date=${encodeURIComponent(value.work_date)}`,text:'Review vehicle load'}));
+      el('a',{class:'btn',href:`#/load?vehicle=${encodeURIComponent(value.location_code)}&day=${encodeURIComponent(value.work_date)}`,text:'Review vehicle load'}));
     if(!value.stops.length)content.append(el('p',{text:'No stops on this vehicle’s operating day.'}));
     for(const stop of value.stops) {
       const card=el('article',{class:'card','data-dispatch-job':stop.job_id},[
