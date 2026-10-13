@@ -96,10 +96,10 @@ export async function renderOfflineWork({ mount, navigate, retry }, snapshot, jo
   await photos.render();
   const completion = createFieldCompletion({jobId,ownerId:snapshot.id,offline:true});
   mount.append(completion.root);completion.start();
-  const input = el('textarea', { 'aria-label': 'Note', placeholder: 'Draft a note for the office…' });
+  const input = el('textarea', { 'aria-label': 'Note', placeholder: 'Draft a note for the office…', disabled: true });
   const visibility = select([{ value: 'internal', label: 'Internal — staff only' },
-    { value: 'customer', label: 'Customer-visible' }], 'internal', null, { 'aria-label': 'Who can see it' });
-  const draftStatus = el('p', { class: 'hint', role: 'status' });
+    { value: 'customer', label: 'Customer-visible' }], 'internal', null, { 'aria-label': 'Who can see it', disabled: true });
+  const draftStatus = el('p', { class: 'hint', role: 'status', text: 'Opening saved note draft…' });
   const dictationHost = el('div', {});
   mount.append(el('div', { class: 'card' }, [el('h2', { text: 'Notes' }),
     el('p', { text: 'You can keep a draft here. Sending a note requires a connection.' }),
@@ -109,6 +109,8 @@ export async function renderOfflineWork({ mount, navigate, retry }, snapshot, jo
     el('label', { class: 'field' }, [el('span', { text: 'Note draft' }), input]),
     el('label', { class: 'field' }, [el('span', { text: 'Who can see it' }), visibility]), draftStatus, dictationHost]));
   const noteDraft = await retainNoteDraft(jobId, input, visibility, draftStatus);
+  input.disabled = visibility.disabled = false;
+  if (draftStatus.textContent === 'Opening saved note draft…') draftStatus.textContent = '';
   const dictation = createDictationReview({ jobId, ownerId: snapshot.id, target: input,
     visibility, flushDraft: noteDraft.flush });
   dictationHost.append(dictation.root); await dictation.ready;

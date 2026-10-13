@@ -1,5 +1,7 @@
+import { pollBrowser } from './poll-browser.mjs';
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { offlineFixture, BASE, JOB, OWNER } from './offline-work-fixture.mjs';
@@ -26,9 +28,31 @@ await check('Passport and note drafts survive a closed page and are labeled unse
   await f.prepare();await f.offline();await f.page.reload();await f.visit();
   await f.page.getByLabel('Note',{exact:true}).fill('Do not lose this note');
   await f.page.getByLabel('Material',{exact:true}).fill('Unsubmitted vinyl');
-  await f.page.waitForFunction(async()=>{const c=await import('/admin/js/lib/field-cache.js');return (await c.readDraft('11111111-1111-4111-8111-111111111111','note'))?.value.body==='Do not lose this note'&&(await c.readDraft('11111111-1111-4111-8111-111111111111','passport'))?.value['siding.material']==='Unsubmitted vinyl';});
+  await pollBrowser(f.page,async()=>{const c=await import('/admin/js/lib/field-cache.js');return (await c.readDraft('11111111-1111-4111-8111-111111111111','note'))?.value.body==='Do not lose this note'&&(await c.readDraft('11111111-1111-4111-8111-111111111111','passport'))?.value['siding.material']==='Unsubmitted vinyl';});
   await f.page.reload();await f.page.getByLabel('Material',{exact:true}).waitFor();await f.page.getByLabel('Note',{exact:true}).waitFor();await f.page.waitForFunction(()=>document.querySelector('textarea[aria-label="Note"]').value==='Do not lose this note');
   assert.equal(await f.page.getByLabel('Material',{exact:true}).inputValue(),'Unsubmitted vinyl');assert.match(await f.page.locator('#view').innerText(),/not submitted|not sent/);
+}));
+await check('A note cannot be edited before its draft listener is ready',()=>fixture(async f=>{
+  await f.prepare();
+  const file='admin/js/lib/field-cache.js';
+  const source=readFileSync(new URL('../'+file,import.meta.url),'utf8');
+  const marker="  const existing = await readDraft(jobId, 'note');";
+  assert.ok(source.includes(marker));
+  await f.context.route('**/'+file,route=>route.fulfill({contentType:'application/javascript',body:source.replace(marker,
+    "  await new Promise(resolve=>{globalThis.__finishNoteRestore=resolve;});\n"+marker)}));
+  if(process.env.OFFLINE_BREAK==='note_ready'){
+    const path='admin/js/views/field-offline.js';
+    await f.context.route('**/'+path,route=>route.fulfill({contentType:'application/javascript',
+      body:execFileSync('git',['show','c35d92b:'+path],{encoding:'utf8'})}));
+  }
+  await f.offline();await f.page.reload();await f.visit();
+  await f.page.waitForFunction(()=>typeof __finishNoteRestore==='function');
+  const note=f.page.getByLabel('Note',{exact:true});
+  assert.equal(await note.isDisabled(),true);
+  await f.page.evaluate(()=>__finishNoteRestore());
+  await note.fill('A safely retained early observation');
+  await pollBrowser(f.page,async id=>(await(await import('/admin/js/lib/field-cache.js')).readDraft(id,'note'))?.value.body==='A safely retained early observation',JOB);
+  assert.equal(await f.page.getByLabel('Who can see it',{exact:true}).isEnabled(),true);
 }));
 await check('Offline passport saves survive restart as pending property facts',()=>fixture(async f=>{
   await f.prepare();await f.offline();await f.page.reload();await f.visit();
@@ -88,7 +112,7 @@ await check('Reconnecting replays supported writes in order and removes them onl
 await check('Denied replay immediately hides an already-open cached visit and retains its unsent work',()=>fixture(async f=>{
   await f.prepare();await f.offline();await f.page.reload();await f.visit();
   await f.page.getByLabel('Note',{exact:true}).fill('Retain my unsent observation');
-  await f.page.waitForFunction(async()=>(await(await import('/admin/js/lib/field-cache.js')).readDraft('11111111-1111-4111-8111-111111111111','note'))?.value.body==='Retain my unsent observation');
+  await pollBrowser(f.page,async()=>(await(await import('/admin/js/lib/field-cache.js')).readDraft('11111111-1111-4111-8111-111111111111','note'))?.value.body==='Retain my unsent observation');
   await queue(f.page,'createMeasurement',{jobId:JOB,measurement:{quantity:5}});
   f.state.denied=true;await f.offline(false);await flush(f.page);
   await f.page.getByRole('heading',{name:'Saved access no longer available'}).waitFor();
@@ -137,7 +161,7 @@ await check('Different tabs share one replay lock and cannot execute the same he
   // Hold the actual first server write while another tab requests replay.
   // This makes overlap deterministic rather than relying on request timing.
   try {
-    await accepted;await second.waitForFunction(async()=>(await navigator.locks.query()).pending.some(lock=>lock.name==='ns-field-outbox-replay'));
+    await accepted;await pollBrowser(second,async()=>(await navigator.locks.query()).pending.some(lock=>lock.name==='ns-field-outbox-replay'));
     assert.equal(f.state.writes.filter(x=>x.name==='createMeasurement').length,1);
   } finally { f.state.release?.();await attempts;await second.close(); }
   assert.equal(f.state.writes.filter(x=>x.name==='createMeasurement').length,1);
@@ -183,7 +207,7 @@ await check('An interrupted in-flight send survives page closure and does not re
   f.state.hold='createMeasurement';
   const accepted=new Promise(resolve=>f.state.onWrite=resolve);
   await f.page.evaluate(()=>{window.__sending=(async()=>{await(await import('/admin/js/lib/offline-queue.js')).callOrQueue('createMeasurement',{jobId:'11111111-1111-4111-8111-111111111111',measurement:{quantity:5}},'Interrupted measurement');})();});
-  await f.page.waitForFunction(async()=>{const q=await import('/admin/js/lib/offline-queue.js');return (await q.pending())[0]?.state==='uncertain';});
+  await pollBrowser(f.page,async()=>{const q=await import('/admin/js/lib/offline-queue.js');return (await q.pending())[0]?.state==='uncertain';});
   await Promise.race([accepted,new Promise((_,reject)=>setTimeout(()=>reject(new Error('The fixture never received the in-flight write.')),7000))]);
   const old=f.page;const replacement=await f.context.newPage();replacement.setDefaultTimeout(7000);await old.close();f.state.hold=null;f.state.release?.();
   await replacement.goto(BASE+'/admin/field.html');await replacement.getByRole('heading',{name:"Today's schedule"}).waitFor();await flush(replacement);

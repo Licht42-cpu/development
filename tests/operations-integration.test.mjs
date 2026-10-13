@@ -45,6 +45,8 @@ await check('Dispatch preserves vehicle and day on reload and selector changes',
   await page.waitForURL(/location=car_b&day=2027-07-08/);
   await page.getByLabel(/^Vehicle/).selectOption('car_a');
   await page.waitForURL(/location=car_a&day=2027-07-08/);
+  assert.equal(await page.getByRole('link',{name:'Review this vehicle’s loading',exact:true}).getAttribute('href'),
+    'field.html#/load?vehicle=car_a&day=2027-07-08');
   await page.reload();
   await page.getByRole('heading', {name:'Dispatch',exact:true}).waitFor();
   assert.equal(await page.getByLabel('Day',{exact:true}).inputValue(), '2027-07-08');

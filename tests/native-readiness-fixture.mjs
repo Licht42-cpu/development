@@ -23,6 +23,7 @@ export async function readinessFixture(browser, options = {}) {
     await fixture.page.getByRole('button', { name: '+ Add photo', exact: true }).waitFor();
     if (options.config?.__fail?.listNotes) await fixture.page.getByText(/Could not load notes:/).waitFor();
     else await fixture.page.getByText('No notes on this job yet.', { exact: true }).waitFor();
+    await fixture.page.waitForFunction(() => !document.querySelector('textarea[aria-label="Note"]').disabled);
   }
   return fixture;
 }

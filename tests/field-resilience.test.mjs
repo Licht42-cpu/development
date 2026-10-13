@@ -1,3 +1,4 @@
+import { pollBrowser } from './poll-browser.mjs';
 import assert from 'node:assert/strict';
 import { createRecorder, finishAndReport } from './test-harness.mjs';
 import { fieldFixture, queueAction, JOB_A, JOB_B } from './field-resilience-fixture.mjs';
@@ -202,7 +203,7 @@ await record('The outbox shows individual items and requires confirmation to dis
     assert.equal(await page.evaluate(async () => (await import('/admin/js/lib/offline-queue.js')).count()), 2);
     page.once('dialog', prompt => prompt.accept());
     await dialog.getByRole('button', { name: 'Discard First queued update', exact: true }).click();
-    await page.waitForFunction(async () => (await (await import('/admin/js/lib/offline-queue.js')).count()) === 1);
+    await pollBrowser(page,async () => (await (await import('/admin/js/lib/offline-queue.js')).count()) === 1);
     assert.equal(await page.evaluate(() => __writes.length), 0);
   } finally { await context.close(); }
 });

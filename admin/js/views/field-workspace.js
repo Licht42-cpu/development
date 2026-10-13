@@ -397,18 +397,18 @@ export async function renderVisit({ mount, navigate }, jobId) {
      the outbox covers four write types by design (see offline-queue.js), and
      silently queuing a fifth would overstate what it guarantees. */
   const noteBody = el('textarea', { placeholder: 'What you saw, what you did, what to tell the office…',
-                                    'aria-label': 'Note' });
+                                    'aria-label': 'Note', disabled: true });
   const noteVisibility = select(
     [{ value: 'internal', label: 'Internal — staff only' },
      { value: 'customer', label: 'Customer-visible' }],
-    'internal', null, { 'aria-label': 'Who can see it' }
+    'internal', null, { 'aria-label': 'Who can see it', disabled: true }
   );
-  const noteBtn = el('button', { class: 'btn', text: 'Save note' });
+  const noteBtn = el('button', { class: 'btn', text: 'Save note', disabled: true });
   const notesList = el('div', {});
   const notesStatus = el('div', { role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true',
     dataset: { notesStatus: '' } });
   let notesAttempt = 0;
-  const draftStatus = el('p', { class: 'hint', role: 'status' });
+  const draftStatus = el('p', { class: 'hint', role: 'status', text: 'Opening saved note draft…' });
   const dictationHost = el('div', {});
   let clearNoteDraft;
 
@@ -641,9 +641,14 @@ export async function renderVisit({ mount, navigate }, jobId) {
   await refreshNotes();
   try {
     clearNoteDraft = await retainNoteDraft(job.id, noteBody, noteVisibility, draftStatus);
+    noteBody.disabled = noteVisibility.disabled = noteBtn.disabled = false;
+    if (draftStatus.textContent === 'Opening saved note draft…') draftStatus.textContent = '';
     const dictation = createDictationReview({ jobId: job.id, ownerId, target: noteBody,
       visibility: noteVisibility, flushDraft: clearNoteDraft.flush });
     dictationHost.append(dictation.root); await dictation.ready;
   }
-  catch (error) { draftStatus.textContent = `Device draft storage unavailable: ${error.message}`; }
+  catch (error) {
+    draftStatus.textContent = `Device draft storage unavailable: ${error.message}. Sending a note still needs a connection.`;
+    noteBody.disabled = noteVisibility.disabled = noteBtn.disabled = false;
+  }
 }

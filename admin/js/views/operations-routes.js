@@ -76,21 +76,24 @@ export async function renderDispatchRoute(ctx) {
   const rawDay = ctx.params?.get('day');
   let day = rawDay || deviceDay();
   let code = ctx.params?.get('location') || 'car_a';
-  if (!validDay(day) || !['car_a', 'car_b'].includes(code)) {
+  if (!validDay(day) || !/^[a-z][a-z0-9_]*$/.test(code)) {
     clear(ctx.mount).append(el('section', { class: 'card' }, [
       el('h1', { text: 'Dispatch selection is invalid' }),
-      el('p', { text: 'Choose a valid calendar day and Car A or an existing Car B.' }),
+      el('p', { text: 'Choose a valid calendar day and an existing vehicle.' }),
       el('a', { class: 'btn', href: '#/dispatch', text: 'Choose today' })
     ]));
     return;
   }
   const query = () => new URLSearchParams({ location: code, day }).toString();
+  const loadingHref = () => `field.html#/load?vehicle=${encodeURIComponent(code)}&day=${encodeURIComponent(day)}`;
+  const loadingLink = el('a', { class: 'btn', href: loadingHref(), text: 'Review this vehicle’s loading' });
   ctx.replaceQuery?.(query());
   const host = el('div');
   clear(ctx.mount).append(el('div', { class: 'page-head' }, [
     el('a', { class: 'hint', href: '#/jobs?bucket=today', text: '← Today’s jobs' }),
     el('h1', { text: 'Dispatch day' }),
-    el('p', { text: `Selected day: ${day}. A default day uses this device’s calendar; the backend’s operating window is shown when available.` })
+    el('p', { text: `Selected day: ${day}. A default day uses this device’s calendar; the backend’s operating window is shown when available.` }),
+    loadingLink
   ]), host);
   await featurePanel(ctx, host, 'Dispatch', async signal => {
     readResult(await supabase.rpc('get_dispatch_day', { p_location_code: code, p_work_date: day }).abortSignal(signal));
@@ -105,6 +108,7 @@ export async function renderDispatchRoute(ctx) {
       else if (event.target === panel.querySelector('input[type="date"]')) day = event.target.value || deviceDay();
       else return;
       ctx.replaceQuery?.(query());
+      loadingLink.href = loadingHref();
       ctx.mount.querySelector('.page-head p').textContent = `Selected day: ${day}. The backend’s operating window is shown below.`;
     }, true);
     clear(host).append(panel);

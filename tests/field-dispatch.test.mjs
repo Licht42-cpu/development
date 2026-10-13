@@ -1,3 +1,4 @@
+import { pollBrowser } from './poll-browser.mjs';
 import assert from 'node:assert/strict';
 import {mkdirSync,writeFileSync,readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
@@ -151,7 +152,7 @@ await test('pending is visible and duplicate taps make one immutable request',()
   await report(f);await first(f).getByText('Request pending',{exact:false}).waitFor();
   assert.equal(await first(f).getByRole('button',{name:'Submit issue report',exact:true}).isDisabled(),true);
   const id=f.dispatch.day.stops[0].job_id;
-  await f.page.waitForFunction(async id=>(await (await import('/admin/js/lib/field-dispatch-work.js')).dispatchWork(id))?.state==='sending',id);
+  await pollBrowser(f.page,async id=>(await (await import('/admin/js/lib/field-dispatch-work.js')).dispatchWork(id))?.state==='sending',id);
   const record=await journal(f,id);assert.equal(record.state,'sending');assert.ok(record.payload.p_client_operation_id);
   f.dispatch.release();await first(f).getByText('Report accepted by the server',{exact:false}).waitFor();assert.equal(f.dispatch.effects,1);
 }));
