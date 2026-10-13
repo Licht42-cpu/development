@@ -1,8 +1,28 @@
-# Nova Shield completion and evidence contract v1
+# Nova Shield completion and evidence contract v1.1
 
-**Status: frozen.** This is the snapshot handed to both tracks. Neither side
-invents a counterpart; a change to this document is a new version, agreed
-before either side implements against it.
+**Status: frozen at v1.1.** A change to this document is a new version,
+agreed before either side implements against it.
+
+> **v1.1 (Batch 15.1) — the one change, and it is a narrowing.**
+> `can_work_job(uuid)` no longer treats an **unassigned** job as every
+> crew's once a **second vehicle is active**. It now reads the single
+> crew-scope rule `ns_job_is_mine(uuid)`, which is 12.1's rule, so the two
+> predicates can no longer disagree. **Nothing changes while one vehicle is
+> active** — today's state — and the four guards that call it
+> (`register_job_evidence`, `complete_job_with_evidence` twice,
+> `propose_additional_work`) keep their signatures and their wording.
+> With two vehicles, a crew resolves the ambiguity itself with
+> `claim_job_for_vehicle` rather than being stranded: see
+> `docs/dispatch-contract-v1.md` v1.1 §2a and `docs/batch15-1-findings.md`.
+> **Known wording limitation:** those four guards still say "That job is
+> assigned to a vehicle you are not on", which is the wrong sentence for a
+> job assigned to nobody. `ns_assert_job_is_mine()` carries the right one
+> for new code; the four were left alone deliberately — re-emitting a
+> 400-line function body to change a sentence is a bigger risk to a release
+> candidate than the sentence is.
+
+This is the snapshot handed to both tracks. Neither side invents a
+counterpart.
 
 **Companion to, not a revision of,** `docs/operations-contract-v1.md` (stock,
 v1.2), `docs/seasonal-sets-contract-v1.md` (v1.2) and

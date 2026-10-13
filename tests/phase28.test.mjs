@@ -69,6 +69,7 @@ const FAKE_API = `
   }
   export async function reorderDispatchDay(a) { push('reorderDispatchDay', a); await gate(); return {}; }
   export async function assignJobToVehicle(a) { push('assignJobToVehicle', a); await gate(); return {}; }
+  export async function claimJobForVehicle(a) { push('claimJobForVehicle', a); await gate(); return {}; }
   export async function setDispatchStage(a) { push('setDispatchStage', a); await gate(); return {}; }
 
   export async function getPropertyAccess(id) {
@@ -339,6 +340,64 @@ async function launch() {
       assert.ok(out.buttons.includes('Give to Car B'),
         'the owner picks the car; the screen does not');
     });
+
+  /* ---- 15.1: the crew's own door out of the two-car ambiguity ---- */
+
+  await record('A7b a CREW is offered the claim, not the owner\u2019s car picker',
+    async () => {
+      const { out, calls } = await withPanel({
+        day: DAY({
+          can_plan: false,
+          stops: [],
+          unassigned_jobs: [{ job_id: 'job-9', scheduled_for: '2027-07-06T16:00:00Z',
+            status: 'scheduled', customer_name: 'FIXTURE Nobody\u2019s Job',
+            property_id: 'prop-9' }],
+          readable_vehicles: [
+            { location_id: 'loc-car-a', code: 'car_a', name: 'Car A' },
+            { location_id: 'loc-car-b', code: 'car_b', name: 'Car B' }]
+        })
+      }, async ({ mount, h }) => {
+        await h.settle(200);
+        const btn = h.button(mount, 'This one is on my car');
+        btn.click();
+        await h.settle(220);
+        return { text: mount.textContent, buttons: h.buttonTexts(mount) };
+      });
+      // The owner's picker is absent for a crew, and the claim is present.
+      assert.ok(!out.buttons.includes('Give to Car A'));
+      assert.ok(!out.buttons.includes('Give to Car B'));
+      assert.ok(out.buttons.includes('This one is on my car'));
+      // It claims for the caller's OWN car: no vehicle is passed at all,
+      // because the backend resolves it from the crew record.
+      const call = calls.find((c) => c.name === 'claimJobForVehicle');
+      assert.ok(call, 'the claim never reached the backend');
+      assert.equal(call.args.jobId, 'job-9');
+      assert.ok(!('locationCode' in call.args),
+        'a crew must not be able to name the car it claims for');
+      assert.equal(calls.filter((c) => c.name === 'assignJobToVehicle').length, 0);
+      // And the crew is told why saying so matters.
+      assert.match(out.text, /which car was there/i);
+    });
+
+  await record('A7c an OWNER still gets the car picker and no claim', async () => {
+    const { out } = await withPanel({
+      day: DAY({
+        stops: [],
+        unassigned_jobs: [{ job_id: 'job-9', scheduled_for: '2027-07-06T16:00:00Z',
+          status: 'scheduled', customer_name: 'FIXTURE Nobody\u2019s Job',
+          property_id: 'prop-9' }],
+        readable_vehicles: [
+          { location_id: 'loc-car-a', code: 'car_a', name: 'Car A' },
+          { location_id: 'loc-car-b', code: 'car_b', name: 'Car B' }]
+      })
+    }, async ({ mount, h }) => {
+      await h.settle(200);
+      return { buttons: h.buttonTexts(mount) };
+    });
+    assert.ok(out.buttons.includes('Give to Car A'));
+    assert.ok(!out.buttons.includes('This one is on my car'),
+      'an owner has no car of their own to claim onto');
+  });
 
   await record('A8 an invalidated load plan is announced with its reason', async () => {
     const { out } = await withPanel({
