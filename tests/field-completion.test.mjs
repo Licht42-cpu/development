@@ -75,7 +75,7 @@ await test('missing_blocking_evidence: 23514 sentence remains visible; photos an
  f.completion.fail=scenarios.cleaning_before_and_after.refused_without_evidence;await f.open();await submit(f);await f.page.getByText(f.completion.fail.message,{exact:true}).waitFor();assert.equal((await saved(f)).pending.state,'conflict');assert.equal(f.completion.effects,0);
 }));
 await test('denied_access: 42501 is refusal, not offline or accepted; stored work remains scoped',()=>fixture(async f=>{
- f.completion.fail=scenarios.denied_access.crew_completing_other_cars_job;await f.open();await submit(f);await f.page.getByText(f.completion.fail.message,{exact:true}).waitFor();const state=await saved(f);assert.equal(state.pending.outcome,'refused');assert.equal(state.pending.state,'needs-review');assert.equal(state.accepted,null);
+ f.completion.fail=scenarios.denied_access.crew_completing_other_cars_job;await f.open();await submit(f);await f.page.locator('.field-completion').getByText(f.completion.fail.message,{exact:true}).waitFor();const state=await saved(f);assert.equal(state.pending.outcome,'refused');assert.equal(state.pending.state,'needs-review');assert.equal(state.accepted,null);
 }));
 await test('same_key_retry_lost_response: original key/payload recovery has one effect and no duplicate debit',()=>fixture(async f=>{
  await f.open();f.completion.lost=true;await submit(f);await f.page.getByText('No response — completion outcome unknown',{exact:true}).waitFor();const original=clone(calls(f,'complete_job_with_evidence')[0].args);assert.equal(f.completion.effects,1);
