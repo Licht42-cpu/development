@@ -1,0 +1,40 @@
+
+> nova-shield@1.0.0 cap:sync
+> npm run sync:mobile && npx cap sync
+
+
+> nova-shield@1.0.0 sync:mobile
+> node scripts/sync-mobile.js
+
+Synced admin/ + shared/ -> mobile/www/; checked 488 local references
+✔ Copying web assets from www to android/app/src/main/assets/public in 39.03ms
+✔ Creating capacitor.config.json in android/app/src/main/assets in 743.67μs
+✔ copy android in 51.17ms
+✔ Updating Android plugins in 1.18ms
+[info] Found 7 Capacitor plugins for android:
+       @capacitor/app@8.1.2
+       @capacitor/camera@8.2.5
+       @capacitor/filesystem@8.1.4
+       @capacitor/geolocation@8.2.3
+       @capacitor/haptics@8.0.2
+       @capacitor/share@8.0.3
+       @capacitor/status-bar@8.0.4
+✔ update android in 31.38ms
+✔ Copying web assets from www to ios/App/App/public in 25.73ms
+✔ Creating capacitor.config.json in ios/App/App in 228.88μs
+✔ copy ios in 41.10ms
+✔ Updating iOS plugins in 1.65ms
+[info] All Capacitor plugins have a Package.swift file and will be included in Package.swift
+[info] Writing Package.swift
+[info] Found 7 Capacitor plugins for ios:
+       @capacitor/app@8.1.2
+       @capacitor/camera@8.2.5
+       @capacitor/filesystem@8.1.4
+       @capacitor/geolocation@8.2.3
+       @capacitor/haptics@8.0.2
+       @capacitor/share@8.0.3
+       @capacitor/status-bar@8.0.4
+✔ update ios in 18.66ms
+✔ copy web in 4.74ms
+✔ update web in 6.81ms
+[info] Sync finished in 0.199s

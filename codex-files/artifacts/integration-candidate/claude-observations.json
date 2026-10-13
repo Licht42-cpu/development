@@ -1,0 +1,31 @@
+{
+  "category": "read-only browser observation; no backend writes",
+  "source_sha": "f08edfd2a52064a090e3bede50253e9027eb75fe",
+  "units": [
+    {
+      "value": "each",
+      "label": "each"
+    },
+    {
+      "value": "linear_ft",
+      "label": "linear ft"
+    },
+    {
+      "value": "box",
+      "label": "box"
+    },
+    {
+      "value": "roll",
+      "label": "roll"
+    },
+    {
+      "value": "kit",
+      "label": "kit"
+    },
+    {
+      "value": "set",
+      "label": "set"
+    }
+  ],
+  "level_creation_control_present": false
+}

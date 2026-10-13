@@ -1,0 +1,35 @@
+(node:1713694) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("./codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - Inventory is reached by keyboard from the real admin nav
+PASS - An inventory tab rewrites the query without adding history and survives reload
+PASS - Dispatch preserves vehicle and day on reload and selector changes
+PASS - Invalid calendar dates do not probe or silently choose another day
+PASS - An existing vehicle code is data rather than an invented slug format
+PASS - Property access mounts on the passport and keeps the customer Back parent
+PASS - Handover uses an authoritative absent completion, beside evidence
+PASS - Handover uses an authoritative accepted completion, beside evidence
+PASS - Inventory: missing backend is reachable, named and offers no writes
+PASS - Dispatch: missing backend is reachable, named and offers no writes
+PASS - Property access and work zones: missing backend is reachable, named and offers no writes
+PASS - Customer handover: missing backend is reachable, named and offers no writes
+PASS - Partially applied inventory relations fail closed before the Stock actions mount
+PASS - Retry rechecks real availability and opens the original feature when reads succeed
+PASS - Availability keeps refused distinct from a missing backend
+PASS - Availability keeps offline distinct from a missing backend
+PASS - Availability keeps unknown distinct from a missing backend
+PASS - Availability keeps crew distinct from a missing backend
+PASS - Availability timeout resolves without leaving a permanent spinner
+PASS - The unchanged real API preserves read parameters, rendered locks and movement precision
+PASS - An old availability read cannot replace a newer route
+PASS - Escape closes the existing overlay before changing a newly wired route
+PASS - A deep-linked dispatch uses its Jobs parent on the mocked Android Back binding
+PASS - Field-to-management navigation waits for the pending measurement save
+PASS - All inventory tabs remain reachable at 390px
+PASS - All inventory tabs remain reachable at 430px
+PASS - All inventory tabs remain reachable at 1280px
+PASS - New routes render at 390px with screenshot artifacts and no overflow
+PASS - New routes render at 430px with screenshot artifacts and no overflow
+PASS - New routes render at 1280px with screenshot artifacts and no overflow
+
+30/30 passed

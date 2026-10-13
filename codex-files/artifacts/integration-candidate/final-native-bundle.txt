@@ -1,0 +1,16 @@
+(node:1718522) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("./codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+Synced admin/ + shared/ -> ../../tmp/nova-native-bundle-7unQtX/; checked 488 local references
+PASS - The synced admin/shared bundle resolves all literal local runtime references
+PASS - Deleting a required shared module makes the audit fail
+PASS - A literal dynamic import outside the bundle is rejected
+PASS - New local HTML assets and CSS URLs cannot disappear silently
+PASS - The old sync silently copies a broken runtime import; the new sync refuses it
+PASS - Native quote preview cannot fall back to the excluded site directory
+PASS - Core, Supabase and all seven lazy plugins are local audited dependencies
+PASS - Android declares foreground coarse and fine location used by high-accuracy GPS
+PASS - The generated Android plugin settings and dependencies include App for hardware Back
+PASS - HTTPS local scheme and cache sharing remain configured
+
+10/10 passed
