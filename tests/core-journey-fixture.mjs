@@ -20,7 +20,10 @@ export async function coreJourneyFixture(browser,{code='car_a',width=390}={}) {
     ...(code==='car_b'?[{location_id:'car-b-id',code:'car_b',name:'Car B',kind:'vehicle'}]:[])];
   load.load.read.day.readable_vehicles=vehicles;
   load.load.read.day.jobs=[{job_id:JOB,property_id:'property-'+JOB,customer_name:'Saved Customer A',assigned:code==='car_b',scheduled_for:date+'T12:00:00Z'}];
-  load.load.catalogue=[];
+  const closingReceipt=clone(loads.closing_without_confirmation.receipt);
+  Object.assign(closingReceipt,{location_code:code,work_date:date,plan_id:load.load.read.plan.plan_id});
+  const observation=closingReceipt.lines[0];
+  load.load.catalogue=[{id:observation.material_id,name:observation.material_name,unit:'litre',tracking_mode:'quantity'}];
   dispatch.dispatch.day.stops=[{...dispatch.dispatch.day.stops[0],job_id:JOB,property_id:'property-'+JOB,customer_name:'Saved Customer A',assigned:code==='car_b'}];
   Object.assign(dispatch.dispatch.day,{location_code:code,location_name:code==='car_a'?'Car A':'Car B',location_id:code==='car_a'?'car-a-id':'car-b-id',work_date:date,
     readable_vehicles:vehicles.map(v=>({code:v.code,name:v.name,location_id:v.location_id}))});
@@ -41,7 +44,7 @@ export async function coreJourneyFixture(browser,{code='car_a',width=390}={}) {
     export const supabase={auth:{getSession:async()=>({data:{session:session()}}),signOut:async()=>__switchAccount(null),onAuthStateChange:cb=>{callbacks.push(cb);cb('INITIAL_SESSION',session());return {data:{subscription:{unsubscribe(){}}}};}},rpc:(name,args)=>query(name,args),from:name=>{const filters={};const q={select:()=>q,eq:(k,v)=>{filters[k]=v;return q;},order:()=>q,single:()=>query(name,filters),then:(a,b)=>query(name,filters).then(a,b)};return q;}};
     export async function getSession(){return {session:session(),isAdmin:!!session()};}
   `}));
-  return {...base,load:load.load,completion:completion.completion,dispatch:dispatch.dispatch,code,date,
+  return {...base,load:load.load,completion:completion.completion,dispatch:dispatch.dispatch,code,date,closingReceipt,
     async openDispatch(){await base.page.goto(BASE+'/admin/field.html#/dispatch?vehicle='+code+'&date='+date);
       await base.page.getByText('Ordered day received from the server.',{exact:false}).waitFor();},
     async confirmLoad(){await base.page.getByLabel('I checked the physical loading',{exact:false}).check();
