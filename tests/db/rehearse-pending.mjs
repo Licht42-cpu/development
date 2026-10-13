@@ -61,9 +61,15 @@ const files = readdirSync(MIGRATIONS).filter(f => f.endsWith('.sql')).sort();
   await client.connect();
   await assertDisposableDatabase(client);
 
+  /* EVERY fixture, in load order. The 12.1 and 13.1 fixtures were added
+     here when those batches landed: 12.1's dispatch migration adds a
+     foreign key to `notifications` only if the table is there, and 13.1's
+     report reads quote_line_items, so a rehearsal without them would
+     silently exercise the weaker half of two migrations. */
   for (const f of ['fixture-schema.sql', 'fixture-schema-batch8-1.sql',
                    'fixture-schema-batch9-1.sql', 'fixture-schema-batch10-1.sql',
-                   'fixture-schema-batch11-1.sql']) {
+                   'fixture-schema-batch11-1.sql', 'fixture-schema-batch12-1.sql',
+                   'fixture-schema-batch13-1.sql']) {
     await client.query(readFileSync(join(HERE, f), 'utf8'));
   }
   // The contract RPCs are admin-only and the fixture's is_admin() reads a GUC.

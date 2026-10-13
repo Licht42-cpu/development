@@ -1997,3 +1997,196 @@ export async function dispatchWinterVisit({
     p_reason: reason
   }));
 }
+
+/* ==========================================================================
+   BATCH 13.1 -- customer completion reports, scoped access, delivery and the
+   payment boundary. Contract: docs/customer-handover-contract-v1.md (v1).
+
+   NOTHING HERE IS APPLIED TO THE LIVE DATABASE YET: twenty-eight migrations
+   are pending. Every call below will raise `function does not exist` until
+   they are, which is the honest state and not something to catch and hide.
+   ========================================================================== */
+
+/* ------------------------------------------- publishing evidence -- */
+
+/** Decide whether ONE registered evidence record may be shown to the
+ *  customer. Owner-only; a withheld decision needs a reason.
+ *
+ *  `customerCaption` is what the customer reads. It is NOT the attachment's
+ *  own caption -- that one is an internal note the office wrote for itself
+ *  and republishing it is the leak this separation exists to prevent.
+ *
+ *  Deciding does not alter a report already generated: the document is
+ *  frozen, so the decision appears in the next generation, which is a new,
+ *  superseding report. */
+export async function setEvidencePublication({
+  clientOperationId, evidenceId, decision, reason, customerCaption
+}) {
+  return unwrap(await supabase.rpc('set_evidence_publication', {
+    p_client_operation_id: clientOperationId || newOperationId('pub'),
+    p_evidence_id: evidenceId,
+    p_decision: decision,
+    p_reason: reason ?? null,
+    p_customer_caption: customerCaption ?? null
+  }));
+}
+
+/* --------------------------------------------------- the report -- */
+
+/** Every report for a job, newest first, with its frozen document, its
+ *  state and whatever evidence still has no publication decision. */
+export async function jobCompletionReports({ jobId }) {
+  return unwrap(await supabase.rpc('job_completion_reports', { p_job_id: jobId }));
+}
+
+/** Generate the customer's report from an ACCEPTED COMPLETION -- not a
+ *  worker's tap and not `work_finished`.
+ *
+ *  Two generations of the same facts are ONE report: the backend
+ *  deduplicates on the logical source version, so a second tab or a retry
+ *  under a fresh key is answered with the first report and `replayed:
+ *  true`. A correction produces a new, superseding version instead. */
+export async function generateCompletionReport({ clientOperationId, completionId }) {
+  return unwrap(await supabase.rpc('generate_completion_report', {
+    p_client_operation_id: clientOperationId || newOperationId('rep'),
+    p_completion_id: completionId
+  }));
+}
+
+/** The owner's decision that a customer may read this report. Issues no
+ *  link and sends nothing -- those are two further deliberate acts. */
+export async function publishCompletionReport({ clientOperationId, reportId }) {
+  return unwrap(await supabase.rpc('publish_completion_report', {
+    p_client_operation_id: clientOperationId || newOperationId('pubrep'),
+    p_report_id: reportId
+  }));
+}
+
+/* ------------------------------------------- the customer's link -- */
+
+/** Issue a capability. OWNER-ONLY, and the token is in the result ONCE:
+ *  it is stored only as a sha256 hash, so it cannot be read back and a
+ *  replay under the same key returns `token: null` with
+ *  `token_state: 'not_recoverable'`. Show it or send it; do not file it.
+ *
+ *  `scope: 'report'` opens one report. `scope: 'customer_collection'` is
+ *  the deliberate broad grant and needs `customerId`; it is never derived
+ *  from an email or from a forwarded report link.
+ *
+ *  `expiresAt` is required unless the owner has set
+ *  `customer_portal.link_expiry_days` in Settings. There is no invented
+ *  default. */
+export async function issueCustomerGrant({
+  clientOperationId, scope, reportId, customerId, expiresAt, label
+}) {
+  return unwrap(await supabase.rpc('issue_customer_grant', {
+    p_client_operation_id: clientOperationId || newOperationId('grant'),
+    p_scope: scope ?? 'report',
+    p_report_id: reportId ?? null,
+    p_customer_id: customerId ?? null,
+    p_expires_at: expiresAt ?? null,
+    p_label: label ?? null
+  }));
+}
+
+/** Stop a link. It stops further reads and any new signed download; it
+ *  cannot reach inside a signed URL a reader already holds, and the
+ *  receipt says exactly that rather than claiming an instant cut-off. */
+export async function revokeCustomerGrant({ clientOperationId, grantId, reason }) {
+  return unwrap(await supabase.rpc('revoke_customer_grant', {
+    p_client_operation_id: clientOperationId || newOperationId('rev'),
+    p_grant_id: grantId,
+    p_reason: reason
+  }));
+}
+
+/** Who can read what, with prefixes rather than tokens, plus read counts. */
+export async function customerGrants({ reportId, customerId }) {
+  return unwrap(await supabase.rpc('customer_grants', {
+    p_report_id: reportId ?? null,
+    p_customer_id: customerId ?? null
+  }));
+}
+
+/* ------------------------------------------------------ delivery -- */
+
+/** Send a PUBLISHED report. Mints the customer's capability and queues the
+ *  message into the existing `notifications` table in one transaction, so
+ *  the token never comes back through a browser.
+ *
+ *  `accepted` means QUEUED, not sent -- the receipt carries `sent: false`
+ *  on purpose. `unavailable` is a receipt rather than an error (no SMS
+ *  provider, or no contact on file) and mints no capability at all. */
+export async function deliverCompletionReport({
+  clientOperationId, reportId, channel, expiresAt
+}) {
+  return unwrap(await supabase.rpc('deliver_completion_report', {
+    p_client_operation_id: clientOperationId || newOperationId('del'),
+    p_report_id: reportId,
+    p_channel: channel ?? 'sms',
+    p_expires_at: expiresAt ?? null
+  }));
+}
+
+/** Every delivery for a report, with its state and no recipient read back. */
+export async function reportDeliveries({ reportId }) {
+  return unwrap(await supabase.rpc('report_deliveries', { p_report_id: reportId }));
+}
+
+/** The five clocks: acceptance, readiness, generation, enqueue and the
+ *  provider's answer -- with local processing and provider time measured
+ *  separately. An unavailable provider or an unknown outcome is never
+ *  scored as having met a delivery target. */
+export async function reportDeliveryTiming({ reportId }) {
+  return unwrap(await supabase.rpc('report_delivery_timing', {
+    p_report_id: reportId
+  }));
+}
+
+/** Record what the provider said. Owner or the sending adapter only, and
+ *  `unknown` stays live and keeps blocking a second message. */
+export async function recordReportDeliveryOutcome({
+  deliveryId, deliveryState, providerMessageId, providerError
+}) {
+  return unwrap(await supabase.rpc('record_report_delivery_outcome', {
+    p_delivery_id: deliveryId,
+    p_delivery_state: deliveryState,
+    p_provider_message_id: providerMessageId ?? null,
+    p_provider_error: providerError ?? null
+  }));
+}
+
+/** Whether a customer can reply to one of our messages. Today: no, and the
+ *  answer says why, with the rule a later implementation inherits -- an
+ *  automatic reply never discloses an access code. */
+export async function inboundReplySupport() {
+  return unwrap(await supabase.rpc('ns_inbound_reply_support', {}));
+}
+
+/* ----------------------------------------------- payment boundary -- */
+
+/** The money state of a job: the approved total (accepted quote plus
+ *  approved, priced change orders), what has been received -- which this
+ *  system does not record -- and therefore a null remaining balance with
+ *  `balance_state: 'no_settlement_model'`. Also the provider state and the
+ *  provider work still outstanding. */
+export async function jobPaymentState({ jobId }) {
+  return unwrap(await supabase.rpc('job_payment_state', { p_job_id: jobId }));
+}
+
+/** Prepare a payment request. Returns `state: 'unavailable'` with a reason
+ *  while no provider is selected or no settlement model exists -- which is
+ *  today, for every job.
+ *
+ *  `expectedAmount` is the figure the owner was shown; a stale one is
+ *  refused rather than quietly re-bound. Preparing or opening a request is
+ *  never payment, and nothing in this system can mark work paid. */
+export async function createPaymentRequest({
+  clientOperationId, jobId, expectedAmount
+}) {
+  return unwrap(await supabase.rpc('create_payment_request', {
+    p_client_operation_id: clientOperationId || newOperationId('pay'),
+    p_job_id: jobId,
+    p_expected_amount: expectedAmount ?? null
+  }));
+}
