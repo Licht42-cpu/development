@@ -131,6 +131,7 @@ list, `field-qualification.test.py` as record checks, and the existing
 unchanged. The actual Android run can resume using the committed runbook once
 an owner-authorized integrated SHA/test backend and a target are available.
 Do not start conditional 14.x or treat this preparation as release approval.
+
 # Later source integration candidate
 
 The authorized source/wiring candidate is now
@@ -139,4 +140,4 @@ The authorized source/wiring candidate is now
 and `codex-files/artifacts/integration-candidate/qualification-record.json`.
 It includes a verified unchanged Claude snapshot without a Git merge.
 Backend/provider qualification and all 16 handset cases remain UNRUN; none of
-the historical 13.2 preparation below becomes a physical-device result.
+the historical 13.2 preparation above becomes a physical-device result.
