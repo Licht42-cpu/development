@@ -1,5 +1,11 @@
 # Nova Shield source integration candidate
 
+**Historical snapshot:** this records the earlier `f08edfd` integration.
+[Batch 15.2](batch15-2-findings.md) supersedes its current-state figures:
+Claude source `5169d7b`, 31 pending source migrations and the reconciled
+crew-scope rule. The source fixes remain unapplied live. The backend authority
+is [release runbook v1](release-runbook-v1.md).
+
 Candidate code: **`de9e5d76e576ec1d6334ffe14fabd465fbf53fab`**, on
 `codex/integration-candidate`. Base:
 `codex/batch-13-2@ae6fb6b8175d822388f9c3f5ef54bbaaf0166450`.

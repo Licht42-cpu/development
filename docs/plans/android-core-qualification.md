@@ -1,5 +1,10 @@
 # Batch 13.2 — Android core qualification runbook
 
+**Historical preparation context:** an authorised source integration candidate
+now exists; [Batch 15.2](../batch15-2-findings.md) records its refreshed source,
+the reconciled crew-scope rule and approved unchanged-copy provenance. There
+is still no Android target. The 16 device cases below remain UNRUN.
+
 This is an execution checklist, not a release approval. It covers one crew
 and at most two separate cars. Claude owns backend/admin work; Codex owns
 field/mobile qualification. No merge, production migration, live data/grant
