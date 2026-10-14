@@ -92,6 +92,26 @@ for (const width of [390, 430, 1280]) for (const [slug, hash, title] of surfaces
     observations.at(-1).levelCreationControl = await page.locator('select option[value="level"]').count() > 0;
   }
 }));
+for (const width of [390, 430, 1280]) await check(`Packaged crew dispatch at ${width}: scoped claim is named, keyboard reachable and 44px`, () => fixture({ width,
+  hash: '#/dispatch?location=car_a&day=2027-07-06', config: {
+    __owner: false, __rpcValues: { is_admin: true }, __values: { getDispatchDay: {
+      location_code: 'car_a', work_date: '2027-07-06', revision: 2, can_plan: false,
+      readable_vehicles: [{ code: 'car_a', name: 'Car A' }], stops: [],
+      unassigned_jobs: [{ job_id: JOB, customer_name: 'FIXTURE unassigned', status: 'in_progress' }]
+    } }
+  } }, async ({ page }, served) => {
+  const claim = page.getByRole('button', { name: 'This one is on my car', exact: true });
+  await claim.waitFor();
+  await claim.focus();
+  assert.ok(await claim.evaluate(node => node === document.activeElement));
+  const box = await claim.boundingBox();
+  assert.ok(box.width >= 44 && box.height >= 44);
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+  assert.equal(await page.getByRole('button', { name: /Give to / }).count(), 0);
+  await page.evaluate(() => scrollTo(0, 0));
+  await page.screenshot({ path: join(evidence, `dispatch-crew-${width}.png`), fullPage: true });
+  observations.push({ slug: 'dispatch-crew', width, claimTarget: box, served: Object.fromEntries(served) });
+}));
 await check('An empty device queue cannot claim confirmed server sync', async () => {
   const { page, context } = await fieldFixture(browser);
   try {
