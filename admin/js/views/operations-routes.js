@@ -22,7 +22,7 @@ function statusCard(host, title, state, retry) {
   ]));
 }
 
-async function featurePanel(ctx, host, title, read, mount) {
+async function featurePanel(ctx, host, title, read, mount, availabilityOptions = {}) {
   let attempt = 0;
   async function check() {
     const here = ++attempt;
@@ -30,7 +30,7 @@ async function featurePanel(ctx, host, title, read, mount) {
       el('h2', { text: title }),
       el('p', { role: 'status', text: 'Checking backend availability…' })
     ]));
-    const result = await operationsAvailability(title, read);
+    const result = await operationsAvailability(title, read, availabilityOptions);
     if (here !== attempt || ctx.isCurrent?.() === false) return;
     if (result.state !== 'available') return statusCard(host, title, result.state, check);
     try {
@@ -114,7 +114,7 @@ export async function renderDispatchRoute(ctx) {
       ctx.mount.querySelector('.page-head p').textContent = `Selected day: ${day}. The backend’s operating window is shown below.`;
     }, true);
     clear(host).append(panel);
-  });
+  }, { ownerOnly: false });
 }
 
 export async function mountPropertyAccess(ctx, propertyId) {

@@ -4,7 +4,7 @@ import { supabase } from '../../../shared/supabase.js';
 // details or assumptions that a checked-in migration has reached a server.
 // These establish the screen's read prerequisites, not a schema-version or
 // grant audit. The server still authorizes every operation when submitted.
-export async function operationsAvailability(feature, read, { timeoutMs = 12000 } = {}) {
+export async function operationsAvailability(feature, read, { timeoutMs = 12000, ownerOnly = true } = {}) {
   if (!navigator.onLine) return { state: 'offline', feature };
   const controller = new AbortController();
   let timer;
@@ -18,7 +18,14 @@ export async function operationsAvailability(feature, read, { timeoutMs = 12000 
     const check = (async () => {
       const owner = await supabase.rpc('is_owner').abortSignal(controller.signal);
       if (owner.error) throw owner.error;
-      if (owner.data !== true) return { state: 'owner_only', feature };
+      if (owner.data !== true) {
+        if (ownerOnly) return { state: 'owner_only', feature };
+        // Dispatch's reviewed contract permits the vehicle's crew. Establish
+        // current membership, then let its scoped read authorize the vehicle.
+        const admin = await supabase.rpc('is_admin').abortSignal(controller.signal);
+        if (admin.error) throw admin.error;
+        if (admin.data !== true) return { state: 'denied', feature };
+      }
       const value = await read(controller.signal);
       return { state: 'available', feature, value };
     })();

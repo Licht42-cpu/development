@@ -14,6 +14,7 @@ const auth = `
     if (__probeError) return { data:null, error:__probeError };
     if (__missingRelation === name) return { data:null, error:{code:'PGRST205',message:'missing'} };
     if (kind==='rpc' && name==='is_owner') return { data:__owner, error:null };
+    if (kind==='rpc' && __rpcErrors[name]) return { data:null, error:__rpcErrors[name] };
     if (kind==='rpc' && name in __rpcValues) return {data:__rpcValues[name],error:null};
     if (kind==='table' && name==='ns_job_evidence_readiness') return { data:__readiness, error:null };
     return { data:{}, error:null };
@@ -63,7 +64,7 @@ export async function integrationFixture(browser, {hash='#/inventory',width=390,
   const context=await browser.newContext({viewport:{width,height:900},serviceWorkers:'block'});
   context.setDefaultTimeout(6500);
   await context.addInitScript(config=>{
-    Object.assign(globalThis,{__checks:[],__calls:[],__values:{},__rpcValues:{},__owner:true,__probeDelay:0,__probeError:null,__missingRelation:null,
+    Object.assign(globalThis,{__checks:[],__calls:[],__values:{},__rpcValues:{},__rpcErrors:{},__owner:true,__probeDelay:0,__probeError:null,__missingRelation:null,
       __readiness:{job_id:'11111111-1111-4111-8111-111111111111',evidence_state:'satisfied',completion_open:false,latest_completion_id:null,blocking_shortfalls:0,unconfigured_services:[],policy_version:1,lock_version:1}},config);
     if(config.__offline)Object.defineProperty(navigator,'onLine',{get:()=>false});
   },config);
@@ -73,6 +74,10 @@ export async function integrationFixture(browser, {hash='#/inventory',width=390,
   if(process.env.OPERATIONS_BREAK==='routes'){
     const body=execFileSync('git',['show','ae6fb6b:admin/js/main.js'],{encoding:'utf8'});
     await context.route(BASE+'/admin/js/main.js',route=>route.fulfill({contentType:'application/javascript',body}));
+  }
+  if(process.env.OPERATIONS_BREAK==='crew_gate'){
+    const body=execFileSync('git',['show','5e6583f:admin/js/lib/operations-availability.js'],{encoding:'utf8'});
+    await context.route(BASE+'/admin/js/lib/operations-availability.js',route=>route.fulfill({contentType:'application/javascript',body}));
   }
   const page=await context.newPage();const errors=[];
   page.on('pageerror',err=>errors.push(err.message));

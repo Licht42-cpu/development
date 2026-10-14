@@ -139,6 +139,45 @@ await check('Availability timeout resolves without leaving a permanent spinner',
   assert.equal(result.state,'timeout');
 }));
 
+await check('The real dispatch route lets a freshly checked crew reach its own claim control',()=>fixture({hash:'#/dispatch?location=car_a&day=2027-07-06',config:{
+  __owner:false,__rpcValues:{is_admin:true},__values:{getDispatchDay:{location_code:'car_a',work_date:'2027-07-06',revision:2,can_plan:false,
+    readable_vehicles:[{code:'car_a',name:'Car A'}],stops:[],unassigned_jobs:[{job_id:JOB,customer_name:'FIXTURE unassigned',status:'in_progress'}]}}
+}},async({page})=>{
+  const claim=page.getByRole('button',{name:'This one is on my car',exact:true});
+  await claim.waitFor();
+  assert.ok((await page.evaluate(()=>__checks)).some(c=>c.name==='is_admin'));
+  assert.equal(await page.getByRole('button',{name:/Give to /}).count(),0);
+  await claim.focus();await page.keyboard.press('Enter');
+  await page.waitForFunction(()=>__calls.some(c=>c.name==='claimJobForVehicle'));
+  const call=await page.evaluate(()=>__calls.find(c=>c.name==='claimJobForVehicle'));
+  assert.equal(call.args[0].jobId,JOB);
+  assert.equal('locationCode' in call.args[0],false);
+}));
+
+await check('Dispatch refuses an account whose fresh admin check fails',()=>fixture({hash:'#/dispatch',config:{__owner:false,__rpcValues:{is_admin:false}}},async({page})=>{
+  await page.getByRole('heading',{name:'Dispatch — unavailable',exact:true}).waitFor();
+  assert.match(await page.locator('#view').innerText(),/server refused access/);
+  assert.ok(!(await page.evaluate(()=>__checks)).some(c=>c.name==='get_dispatch_day'));
+}));
+
+await check('A crew cannot mount another vehicle day after its scoped read refuses',()=>fixture({hash:'#/dispatch?location=car_b',config:{__owner:false,__rpcValues:{is_admin:true},__rpcErrors:{get_dispatch_day:{code:'42501',message:'PRIVATE ACCESS CODE'}}}},async({page})=>{
+  await page.getByRole('heading',{name:'Dispatch — unavailable',exact:true}).waitFor();
+  assert.equal(await page.getByRole('button',{name:'This one is on my car',exact:true}).count(),0);
+  assert.ok(!(await page.locator('#view').innerText()).includes('PRIVATE ACCESS CODE'));
+  assert.ok(!(await page.evaluate(()=>__calls)).some(c=>c.name==='getDispatchDay'));
+}));
+
+await check('The copied crew API quotes the original claim key and revision without a vehicle override',()=>fixture({},async({page})=>{
+  const calls=await page.evaluate(async job=>{
+    const api=await import('/admin/js/lib/api.js?claim-boundary');
+    await api.jobCrewScope({jobId:job});
+    await api.claimJobForVehicle({clientOperationId:'original-claim-key',jobId:job,reason:'Working this job',expectedRevision:4});
+    return __checks;
+  },JOB);
+  assert.deepEqual(calls.find(c=>c.name==='job_crew_scope').args,{p_job_id:JOB});
+  assert.deepEqual(calls.find(c=>c.name==='claim_job_for_vehicle').args,{p_client_operation_id:'original-claim-key',p_job_id:JOB,p_reason:'Working this job',p_expected_revision:4});
+}));
+
 await check('The unchanged real API preserves read parameters, rendered locks and movement precision',()=>fixture({},async({page})=>{
   const result=await page.evaluate(async({job,property})=>{
     // Query suffix bypasses only the test fixture's API stub. This imports
