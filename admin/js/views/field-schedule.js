@@ -170,7 +170,7 @@ export async function renderSchedule({ mount, navigate }) {
     ]);
   }
 
-  clear(mount).append(
+  clear(mount).append(...[
     el('div', { class: 'page-head', style: 'padding:0 0 10px' }, [
       el('h1', { text: "Today's schedule" }),
       el('p', { class: 'hint', text: 'Device-calendar visits. Use Ordered day for the server operating-day window and dispatch order. Proximity does not confirm arrival.' }),
@@ -195,7 +195,7 @@ export async function renderSchedule({ mount, navigate }) {
           el('div', {}, upcoming.map(upcomingRow))
         ])
       : null
-  );
+  ].filter(Boolean));
 
   if (visits.length) checkArrival();
 }

@@ -299,6 +299,7 @@ await record('The schedule retains distinct successful-empty and failed-load sta
   const { context, page } = await fieldFixture(browser);
   try {
     await page.getByText('Nothing booked for today', { exact: true }).waitFor();
+    assert.doesNotMatch(await page.locator('#view').innerText(), /^\s*null\s*$/m);
     await page.evaluate(() => { __fail.listTodaysVisits = 'Failed to fetch'; });
     await page.locator('.field-topbar__brand').click();
     // Clicking the same hash does not refresh; navigate away/back through the router.
