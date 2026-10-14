@@ -214,6 +214,14 @@ input[inputmode="decimal"], input[type="number"] {
 .btn.btn--primary[aria-busy="true"] { opacity: 1; cursor: wait; }
 .btn--danger { color: var(--danger); border-color: var(--danger); background: var(--danger-soft); }
 .btn--sm { min-height: var(--tap); min-width: var(--tap); padding: 4px 10px; font-size: .85rem; }
+/* Back and contact links are handset controls too. Preserve their plain
+   appearance while providing the same minimum target as action buttons. */
+.page-head > a.hint,
+.field a[href^="tel:"], .field a[href^="mailto:"] {
+  display: inline-flex; align-items: center;
+  min-height: var(--tap); min-width: var(--tap);
+  max-width: 100%; overflow-wrap: anywhere;
+}
 /* field.html has an inline 40px override. Keep its compact controls at the
    same minimum tap size without changing that page's owned markup. */
 .field-view .btn.btn--sm { min-height: var(--tap); }

@@ -275,7 +275,7 @@ syncBadge.after(syncStatus);
 
 /* Four states the tech must be able to tell apart, because they call for
    different actions:
-     synced       - nothing outstanding, connection fine
+     no queued actions - the local outbox is empty; no server receipt implied
      offline      - no connection; anything saved is saved HERE, not on the server
      pending sync - has connection, replay in flight or waiting
      sync failed  - has connection but replay hit a real error; needs attention
@@ -294,7 +294,7 @@ function paintBadge(state) {
   }
 
   if (count === 0) {
-    syncBadge.textContent = online ? 'Synced' : 'Offline';
+    syncBadge.textContent = online ? 'No queued actions' : 'Offline';
     syncBadge.className = online ? 'sync-badge sync-badge--ok' : 'sync-badge sync-badge--queued';
     return;
   }
