@@ -1,0 +1,17 @@
+- main:
+  - link "← Today’s jobs":
+    - /url: "#/jobs?bucket=today"
+  - heading "Dispatch day" [level=1]
+  - paragraph: "Selected day: 2027-07-06. A default day uses this device’s calendar; the backend’s operating window is shown when available."
+  - link "Review this vehicle’s loading":
+    - /url: field.html#/load?vehicle=car_a&day=2027-07-06
+  - heading "Dispatch" [level=2]
+  - paragraph: Today’s work in order, for one car at a time. Ordering and reassigning are the owner’s; nothing here moves stock or completes work.
+  - text: Vehicle
+  - combobox "Vehicle":
+    - option "Car A" [selected]
+    - option "Car B"
+  - text: Day
+  - textbox "Day": 2027-07-06
+  - paragraph: The operating day has no timezone set, so this list counts a day as midnight to midnight UTC. Work booked late in the afternoon can appear on the next day. Set it in Settings.
+  - paragraph: Nothing on car_a for Jul 6, 2027.

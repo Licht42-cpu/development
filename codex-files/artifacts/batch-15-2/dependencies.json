@@ -1,0 +1,76 @@
+{
+  "version": "1.0.0",
+  "name": "nova-shield",
+  "dependencies": {
+    "@capacitor/android": {
+      "version": "8.5.2",
+      "resolved": "https://registry.npmjs.org/@capacitor/android/-/android-8.5.2.tgz",
+      "overridden": false
+    },
+    "@capacitor/app": {
+      "version": "8.1.2",
+      "resolved": "https://registry.npmjs.org/@capacitor/app/-/app-8.1.2.tgz",
+      "overridden": false
+    },
+    "@capacitor/camera": {
+      "version": "8.2.5",
+      "resolved": "https://registry.npmjs.org/@capacitor/camera/-/camera-8.2.5.tgz",
+      "overridden": false
+    },
+    "@capacitor/cli": {
+      "version": "8.5.2",
+      "resolved": "https://registry.npmjs.org/@capacitor/cli/-/cli-8.5.2.tgz",
+      "overridden": false
+    },
+    "@capacitor/core": {
+      "version": "8.5.2",
+      "resolved": "https://registry.npmjs.org/@capacitor/core/-/core-8.5.2.tgz",
+      "overridden": false
+    },
+    "@capacitor/filesystem": {
+      "version": "8.1.4",
+      "resolved": "https://registry.npmjs.org/@capacitor/filesystem/-/filesystem-8.1.4.tgz",
+      "overridden": false
+    },
+    "@capacitor/geolocation": {
+      "version": "8.2.3",
+      "resolved": "https://registry.npmjs.org/@capacitor/geolocation/-/geolocation-8.2.3.tgz",
+      "overridden": false
+    },
+    "@capacitor/haptics": {
+      "version": "8.0.2",
+      "resolved": "https://registry.npmjs.org/@capacitor/haptics/-/haptics-8.0.2.tgz",
+      "overridden": false
+    },
+    "@capacitor/ios": {
+      "version": "8.5.2",
+      "resolved": "https://registry.npmjs.org/@capacitor/ios/-/ios-8.5.2.tgz",
+      "overridden": false
+    },
+    "@capacitor/share": {
+      "version": "8.0.3",
+      "resolved": "https://registry.npmjs.org/@capacitor/share/-/share-8.0.3.tgz",
+      "overridden": false
+    },
+    "@capacitor/status-bar": {
+      "version": "8.0.4",
+      "resolved": "https://registry.npmjs.org/@capacitor/status-bar/-/status-bar-8.0.4.tgz",
+      "overridden": false
+    },
+    "@supabase/supabase-js": {
+      "version": "2.117.3",
+      "resolved": "https://registry.npmjs.org/@supabase/supabase-js/-/supabase-js-2.117.3.tgz",
+      "overridden": false
+    },
+    "es-module-lexer": {
+      "version": "1.7.0",
+      "resolved": "https://registry.npmjs.org/es-module-lexer/-/es-module-lexer-1.7.0.tgz",
+      "overridden": false
+    },
+    "pg": {
+      "version": "8.23.1",
+      "resolved": "https://registry.npmjs.org/pg/-/pg-8.23.1.tgz",
+      "overridden": false
+    }
+  }
+}

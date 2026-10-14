@@ -1,0 +1,28 @@
+{
+  "kind": "Live anonymous read-only RPC probes, not authenticated screen or migration history verification",
+  "checked_at": "2026-10-14T10:42:38.104613+00:00",
+  "actor": "publishable-key anonymous; no user session",
+  "scope": "nil property/job IDs; no business records read",
+  "results": [
+    {
+      "rpc": "is_owner",
+      "http_status": 404,
+      "error_code": "PGRST202"
+    },
+    {
+      "rpc": "get_dispatch_day",
+      "http_status": 404,
+      "error_code": "PGRST202"
+    },
+    {
+      "rpc": "get_property_access",
+      "http_status": 404,
+      "error_code": "PGRST202"
+    },
+    {
+      "rpc": "job_completion_reports",
+      "http_status": 404,
+      "error_code": "PGRST202"
+    }
+  ]
+}

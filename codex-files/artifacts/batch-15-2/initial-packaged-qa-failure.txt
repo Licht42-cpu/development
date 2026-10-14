@@ -1,0 +1,44 @@
+(node:146208) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("./codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - Packaged inventory: missing backend remains named and write-free
+PASS - Packaged dispatch: missing backend remains named and write-free
+PASS - Packaged property: missing backend remains named and write-free
+PASS - Packaged handover: missing backend remains named and write-free
+PASS - Packaged inventory at 390: keyboard, names, layout and measured targets
+FAIL - Packaged dispatch at 390: keyboard, names, layout and measured targets
+locator.focus: Timeout 6500ms exceeded.
+Call log:
+[2m  - waiting for locator('#view button:visible:not([disabled])').first()[22m
+
+    at /workspace/nova-shield/tests/final-candidate-qa.mjs:68:17
+    at async fixture (/workspace/nova-shield/tests/final-candidate-qa.mjs:39:5)
+    at async check (/workspace/nova-shield/tests/final-candidate-qa.mjs:21:9)
+    at async file:///workspace/nova-shield/tests/final-candidate-qa.mjs:60:83
+PASS - Packaged property at 390: keyboard, names, layout and measured targets
+PASS - Packaged handover at 390: keyboard, names, layout and measured targets
+PASS - Packaged inventory at 430: keyboard, names, layout and measured targets
+FAIL - Packaged dispatch at 430: keyboard, names, layout and measured targets
+locator.focus: Timeout 6500ms exceeded.
+Call log:
+[2m  - waiting for locator('#view button:visible:not([disabled])').first()[22m
+
+    at /workspace/nova-shield/tests/final-candidate-qa.mjs:68:17
+    at async fixture (/workspace/nova-shield/tests/final-candidate-qa.mjs:39:5)
+    at async check (/workspace/nova-shield/tests/final-candidate-qa.mjs:21:9)
+    at async file:///workspace/nova-shield/tests/final-candidate-qa.mjs:60:83
+PASS - Packaged property at 430: keyboard, names, layout and measured targets
+PASS - Packaged handover at 430: keyboard, names, layout and measured targets
+PASS - Packaged inventory at 1280: keyboard, names, layout and measured targets
+FAIL - Packaged dispatch at 1280: keyboard, names, layout and measured targets
+locator.focus: Timeout 6500ms exceeded.
+Call log:
+[2m  - waiting for locator('#view button:visible:not([disabled])').first()[22m
+
+    at /workspace/nova-shield/tests/final-candidate-qa.mjs:68:17
+    at async fixture (/workspace/nova-shield/tests/final-candidate-qa.mjs:39:5)
+    at async check (/workspace/nova-shield/tests/final-candidate-qa.mjs:21:9)
+    at async file:///workspace/nova-shield/tests/final-candidate-qa.mjs:60:83
+PASS - Packaged property at 1280: keyboard, names, layout and measured targets
+PASS - Packaged handover at 1280: keyboard, names, layout and measured targets
+13/16 passed

@@ -1,0 +1,329 @@
+{
+  "base_sha": "52510c3d49cdffa71a0f607c676b82bde1c48416",
+  "qualified_candidate_sha": "f0bdab542e04f26d0a8fcc668121e47ef4247fc2",
+  "claude_source_sha": "5169d7bf18e99e10855b47da2d12308d886f0fc9",
+  "branch": "codex/batch-15-2",
+  "suites": [
+    {
+      "suite": "phase2",
+      "passed": 18,
+      "failed": 0
+    },
+    {
+      "suite": "phase3",
+      "passed": 11,
+      "failed": 0
+    },
+    {
+      "suite": "phase4",
+      "passed": 17,
+      "failed": 0
+    },
+    {
+      "suite": "phase5",
+      "passed": 13,
+      "failed": 0
+    },
+    {
+      "suite": "phase6",
+      "passed": 14,
+      "failed": 0
+    },
+    {
+      "suite": "phase7",
+      "passed": 16,
+      "failed": 0
+    },
+    {
+      "suite": "phase8",
+      "passed": 17,
+      "failed": 0
+    },
+    {
+      "suite": "phase9",
+      "passed": 15,
+      "failed": 0
+    },
+    {
+      "suite": "phase10",
+      "passed": 18,
+      "failed": 0
+    },
+    {
+      "suite": "phase10-5",
+      "passed": 9,
+      "failed": 0
+    },
+    {
+      "suite": "phase11",
+      "passed": 18,
+      "failed": 0
+    },
+    {
+      "suite": "phase12",
+      "passed": 17,
+      "failed": 0
+    },
+    {
+      "suite": "phase13",
+      "passed": 17,
+      "failed": 0
+    },
+    {
+      "suite": "phase14",
+      "passed": 13,
+      "failed": 0
+    },
+    {
+      "suite": "phase15",
+      "passed": 15,
+      "failed": 0
+    },
+    {
+      "suite": "phase16",
+      "passed": 13,
+      "failed": 0
+    },
+    {
+      "suite": "phase17",
+      "passed": 16,
+      "failed": 0
+    },
+    {
+      "suite": "phase18",
+      "passed": 35,
+      "failed": 0
+    },
+    {
+      "suite": "phase19",
+      "passed": 25,
+      "failed": 0
+    },
+    {
+      "suite": "phase20",
+      "passed": 24,
+      "failed": 0
+    },
+    {
+      "suite": "phase21",
+      "passed": 14,
+      "failed": 0
+    },
+    {
+      "suite": "phase22",
+      "passed": 18,
+      "failed": 0
+    },
+    {
+      "suite": "phase23",
+      "passed": 55,
+      "failed": 0
+    },
+    {
+      "suite": "phase24",
+      "passed": 37,
+      "failed": 0
+    },
+    {
+      "suite": "phase25",
+      "passed": 25,
+      "failed": 0
+    },
+    {
+      "suite": "phase26",
+      "passed": 29,
+      "failed": 0
+    },
+    {
+      "suite": "phase27",
+      "passed": 16,
+      "failed": 0
+    },
+    {
+      "suite": "phase28",
+      "passed": 30,
+      "failed": 0
+    },
+    {
+      "suite": "phase29",
+      "passed": 40,
+      "failed": 0
+    },
+    {
+      "suite": "geofence",
+      "passed": null,
+      "failed": 0,
+      "result": "PASS, separate uncounted result"
+    },
+    {
+      "suite": "native-wrapper",
+      "passed": 19,
+      "failed": 0
+    },
+    {
+      "suite": "reload-offline",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "suite": "measurement-entry",
+      "passed": 29,
+      "failed": 0
+    },
+    {
+      "suite": "mobile-reliability",
+      "passed": 22,
+      "failed": 0
+    },
+    {
+      "suite": "field-resilience",
+      "passed": 27,
+      "failed": 0
+    },
+    {
+      "suite": "native-readiness",
+      "passed": 24,
+      "failed": 0
+    },
+    {
+      "suite": "native-bundle",
+      "passed": 10,
+      "failed": 0
+    },
+    {
+      "suite": "native-packaging",
+      "passed": 19,
+      "failed": 0
+    },
+    {
+      "suite": "native-startup",
+      "passed": 18,
+      "failed": 0
+    },
+    {
+      "suite": "offline-work",
+      "passed": 49,
+      "failed": 0
+    },
+    {
+      "suite": "load-prep",
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "field-evidence",
+      "passed": 31,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "field-load",
+      "passed": 41,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "field-completion",
+      "passed": 35,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "field-dispatch",
+      "passed": 45,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "core-journey",
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "suite": "operations-integration",
+      "passed": 34,
+      "failed": 0
+    }
+  ],
+  "shared_distinct_checks_passed": 1031,
+  "geofence": "PASS, uncounted separate result",
+  "staged_browser_cases": 20,
+  "header_functional_observations": 3,
+  "native_sdk_checks": 6,
+  "apk_audit_checks": 25,
+  "record_validator_checks": 18,
+  "final_normal_failures": 0,
+  "skipped": 0,
+  "declared_expected_failures": 5,
+  "device_gate": "EXPECTED REJECTION, no device results",
+  "physical_device_cases": {
+    "PASS": 0,
+    "FAIL": 0,
+    "SKIPPED": 0,
+    "UNRUN": 16
+  },
+  "database": "UNRUN",
+  "live_authenticated_integration": "UNRUN; no authorised session supplied",
+  "live_anonymous_reads": "4 probes, 404/PGRST202; no user session or business records",
+  "emulator": "UNRUN",
+  "providers": "UNRUN",
+  "production": "UNRUN",
+  "14.2": "Not authorised; no additional cases invented",
+  "source_files_unchanged": 125,
+  "migration_files_unchanged": 41,
+  "pending_migrations_after_reported_cutoff": 31,
+  "live_migration_history": "UNRUN; owner reports pending state",
+  "captures": 58,
+  "apk_sha256": "4e41f92870d167f88ee997c25148711dd33624055f8a08919b4cb7ad376526a0",
+  "apk_asset_binding": {
+    "candidate_sha": "f0bdab542e04f26d0a8fcc668121e47ef4247fc2",
+    "assets_match_commit": true,
+    "apk_matches_staging": true
+  },
+  "publication": "none",
+  "ordinary_initial_failures": "Preserved separately: initial QA selector assumptions, omitted transitive-permission audit expectations and one signature callback assertion in an earlier full run.",
+  "shared_full_run_sha": "d83c4b6732db8df6c8ee6fab67d8a7b776c86442",
+  "final_affected_suites": [
+    {
+      "suite": "field-resilience",
+      "passed": 27,
+      "failed": 0
+    },
+    {
+      "suite": "offline-work",
+      "passed": 49,
+      "failed": 0
+    },
+    {
+      "suite": "native-readiness",
+      "passed": 24,
+      "failed": 0
+    },
+    {
+      "suite": "native-startup",
+      "passed": 18,
+      "failed": 0
+    },
+    {
+      "suite": "native-bundle",
+      "passed": 10,
+      "failed": 0
+    },
+    {
+      "suite": "native-packaging",
+      "passed": 19,
+      "failed": 0
+    },
+    {
+      "suite": "core-journey",
+      "passed": 5,
+      "failed": 0
+    }
+  ],
+  "final_affected_checks_passed": 152,
+  "overlap_note": "The complete 47-suite run passed before the final empty-schedule/toast fixes. Seven affected suites were rerun at the final candidate; their 152 checks overlap the 1,031 distinct shared checks.",
+  "final_captures": 57,
+  "before_fix_captures": 1
+}

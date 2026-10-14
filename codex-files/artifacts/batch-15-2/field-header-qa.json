@@ -1,0 +1,41 @@
+{
+  "proof": "Three browser-only visual/functional observations; no server sync or physical-device proof.",
+  "observations": [
+    {
+      "width": 390,
+      "status": "PASS",
+      "localBadge": "No queued actions",
+      "target": {
+        "x": 16,
+        "y": 114,
+        "width": 130.53125,
+        "height": 44
+      },
+      "serverWrites": 0
+    },
+    {
+      "width": 430,
+      "status": "PASS",
+      "localBadge": "No queued actions",
+      "target": {
+        "x": 16,
+        "y": 114,
+        "width": 130.53125,
+        "height": 44
+      },
+      "serverWrites": 0
+    },
+    {
+      "width": 1280,
+      "status": "PASS",
+      "localBadge": "No queued actions",
+      "target": {
+        "x": 1047.515625,
+        "y": 28,
+        "width": 130.53125,
+        "height": 44
+      },
+      "serverWrites": 0
+    }
+  ]
+}

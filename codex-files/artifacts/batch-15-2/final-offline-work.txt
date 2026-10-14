@@ -1,0 +1,54 @@
+(node:297622) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("./codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - Prefetch, offline restart and visit navigation preserve addresses, passport and notes
+PASS - Passport and note drafts survive a closed page and are labeled unsent
+PASS - A note cannot be edited before its draft listener is ready
+PASS - Management handoff commits a newly typed note before changing documents
+PASS - Offline passport saves survive restart as pending property facts
+PASS - Offline new measurements are saved without invoking pricing or unsupported writes
+PASS - An uncached deep link reports unavailable rather than another job’s data
+PASS - Expired snapshots stop offline access without destroying pending actions
+PASS - Account switching hides another account’s visits, drafts and photo payloads
+PASS - Logout removes read snapshots and preserves owned unsent actions
+PASS - Offline or rejected logout never falsely announces successful sign-out
+PASS - Revoked online access never falls back to cached private work
+PASS - Replay revalidates revoked targets before sending and retains their payload
+PASS - Reconnecting replays supported writes in order and removes them only after success
+PASS - Denied replay immediately hides an already-open cached visit and retains its unsent work
+PASS - Denied work stays retired after reload even if its cache deletion failed
+PASS - Photo bytes commit before network I/O; a lost response is held for explicit review
+PASS - A signature resumes its saved upload path without uploading again after a rejected RPC
+PASS - A lost signature response reconciles the matching server signature after explicit review
+PASS - Different tabs share one replay lock and cannot execute the same head twice
+PASS - Offline passport replay preserves unrelated server fields
+PASS - A conflicting server passport edit stops replay rather than overwriting it
+PASS - Connection loss while the browser reports online uses the saved snapshot
+PASS - Changing accounts closes private outbox dialogs immediately
+PASS - A detached old-account action cannot be persisted as the new account’s action
+PASS - A pending quantity timer cannot save after its account’s screen is removed
+PASS - Storage failure refuses photo saving before any server upload
+PASS - An interrupted in-flight send survives page closure and does not replay automatically
+PASS - A failed preparation keeps the previous complete snapshot
+PASS - Prefetch is bounded to twenty visits and says when the schedule is truncated
+PASS - Storage failure never claims that work was saved
+PASS - Preparation caches job flags and pricing-rule metadata without invoking pricing
+PASS - Reference refresh is independent of visit facts and preparation reuses fresh references
+PASS - Expired references keep saved visit facts readable but stop new measurement entry
+PASS - The seven-day horizon excludes later visits and duplicate rows do not consume the bound
+PASS - The ten-megabyte bound counts references and visit facts together
+PASS - An aborted write transaction cannot announce that work was saved
+PASS - An empty work store degrades truthfully and retains separately stored photo bytes
+PASS - A blocked populated outbox upgrade has a retry screen and preserves full legacy bytes
+PASS - Upgrading the populated work store preserves its snapshot and note draft
+PASS - A blocked work-store upgrade reports failure and recovers when its old tab closes
+PASS - A temporary storage exception can be retried without erasing saved work
+PASS - Preparation never stores expiring signed URLs and online photo views re-sign
+PASS - A v1 upgrade preserves full legacy bytes and blocks unowned replay
+PASS - The real Supabase SDK can reopen saved work with an expired offline access token
+PASS - Saved work at 390px fits and exposes real local photo previews
+PASS - Saved work at 430px fits and exposes real local photo previews
+PASS - Saved work at 1200px fits and exposes real local photo previews
+PASS - Actual Chromium process restart retains the prepared snapshot and photo Blob
+
+49/49 passed

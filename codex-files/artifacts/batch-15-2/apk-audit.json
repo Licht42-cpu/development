@@ -1,0 +1,227 @@
+{
+  "proof": "Local debug artifact audit, not installation, delivery, authorization or physical-device proof.",
+  "candidate": {
+    "sha": "f0bdab542e04f26d0a8fcc668121e47ef4247fc2",
+    "branch": "codex/batch-15-2",
+    "tracked_changes": "",
+    "contains_codex_12_2": true,
+    "contains_claude_12_1": false,
+    "claude_snapshot": {
+      "verified": true,
+      "source_sha": "5169d7bf18e99e10855b47da2d12308d886f0fc9",
+      "files_checked": 125,
+      "migration_files_checked": 41,
+      "proof": "committed_source_only"
+    },
+    "authorization_reference": "Owner Batch 15.2 assignment; local qualification only",
+    "classification": "authorized_integrated_candidate"
+  },
+  "checks": [
+    {
+      "name": "dependencies match lock root",
+      "status": "PASS"
+    },
+    {
+      "name": "@capacitor/android exact version",
+      "status": "PASS"
+    },
+    {
+      "name": "@capacitor/app exact version",
+      "status": "PASS"
+    },
+    {
+      "name": "@capacitor/camera exact version",
+      "status": "PASS"
+    },
+    {
+      "name": "@capacitor/core exact version",
+      "status": "PASS"
+    },
+    {
+      "name": "@capacitor/filesystem exact version",
+      "status": "PASS"
+    },
+    {
+      "name": "@capacitor/geolocation exact version",
+      "status": "PASS"
+    },
+    {
+      "name": "@capacitor/haptics exact version",
+      "status": "PASS"
+    },
+    {
+      "name": "@capacitor/ios exact version",
+      "status": "PASS"
+    },
+    {
+      "name": "@capacitor/share exact version",
+      "status": "PASS"
+    },
+    {
+      "name": "@capacitor/status-bar exact version",
+      "status": "PASS"
+    },
+    {
+      "name": "@supabase/supabase-js exact version",
+      "status": "PASS"
+    },
+    {
+      "name": "devDependencies match lock root",
+      "status": "PASS"
+    },
+    {
+      "name": "@capacitor/cli exact version",
+      "status": "PASS"
+    },
+    {
+      "name": "es-module-lexer exact version",
+      "status": "PASS"
+    },
+    {
+      "name": "pg exact version",
+      "status": "PASS"
+    },
+    {
+      "name": "committed unchanged Claude snapshot",
+      "status": "PASS"
+    },
+    {
+      "name": "staged inputs bound to candidate commit",
+      "status": "PASS"
+    },
+    {
+      "name": "APK bytes match every staged file",
+      "status": "PASS"
+    },
+    {
+      "name": "compiled manifest inspection",
+      "status": "PASS"
+    },
+    {
+      "name": "packaged app ID and version match project",
+      "status": "PASS"
+    },
+    {
+      "name": "compiled permission set matches reviewed foreground-only set",
+      "status": "PASS"
+    },
+    {
+      "name": "compiled dynamic receiver permission is signature protected",
+      "status": "PASS"
+    },
+    {
+      "name": "only known Cordova compatibility files added",
+      "status": "PASS"
+    },
+    {
+      "name": "compiled native artifacts present",
+      "status": "PASS"
+    }
+  ],
+  "dependency_versions": {
+    "@capacitor/android": {
+      "declared": "8.5.2",
+      "locked": "8.5.2",
+      "installed": "8.5.2"
+    },
+    "@capacitor/app": {
+      "declared": "8.1.2",
+      "locked": "8.1.2",
+      "installed": "8.1.2"
+    },
+    "@capacitor/camera": {
+      "declared": "8.2.5",
+      "locked": "8.2.5",
+      "installed": "8.2.5"
+    },
+    "@capacitor/core": {
+      "declared": "8.5.2",
+      "locked": "8.5.2",
+      "installed": "8.5.2"
+    },
+    "@capacitor/filesystem": {
+      "declared": "8.1.4",
+      "locked": "8.1.4",
+      "installed": "8.1.4"
+    },
+    "@capacitor/geolocation": {
+      "declared": "8.2.3",
+      "locked": "8.2.3",
+      "installed": "8.2.3"
+    },
+    "@capacitor/haptics": {
+      "declared": "8.0.2",
+      "locked": "8.0.2",
+      "installed": "8.0.2"
+    },
+    "@capacitor/ios": {
+      "declared": "8.5.2",
+      "locked": "8.5.2",
+      "installed": "8.5.2"
+    },
+    "@capacitor/share": {
+      "declared": "8.0.3",
+      "locked": "8.0.3",
+      "installed": "8.0.3"
+    },
+    "@capacitor/status-bar": {
+      "declared": "8.0.4",
+      "locked": "8.0.4",
+      "installed": "8.0.4"
+    },
+    "@supabase/supabase-js": {
+      "declared": "2.117.3",
+      "locked": "2.117.3",
+      "installed": "2.117.3"
+    },
+    "@capacitor/cli": {
+      "declared": "8.5.2",
+      "locked": "8.5.2",
+      "installed": "8.5.2"
+    },
+    "es-module-lexer": {
+      "declared": "1.7.0",
+      "locked": "1.7.0",
+      "installed": "1.7.0"
+    },
+    "pg": {
+      "declared": "8.23.1",
+      "locked": "8.23.1",
+      "installed": "8.23.1"
+    }
+  },
+  "version": {
+    "application_id": "com.novashield.admin",
+    "version_code": "1",
+    "version_name": "1.0",
+    "npm_version": "1.0.0",
+    "min_sdk": [
+      "24"
+    ],
+    "target_sdk": [
+      "36"
+    ]
+  },
+  "permissions": [
+    "android.permission.ACCESS_COARSE_LOCATION",
+    "android.permission.ACCESS_FINE_LOCATION",
+    "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.INTERNET",
+    "android.permission.VIBRATE",
+    "com.novashield.admin.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+  ],
+  "transitive_permission_origins": {
+    "android.permission.ACCESS_NETWORK_STATE": "io.ionic.libs:iongeolocation-android:2.2.2",
+    "com.novashield.admin.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION": "androidx.core:core:1.17.0; signature protection"
+  },
+  "staged_file_count": 178,
+  "packaged_web_file_count": 180,
+  "apk_sha256": "4e41f92870d167f88ee997c25148711dd33624055f8a08919b4cb7ad376526a0",
+  "apk_bytes": 9554179,
+  "asset_binding": {
+    "candidate_sha": "f0bdab542e04f26d0a8fcc668121e47ef4247fc2",
+    "assets_match_commit": true,
+    "apk_matches_staging": true
+  },
+  "publication": "none"
+}

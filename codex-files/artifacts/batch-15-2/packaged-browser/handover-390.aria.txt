@@ -1,0 +1,125 @@
+- main:
+  - link "← All jobs":
+    - /url: "#/jobs"
+  - heading "FIXTURE Customer" [level=1]
+  - paragraph: FIXTURE 100 Example Road, Example City
+  - 'link "Customer: FIXTURE Customer"':
+    - /url: "#/customers/33333333-3333-4333-8333-333333333333"
+  - link "Property Passport":
+    - /url: "#/properties/22222222-2222-4222-8222-222222222222"
+  - text: Status
+  - combobox "Status":
+    - option "New"
+    - option "Reviewing"
+    - option "Estimate drafted"
+    - option "Site visit scheduled"
+    - option "Assessed"
+    - option "Quote sent"
+    - option "Accepted"
+    - option "Declined"
+    - option "Scheduled"
+    - option "In progress" [selected]
+    - option "Completed"
+    - option "Invoiced"
+    - option "Paid"
+    - option "Closed"
+    - option "Lost"
+  - text: Phone
+  - paragraph:
+    - link "5550100":
+      - /url: tel:5550100
+  - text: Email
+  - paragraph:
+    - link "customer@example.test":
+      - /url: mailto:customer@example.test
+  - text: Scheduled for
+  - textbox "Scheduled for"
+  - button "Save date"
+  - button "Clear"
+  - paragraph: Not booked in. The field console only lists jobs that have a date.
+  - text: Completion
+  - button "Mark job complete"
+  - paragraph: Not completed yet. Completing stamps the time used by the completion report.
+  - 'heading "Next: Add measurements" [level=2]'
+  - paragraph: No measurements on this job yet, so there is nothing to price.
+  - text: Action needed → Add measurements now · Build a quote later · Send the quote later ✓ Waiting on the customer done · Record completion later
+  - heading "Property layout" [level=2]
+  - paragraph: The front can be one storey while the rear is two. These values drive the price.
+  - button "+ Add section"
+  - text: No sections yet.
+  - heading "Photos" [level=2]
+  - paragraph: Nothing attached. Customer uploads from the website appear here.
+  - text: No services on this job yet. Add one below.
+  - paragraph: Height and access come from the property’s elevation settings, not from each measurement — set them once above.
+  - heading "Site inspection" [level=2]
+  - paragraph: Add a service to see the relevant checks.
+  - heading "Calculated price" [level=2]
+  - paragraph: What the price book says. You still decide the final number.
+  - text: Calculated subtotal $0.00
+  - region "Job operations":
+    - heading "Materials" [level=2]
+    - paragraph: Worked out from this job’s measurements and what each service consumes. Quantities only — nothing here affects the quote.
+    - button "Work out materials"
+    - paragraph: Not calculated yet. It is not loaded automatically because it reads every measurement on the job plus the whole stock ledger.
+    - heading "Material sheet" [level=2]
+    - paragraph: What was chosen for this job. Only the ticked lines ever reserve stock, so an option nobody picked never reaches the shelf.
+    - paragraph: No material sheet yet. Start one to record what this job actually needs, then review it to commit stock.
+    - button "Start a sheet"
+    - heading "Evidence" [level=2]
+    - paragraph: What this job has to prove before it can be completed, per service. Set by the owner; unknown is its own answer and is never read as "nothing needed".
+    - text: Satisfied
+    - paragraph: Everything this job has to prove is proved.
+    - text: This job has no measured services, so there is nothing to require evidence of yet.
+    - heading "Say what a photograph proves" [level=3]
+    - paragraph: No photographs on this job yet. The field console puts them here; this screen says what each one proves.
+    - heading "Excuse this job" [level=3]
+    - paragraph: Owner only. A crew that could excuse its own photographs would be the absence of a rule rather than an exception to one, so the backend refuses it.
+    - paragraph: An exception is a named, reasoned exemption for THIS job, recorded against your name. It does not change the rule for anything else.
+    - text: Excuse which requirement
+    - combobox "Excuse which requirement":
+      - option "Every requirement on this job" [selected]
+      - option "Before — the state we found it in"
+      - option "After — the state we left it in"
+      - option "Installation — the run as it was left"
+      - option "Component — what came out of the box"
+      - option "Winter proof — somebody was there"
+      - option "Site condition"
+      - option "Access or hazard"
+    - text: For which service
+    - combobox "For which service":
+      - option "Every service" [selected]
+    - text: Reason
+    - textbox "Reason for the exception":
+      - /placeholder: Why this job is being excused — the camera died, the owner inspected it personally…
+    - button "Authorise the exception"
+    - paragraph
+    - button "Refresh accepted completion for handover"
+    - heading "Customer handover" [level=2]
+    - paragraph: The report of accepted work, who can read it, whether it went, and what is owed.
+    - paragraph: Every photograph on this job has a publication decision.
+    - heading "The customer’s report" [level=3]
+    - paragraph: Built from the accepted completion. Generating it sends nothing.
+    - paragraph: No report yet.
+    - heading "Paying" [level=3]
+    - paragraph: No accepted quote, so there is no agreed amount.
+    - paragraph: What has been paid is not recorded anywhere in this system, so there is no outstanding balance to show.
+    - paragraph: No payment provider is selected, so online payment is unavailable. Choose one in Settings.
+    - paragraph: Opening a payment link is never payment, and nothing here can mark work paid.
+  - heading "Quotes" [level=2]
+  - paragraph: No quote built yet
+  - button "New estimate"
+  - button "Build quote"
+  - heading "Notes" [level=2]
+  - paragraph: Newest first. Internal notes are never shown to the customer.
+  - text: New note
+  - textbox "Note":
+    - /placeholder: What happened, what to watch out for, what you told the customer…
+  - text: Who can see it
+  - combobox "Who can see it":
+    - option "Internal — staff only" [selected]
+    - option "Customer-visible — can appear on the completion report"
+  - button "Add note"
+  - text: No notes yet.
+  - heading "Activity" [level=2]
+  - paragraph: Everything the system actually recorded, newest first.
+  - text: 0 events Nothing recorded for this job yet.

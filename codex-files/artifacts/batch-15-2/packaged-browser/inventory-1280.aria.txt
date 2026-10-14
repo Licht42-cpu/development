@@ -1,0 +1,107 @@
+- main:
+  - heading "Inventory" [level=1]
+  - paragraph: Parts, purchasing, permanent-lighting kits and the company-owned Christmas sets. Nothing here affects quote pricing.
+  - button "Stock" [pressed]
+  - button "Purchasing"
+  - button "Service parts"
+  - button "Christmas sets"
+  - button "Kits & pieces"
+  - button "Daily load"
+  - heading "Parts catalogue" [level=2]
+  - paragraph: 1 part. On hand is the sum of the movement ledger.
+  - strong: Wire
+  - strong: FIXTURE Cable
+  - text: pack of 1 100 linear ft
+  - button "Move"
+  - button "Movements"
+  - text: Unit cost
+  - spinbutton "FIXTURE Cable unit cost"
+  - paragraph: Blank means unknown, not free.
+  - text: Reorder at
+  - spinbutton "FIXTURE Cable reorder point": "0"
+  - text: Pack size
+  - spinbutton "FIXTURE Cable pack size": "1"
+  - paragraph: How many linear ft the supplier sells in one pack.
+  - paragraph: "Base: 100 linear ft free"
+  - heading "Committed to work" [level=4]
+  - paragraph: Nothing committed, so everything on hand can be promised.
+  - text: Commit at
+  - combobox "Commit location for FIXTURE Cable":
+    - option "Base" [selected]
+    - option "Car A"
+  - text: Quantity to commit (linear ft)
+  - spinbutton "Quantity to commit of FIXTURE Cable"
+  - paragraph: 100 linear ft free at Base.
+  - paragraph: Committing does not move anything. It reserves stock so the other car cannot promise the same thing.
+  - button "Commit"
+  - text: Movement
+  - combobox "Movement":
+    - option "Opening count" [selected]
+    - option "Used on a job"
+    - option "Damaged / wasted"
+    - option "Returned to shelf"
+    - option "Correction"
+  - text: Where
+  - combobox "Location for FIXTURE Cable":
+    - option "Base" [selected]
+    - option "Car A"
+  - text: Quantity (linear ft)
+  - spinbutton "Quantity for FIXTURE Cable"
+  - text: Note
+  - textbox "Movement note":
+    - /placeholder: Note (optional)
+  - text: Condition
+  - combobox "Condition for FIXTURE Cable":
+    - option "Usable" [selected]
+    - option "Damaged"
+  - paragraph: Damaged stock stays recorded but is never offered to a job.
+  - text: Count
+  - combobox "Count precision for FIXTURE Cable":
+    - option "Counted exactly" [selected]
+    - option "Estimated"
+  - paragraph: An estimate flags every balance it touches.
+  - paragraph: Adds to the shelf.
+  - button "Post movement"
+  - button "Mark inactive"
+  - heading "Add a part" [level=2]
+  - paragraph: Entered by hand from the supplier’s own listing.
+  - text: Part name
+  - textbox "Part name":
+    - /placeholder: e.g. 150 ft channel
+  - text: Supplier code
+  - textbox "SKU":
+    - /placeholder: Supplier code (optional)
+  - paragraph: Unique per supplier. Leave blank if the supplier has none.
+  - text: Category
+  - combobox "Category":
+    - option "Track" [selected]
+    - option "Light"
+    - option "Controller"
+    - option "Power supply"
+    - option "Connector"
+    - option "Clip"
+    - option "Wire"
+    - option "Rental set"
+    - option "Consumable"
+    - option "Tool"
+    - option "Other"
+  - text: Counted in
+  - combobox "Counted in":
+    - option "each"
+    - option "linear ft" [selected]
+    - option "box"
+    - option "roll"
+    - option "kit"
+    - option "set"
+  - text: Supplier
+  - combobox "Supplier":
+    - option "No supplier" [selected]
+  - text: Pack size
+  - spinbutton "Pack size": "1"
+  - paragraph: How many of the unit above come in one pack.
+  - text: Unit cost
+  - spinbutton "Unit cost"
+  - paragraph: Leave blank if unknown — blank is not zero.
+  - text: Reorder at
+  - spinbutton "Reorder point": "0"
+  - button "Add part"

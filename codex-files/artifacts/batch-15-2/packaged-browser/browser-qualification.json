@@ -1,0 +1,3105 @@
+{
+  "proof": "Staged application bytes with browser-only API/auth doubles; no live backend or tactile/device proof.",
+  "cases": [
+    {
+      "name": "Packaged inventory: missing backend remains named and write-free",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged dispatch: missing backend remains named and write-free",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged property: missing backend remains named and write-free",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged handover: missing backend remains named and write-free",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged inventory at 390: keyboard, names, layout and measured targets",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged dispatch at 390: keyboard, names, layout and measured targets",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged property at 390: keyboard, names, layout and measured targets",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged handover at 390: keyboard, names, layout and measured targets",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged inventory at 430: keyboard, names, layout and measured targets",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged dispatch at 430: keyboard, names, layout and measured targets",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged property at 430: keyboard, names, layout and measured targets",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged handover at 430: keyboard, names, layout and measured targets",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged inventory at 1280: keyboard, names, layout and measured targets",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged dispatch at 1280: keyboard, names, layout and measured targets",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged property at 1280: keyboard, names, layout and measured targets",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged handover at 1280: keyboard, names, layout and measured targets",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged crew dispatch at 390: scoped claim is named, keyboard reachable and 44px",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged crew dispatch at 430: scoped claim is named, keyboard reachable and 44px",
+      "status": "PASS"
+    },
+    {
+      "name": "Packaged crew dispatch at 1280: scoped claim is named, keyboard reachable and 44px",
+      "status": "PASS"
+    },
+    {
+      "name": "An empty device queue cannot claim confirmed server sync",
+      "status": "PASS"
+    }
+  ],
+  "observations": [
+    {
+      "slug": "inventory",
+      "width": 390,
+      "focusStyle": {
+        "outline": "solid",
+        "width": "2px",
+        "shadow": "none"
+      },
+      "targets": [
+        {
+          "tag": "BUTTON",
+          "name": "Stock",
+          "width": 59.234375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Purchasing",
+          "width": 97.9375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Service parts",
+          "width": 109.78125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Christmas sets",
+          "width": 121.859375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Kits & pieces",
+          "width": 107.65625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Daily load",
+          "width": 89.21875,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Move",
+          "width": 58.734375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Movements",
+          "width": 101.703125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "FIXTURE Cable unit cost",
+          "width": 280,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "FIXTURE Cable reorder point",
+          "width": 280,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "FIXTURE Cable pack size",
+          "width": 280,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Commit location for FIXTURE Cable",
+          "width": 280,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Quantity to commit of FIXTURE Cable",
+          "width": 280,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Commit",
+          "width": 75.828125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "MovementOpening countUsed on a jobDamaged / wastedReturned to shelfCorrection",
+          "width": 280,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Location for FIXTURE Cable",
+          "width": 280,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Quantity for FIXTURE Cable",
+          "width": 280,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Movement note",
+          "width": 280,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Condition for FIXTURE Cable",
+          "width": 280,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Count precision for FIXTURE Cable",
+          "width": 280,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Post movement",
+          "width": 128.625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Mark inactive",
+          "width": 115.265625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Part name",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "SKU",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "CategoryTrackLightControllerPower supplyConnectorClipWireRental setConsumableToolOther",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Counted ineachlinear ftboxrollkitset",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "SupplierNo supplier",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Pack size",
+          "width": 332,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Unit cost",
+          "width": 332,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Reorder point",
+          "width": 332,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Add part",
+          "width": 103.46875,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        }
+      ],
+      "served": {
+        "/admin/js/views/inventory.js": "3682a5424ff33288696ef826c7b4d1fa72147100d1d41db99df258b449abf87b",
+        "/admin/index.html": "990cd6645d5f0f84bf5cb1e6d62cd5f3dd2467ec973601ba3e5c8e6ff52c5046",
+        "/admin/js/lib/admin-dom.js": "c9fdd42f9448f54313db12584819439bda526bc7738437ac6238206b37e9e7e4",
+        "/admin/js/lib/inventory-math.js": "29ae9b5852955540ff05d88b50f0f3b200ddf2d8668938d23d4f8e00a05fc494",
+        "/admin/js/components/seasonal-sets.js": "d3f732ccfc5c0e609c2935476f71e4cb18f753639b74928e79528504c3f65be1",
+        "/admin/js/components/kit-sheets.js": "c378fb391f58b688cb981367913f8e590cb1ba6f843bbee02da6f8ae25fde600",
+        "/admin/js/components/load-plan.js": "d7623fc1b8f1ceeaa99025373742b66e24404ffa831650363dee10d527629d14",
+        "/admin/js/lib/inventory-units.js": "52d367d6f9450c21d021405ea4f3e51d18fcd0a23683a9906dacca35ec1d3067",
+        "/admin/css/admin.css": "dcc7f75392cdb70efe8c5219d388a9683b493a281bc57e9ee5ed986e9795b3cf",
+        "/admin/js/bootstrap.js": "ebbf9f6ba4d75d047c46741d34d89fed93bd3591f95a9e1896f95d5f01f764e5",
+        "/admin/js/main.js": "b1a1264ed882f8c7ae5d350b4ed6250156d5572b3a51774850e7a736680401cf",
+        "/admin/js/lib/measurement-entry.js": "00131806e809d5ab182d139782f7afd81ec8dfcea7dc1efa2865b6c27e83a5b3",
+        "/shared/dom.js": "930fbec42ed4f86792974ce98b0769260f406baa84b3ac6afa037be30cd24dd8",
+        "/admin/js/lib/save.js": "eb3980b09e921931e4c74b69a817afcd886b73673f48d723a532f459aab46bec",
+        "/admin/js/lib/native.js": "95d3b5f30cba36c495bb52d2390928a89ed3c9d000b9e7125dd47bcaf8466f03",
+        "/admin/js/lib/navigation.js": "dc4e8ec84304d484ba7e64ed29745ac9c14e33e11ed33623d1bd140591567458",
+        "/admin/js/views/login.js": "9e344b14ffe1433b399ac464b541f22324f6ffccd7e3655594532f1e88c094b1",
+        "/admin/js/views/dashboard.js": "b574a959458aa05a9ad6718d52514c415f56fc69f900ec4b459ec8fb5be178fd",
+        "/admin/js/views/requests.js": "91aec60573cbb772b0c1472d0b67d4bf6c0ac232d3038ec771c9d8bc740e3e61",
+        "/admin/js/views/job.js": "689cd1a8de3b7e625b376a7804c7fe2add5e517a38649305dbf9d68d72234fc8",
+        "/admin/js/views/customers.js": "1b31842b38572ac23ce56229f7f1b87c2e4d82b05ca194b778436fb8bc86436d",
+        "/admin/js/views/property.js": "b1b6a8e72109698698f123efa94d3c76d065f9ae3238dbb451ee1dd373ab22f9",
+        "/admin/js/views/settings.js": "a5b2e2ed21889a39498faa03f7693e398c9aca2b9d08d862cb0b582e1df4ec6a",
+        "/admin/js/views/winter.js": "32c378f10c27b76ec1b7927e54b732bd32e34ea485a547cb61d258106fe8bc00",
+        "/admin/js/views/operations-routes.js": "93b9204d16c8993300c6f50846368486d6aed3da68dcdf6fa07424d2beab4b0d",
+        "/admin/js/lib/offline-queue.js": "42713f971966e02a49af8b1e4cfd7db0862369c28ef4d1286bdb4dab4180858c",
+        "/shared/vendor/@capacitor/core/dist/index.js": "b81c1c3e42ba3b85bd3b0222ff1d5400c51569e7fd681e0f3b3efb444bbcc363",
+        "/shared/format.js": "ea76e5e081f51b69d0f9c16a939a57fe3ebe03a73f10fa9ee23eadb76b2e1e99",
+        "/admin/js/components/evidence-policy.js": "58e1c9f045434481e6a5aeaab9e2096cc33e8c051c6e69c2c338e7e740250271",
+        "/admin/js/lib/settings-form.js": "e5fec184ced2dd73562b1f3560e84e85fce6cfcff649b0482cba951a7fe868f0",
+        "/admin/js/views/measurements.js": "5b01738f195448e82fc683b44dcb57e749c853afe97a322d1c6ce82b7a1fc003",
+        "/admin/js/views/quote.js": "45a2663cc7593f1192cc87121796427560baed7fafdf946e5d7e2f73c007870c",
+        "/admin/js/components/review-flag.js": "914283c85dfeff133fcc7de04596cad5236a80237ab85a32373d885cccbbe134",
+        "/admin/js/components/next-step.js": "4cebc4f1969d31557a559f894434a8144b4b1ec2b544f7e0b8c0215943df21ef",
+        "/admin/js/components/job-activity.js": "106589a59ef858a05ed6b8f6f4ff73f4d67eacb4c8a4737d55fb349fc7b0edeb",
+        "/admin/js/lib/operations-availability.js": "f046a2fe7ffd61d651e897e0a34629f1e542d1eba16a2334cd67b6abb368c3e5",
+        "/admin/js/lib/field-identity.js": "a4ba0628d39eeccd984847220bc7b62193c49c19ce6ca4971b248c8e62e6d2cb",
+        "/admin/js/lib/field-cache.js": "59037117362527592d886a5e79863e59f4cf84200795641ce2117ce19bee44e8",
+        "/admin/js/lib/outbox-schema.js": "7fbdc7513dcc4fb00e1a8b082554468324fe6148407718d3ad66fcab7c198e26",
+        "/admin/js/lib/field-completion-api.js": "dd4679bc8ed9ce350b1125a3d290a157fb47bc3c512ad59d29e5840df129012b",
+        "/admin/js/components/modifier-groups.js": "256c36097dc420e232e9ca3e20c33ba17262cfd9b6432f8d0800a975c2f24513",
+        "/admin/js/components/heating-wire-calculator.js": "619312594118ea51d6583ef1d8cddcc38f365c8c2961d239ac24c3c749c95689",
+        "/admin/js/components/siding-calculator.js": "ab3a422e25e26e134244d7cba4337dbe45fe388ad3973e517d48a63c5f7e3a2d",
+        "/admin/js/components/gutter-brightening-calculator.js": "fd670403ce595b38b4f1ce8d8b4715e1917486c35b0af0852506d64ab1a8d88e",
+        "/admin/js/components/window-cleaning-calculator.js": "a4864a2e2a386d027b59bd9f684d5475db7c77ab6e70b4fec2bd592558accdd7",
+        "/admin/js/components/concrete-cleaning-calculator.js": "e3f88ba13cd1a0c13adf7800f71b9844566c2b8994de16ba21bc55aa682fbcaa",
+        "/admin/js/components/roof-cleaning-calculator.js": "d2f02081cd2ca2f445bb913c4afe53c6883ea318c7d28963446d818a555f8dd7",
+        "/admin/js/components/deck-cleaning-calculator.js": "8e7383d68d76d5447e59feb16a62d3b9bb17112df047efa4d1c1145a480c45f5",
+        "/admin/js/components/fence-cleaning-calculator.js": "f0fa1fcce6a8c999b37971248d1ece09caa8c5260b1a8f2c62c0ffcab9e2b02c",
+        "/admin/js/components/moss-removal-calculator.js": "e397665966fe993607957a05c834abf86f5568e6103d73c8b9405acedb0a8508",
+        "/admin/js/components/graffiti-removal-calculator.js": "522fb5aedfe9dee103790975dc275d54d680e8c11e19d379095a34e455d52918",
+        "/admin/js/components/permanent-lighting-calculator.js": "0ae1bb62c5240532bb27d3945375b9909a6ae6c919ac540d0a31e7907566772a",
+        "/admin/js/components/christmas-lighting-calculator.js": "8df5ab962b1d7c4baedf9ebe9ceae716dd5db1c0290c21b5d18e861a2e496be4",
+        "/admin/js/components/winter-property-care-calculator.js": "77cf90730d5e1cfd49ba5de35d5e2207481fef1a97effc934e059017b709b02e",
+        "/admin/js/components/signature-pad.js": "635676dd74e5bffb570dfc861b3f56fbcfb5bc71143bbace266c66286c0e96b5",
+        "/admin/js/components/change-orders.js": "4a1bf43a5a5875264af61a5b82c8d3a43934bda12a54f32ed99bca002893c6b1",
+        "/admin/js/lib/field-storage.js": "c3b3880dcc919064c663de03db726daa86d00e7d399352aeff521b871a1eec66"
+      },
+      "selectOptions": [
+        [
+          "base",
+          "car_a"
+        ],
+        [
+          "opening",
+          "consumed",
+          "damaged",
+          "returned",
+          "adjustment"
+        ],
+        [
+          "base",
+          "car_a"
+        ],
+        [
+          "usable",
+          "damaged"
+        ],
+        [
+          "exact",
+          "estimated"
+        ],
+        [
+          "track",
+          "light",
+          "controller",
+          "power_supply",
+          "connector",
+          "clip",
+          "wire",
+          "rental_set",
+          "consumable",
+          "tool",
+          "other"
+        ],
+        [
+          "each",
+          "linear_ft",
+          "box",
+          "roll",
+          "kit",
+          "set"
+        ],
+        [
+          ""
+        ]
+      ],
+      "levelCreationControl": false
+    },
+    {
+      "slug": "dispatch",
+      "width": 390,
+      "focusStyle": {
+        "outline": "solid",
+        "width": "2px",
+        "shadow": "none"
+      },
+      "targets": [
+        {
+          "tag": "A",
+          "name": "← Today’s jobs",
+          "width": 90.703125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "A",
+          "name": "Review this vehicle’s loading",
+          "width": 260.6875,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "VehicleCar ACar B",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Day",
+          "width": 332,
+          "height": 48,
+          "disabled": false,
+          "below44": false
+        }
+      ],
+      "served": {
+        "/admin/index.html": "990cd6645d5f0f84bf5cb1e6d62cd5f3dd2467ec973601ba3e5c8e6ff52c5046",
+        "/admin/js/lib/admin-dom.js": "c9fdd42f9448f54313db12584819439bda526bc7738437ac6238206b37e9e7e4",
+        "/admin/css/admin.css": "dcc7f75392cdb70efe8c5219d388a9683b493a281bc57e9ee5ed986e9795b3cf",
+        "/admin/js/bootstrap.js": "ebbf9f6ba4d75d047c46741d34d89fed93bd3591f95a9e1896f95d5f01f764e5",
+        "/admin/js/main.js": "b1a1264ed882f8c7ae5d350b4ed6250156d5572b3a51774850e7a736680401cf",
+        "/admin/js/lib/measurement-entry.js": "00131806e809d5ab182d139782f7afd81ec8dfcea7dc1efa2865b6c27e83a5b3",
+        "/shared/dom.js": "930fbec42ed4f86792974ce98b0769260f406baa84b3ac6afa037be30cd24dd8",
+        "/admin/js/lib/save.js": "eb3980b09e921931e4c74b69a817afcd886b73673f48d723a532f459aab46bec",
+        "/admin/js/lib/native.js": "95d3b5f30cba36c495bb52d2390928a89ed3c9d000b9e7125dd47bcaf8466f03",
+        "/admin/js/lib/navigation.js": "dc4e8ec84304d484ba7e64ed29745ac9c14e33e11ed33623d1bd140591567458",
+        "/admin/js/views/login.js": "9e344b14ffe1433b399ac464b541f22324f6ffccd7e3655594532f1e88c094b1",
+        "/admin/js/views/dashboard.js": "b574a959458aa05a9ad6718d52514c415f56fc69f900ec4b459ec8fb5be178fd",
+        "/admin/js/views/requests.js": "91aec60573cbb772b0c1472d0b67d4bf6c0ac232d3038ec771c9d8bc740e3e61",
+        "/admin/js/views/job.js": "689cd1a8de3b7e625b376a7804c7fe2add5e517a38649305dbf9d68d72234fc8",
+        "/admin/js/views/customers.js": "1b31842b38572ac23ce56229f7f1b87c2e4d82b05ca194b778436fb8bc86436d",
+        "/admin/js/views/property.js": "b1b6a8e72109698698f123efa94d3c76d065f9ae3238dbb451ee1dd373ab22f9",
+        "/admin/js/views/settings.js": "a5b2e2ed21889a39498faa03f7693e398c9aca2b9d08d862cb0b582e1df4ec6a",
+        "/admin/js/views/winter.js": "32c378f10c27b76ec1b7927e54b732bd32e34ea485a547cb61d258106fe8bc00",
+        "/admin/js/views/operations-routes.js": "93b9204d16c8993300c6f50846368486d6aed3da68dcdf6fa07424d2beab4b0d",
+        "/admin/js/lib/offline-queue.js": "42713f971966e02a49af8b1e4cfd7db0862369c28ef4d1286bdb4dab4180858c",
+        "/shared/vendor/@capacitor/core/dist/index.js": "b81c1c3e42ba3b85bd3b0222ff1d5400c51569e7fd681e0f3b3efb444bbcc363",
+        "/shared/format.js": "ea76e5e081f51b69d0f9c16a939a57fe3ebe03a73f10fa9ee23eadb76b2e1e99",
+        "/admin/js/lib/operations-availability.js": "f046a2fe7ffd61d651e897e0a34629f1e542d1eba16a2334cd67b6abb368c3e5",
+        "/admin/js/components/evidence-policy.js": "58e1c9f045434481e6a5aeaab9e2096cc33e8c051c6e69c2c338e7e740250271",
+        "/admin/js/lib/settings-form.js": "e5fec184ced2dd73562b1f3560e84e85fce6cfcff649b0482cba951a7fe868f0",
+        "/admin/js/views/measurements.js": "5b01738f195448e82fc683b44dcb57e749c853afe97a322d1c6ce82b7a1fc003",
+        "/admin/js/views/quote.js": "45a2663cc7593f1192cc87121796427560baed7fafdf946e5d7e2f73c007870c",
+        "/admin/js/components/review-flag.js": "914283c85dfeff133fcc7de04596cad5236a80237ab85a32373d885cccbbe134",
+        "/admin/js/components/next-step.js": "4cebc4f1969d31557a559f894434a8144b4b1ec2b544f7e0b8c0215943df21ef",
+        "/admin/js/components/job-activity.js": "106589a59ef858a05ed6b8f6f4ff73f4d67eacb4c8a4737d55fb349fc7b0edeb",
+        "/admin/js/lib/field-identity.js": "a4ba0628d39eeccd984847220bc7b62193c49c19ce6ca4971b248c8e62e6d2cb",
+        "/admin/js/lib/field-cache.js": "59037117362527592d886a5e79863e59f4cf84200795641ce2117ce19bee44e8",
+        "/admin/js/lib/outbox-schema.js": "7fbdc7513dcc4fb00e1a8b082554468324fe6148407718d3ad66fcab7c198e26",
+        "/admin/js/lib/field-completion-api.js": "dd4679bc8ed9ce350b1125a3d290a157fb47bc3c512ad59d29e5840df129012b",
+        "/admin/js/components/modifier-groups.js": "256c36097dc420e232e9ca3e20c33ba17262cfd9b6432f8d0800a975c2f24513",
+        "/admin/js/components/heating-wire-calculator.js": "619312594118ea51d6583ef1d8cddcc38f365c8c2961d239ac24c3c749c95689",
+        "/admin/js/components/siding-calculator.js": "ab3a422e25e26e134244d7cba4337dbe45fe388ad3973e517d48a63c5f7e3a2d",
+        "/admin/js/components/gutter-brightening-calculator.js": "fd670403ce595b38b4f1ce8d8b4715e1917486c35b0af0852506d64ab1a8d88e",
+        "/admin/js/components/window-cleaning-calculator.js": "a4864a2e2a386d027b59bd9f684d5475db7c77ab6e70b4fec2bd592558accdd7",
+        "/admin/js/components/concrete-cleaning-calculator.js": "e3f88ba13cd1a0c13adf7800f71b9844566c2b8994de16ba21bc55aa682fbcaa",
+        "/admin/js/components/roof-cleaning-calculator.js": "d2f02081cd2ca2f445bb913c4afe53c6883ea318c7d28963446d818a555f8dd7",
+        "/admin/js/components/deck-cleaning-calculator.js": "8e7383d68d76d5447e59feb16a62d3b9bb17112df047efa4d1c1145a480c45f5",
+        "/admin/js/components/fence-cleaning-calculator.js": "f0fa1fcce6a8c999b37971248d1ece09caa8c5260b1a8f2c62c0ffcab9e2b02c",
+        "/admin/js/components/moss-removal-calculator.js": "e397665966fe993607957a05c834abf86f5568e6103d73c8b9405acedb0a8508",
+        "/admin/js/components/graffiti-removal-calculator.js": "522fb5aedfe9dee103790975dc275d54d680e8c11e19d379095a34e455d52918",
+        "/admin/js/components/permanent-lighting-calculator.js": "0ae1bb62c5240532bb27d3945375b9909a6ae6c919ac540d0a31e7907566772a",
+        "/admin/js/components/christmas-lighting-calculator.js": "8df5ab962b1d7c4baedf9ebe9ceae716dd5db1c0290c21b5d18e861a2e496be4",
+        "/admin/js/components/winter-property-care-calculator.js": "77cf90730d5e1cfd49ba5de35d5e2207481fef1a97effc934e059017b709b02e",
+        "/admin/js/components/signature-pad.js": "635676dd74e5bffb570dfc861b3f56fbcfb5bc71143bbace266c66286c0e96b5",
+        "/admin/js/components/change-orders.js": "4a1bf43a5a5875264af61a5b82c8d3a43934bda12a54f32ed99bca002893c6b1",
+        "/admin/js/lib/field-storage.js": "c3b3880dcc919064c663de03db726daa86d00e7d399352aeff521b871a1eec66",
+        "/admin/js/components/dispatch-day.js": "fc9f4bf9c11eb4f8e51f7c15542c899272538d778ff895ac77ff3aedfc5dbd86"
+      }
+    },
+    {
+      "slug": "property",
+      "width": 390,
+      "focusStyle": {
+        "outline": "solid",
+        "width": "2px",
+        "shadow": "none"
+      },
+      "targets": [
+        {
+          "tag": "A",
+          "name": "← FIXTURE Customer",
+          "width": 165.4375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Address line 1",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Address line 2",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "City",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Province",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Postal code",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Property typeNot statedResidentialCommercialStrataIndustrial",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Storeys note",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "TEXTAREA",
+          "name": "Access note",
+          "width": 332,
+          "height": 88,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "TEXTAREA",
+          "name": "Property notes",
+          "width": 332,
+          "height": 94,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Save property",
+          "width": 145.078125,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Cancel",
+          "width": 86.9375,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Entrance",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Hazard",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Parking",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Internal note",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Access code",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Customer-facing note",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Save details",
+          "width": 102.8125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Add a zone",
+          "width": 95.890625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        }
+      ],
+      "served": {
+        "/admin/js/lib/admin-dom.js": "c9fdd42f9448f54313db12584819439bda526bc7738437ac6238206b37e9e7e4",
+        "/admin/index.html": "990cd6645d5f0f84bf5cb1e6d62cd5f3dd2467ec973601ba3e5c8e6ff52c5046",
+        "/admin/css/admin.css": "dcc7f75392cdb70efe8c5219d388a9683b493a281bc57e9ee5ed986e9795b3cf",
+        "/admin/js/bootstrap.js": "ebbf9f6ba4d75d047c46741d34d89fed93bd3591f95a9e1896f95d5f01f764e5",
+        "/admin/js/main.js": "b1a1264ed882f8c7ae5d350b4ed6250156d5572b3a51774850e7a736680401cf",
+        "/admin/js/lib/measurement-entry.js": "00131806e809d5ab182d139782f7afd81ec8dfcea7dc1efa2865b6c27e83a5b3",
+        "/shared/dom.js": "930fbec42ed4f86792974ce98b0769260f406baa84b3ac6afa037be30cd24dd8",
+        "/admin/js/lib/save.js": "eb3980b09e921931e4c74b69a817afcd886b73673f48d723a532f459aab46bec",
+        "/admin/js/lib/native.js": "95d3b5f30cba36c495bb52d2390928a89ed3c9d000b9e7125dd47bcaf8466f03",
+        "/admin/js/lib/navigation.js": "dc4e8ec84304d484ba7e64ed29745ac9c14e33e11ed33623d1bd140591567458",
+        "/admin/js/views/login.js": "9e344b14ffe1433b399ac464b541f22324f6ffccd7e3655594532f1e88c094b1",
+        "/admin/js/views/dashboard.js": "b574a959458aa05a9ad6718d52514c415f56fc69f900ec4b459ec8fb5be178fd",
+        "/admin/js/views/requests.js": "91aec60573cbb772b0c1472d0b67d4bf6c0ac232d3038ec771c9d8bc740e3e61",
+        "/admin/js/views/job.js": "689cd1a8de3b7e625b376a7804c7fe2add5e517a38649305dbf9d68d72234fc8",
+        "/admin/js/views/customers.js": "1b31842b38572ac23ce56229f7f1b87c2e4d82b05ca194b778436fb8bc86436d",
+        "/admin/js/views/property.js": "b1b6a8e72109698698f123efa94d3c76d065f9ae3238dbb451ee1dd373ab22f9",
+        "/admin/js/views/settings.js": "a5b2e2ed21889a39498faa03f7693e398c9aca2b9d08d862cb0b582e1df4ec6a",
+        "/admin/js/views/winter.js": "32c378f10c27b76ec1b7927e54b732bd32e34ea485a547cb61d258106fe8bc00",
+        "/admin/js/views/operations-routes.js": "93b9204d16c8993300c6f50846368486d6aed3da68dcdf6fa07424d2beab4b0d",
+        "/admin/js/lib/offline-queue.js": "42713f971966e02a49af8b1e4cfd7db0862369c28ef4d1286bdb4dab4180858c",
+        "/shared/vendor/@capacitor/core/dist/index.js": "b81c1c3e42ba3b85bd3b0222ff1d5400c51569e7fd681e0f3b3efb444bbcc363",
+        "/shared/format.js": "ea76e5e081f51b69d0f9c16a939a57fe3ebe03a73f10fa9ee23eadb76b2e1e99",
+        "/admin/js/views/measurements.js": "5b01738f195448e82fc683b44dcb57e749c853afe97a322d1c6ce82b7a1fc003",
+        "/admin/js/views/quote.js": "45a2663cc7593f1192cc87121796427560baed7fafdf946e5d7e2f73c007870c",
+        "/admin/js/components/review-flag.js": "914283c85dfeff133fcc7de04596cad5236a80237ab85a32373d885cccbbe134",
+        "/admin/js/components/next-step.js": "4cebc4f1969d31557a559f894434a8144b4b1ec2b544f7e0b8c0215943df21ef",
+        "/admin/js/components/job-activity.js": "106589a59ef858a05ed6b8f6f4ff73f4d67eacb4c8a4737d55fb349fc7b0edeb",
+        "/admin/js/components/evidence-policy.js": "58e1c9f045434481e6a5aeaab9e2096cc33e8c051c6e69c2c338e7e740250271",
+        "/admin/js/lib/settings-form.js": "e5fec184ced2dd73562b1f3560e84e85fce6cfcff649b0482cba951a7fe868f0",
+        "/admin/js/lib/operations-availability.js": "f046a2fe7ffd61d651e897e0a34629f1e542d1eba16a2334cd67b6abb368c3e5",
+        "/admin/js/lib/field-identity.js": "a4ba0628d39eeccd984847220bc7b62193c49c19ce6ca4971b248c8e62e6d2cb",
+        "/admin/js/lib/field-cache.js": "59037117362527592d886a5e79863e59f4cf84200795641ce2117ce19bee44e8",
+        "/admin/js/lib/outbox-schema.js": "7fbdc7513dcc4fb00e1a8b082554468324fe6148407718d3ad66fcab7c198e26",
+        "/admin/js/lib/field-completion-api.js": "dd4679bc8ed9ce350b1125a3d290a157fb47bc3c512ad59d29e5840df129012b",
+        "/admin/js/components/modifier-groups.js": "256c36097dc420e232e9ca3e20c33ba17262cfd9b6432f8d0800a975c2f24513",
+        "/admin/js/components/heating-wire-calculator.js": "619312594118ea51d6583ef1d8cddcc38f365c8c2961d239ac24c3c749c95689",
+        "/admin/js/components/siding-calculator.js": "ab3a422e25e26e134244d7cba4337dbe45fe388ad3973e517d48a63c5f7e3a2d",
+        "/admin/js/components/gutter-brightening-calculator.js": "fd670403ce595b38b4f1ce8d8b4715e1917486c35b0af0852506d64ab1a8d88e",
+        "/admin/js/components/window-cleaning-calculator.js": "a4864a2e2a386d027b59bd9f684d5475db7c77ab6e70b4fec2bd592558accdd7",
+        "/admin/js/components/concrete-cleaning-calculator.js": "e3f88ba13cd1a0c13adf7800f71b9844566c2b8994de16ba21bc55aa682fbcaa",
+        "/admin/js/components/roof-cleaning-calculator.js": "d2f02081cd2ca2f445bb913c4afe53c6883ea318c7d28963446d818a555f8dd7",
+        "/admin/js/components/deck-cleaning-calculator.js": "8e7383d68d76d5447e59feb16a62d3b9bb17112df047efa4d1c1145a480c45f5",
+        "/admin/js/components/fence-cleaning-calculator.js": "f0fa1fcce6a8c999b37971248d1ece09caa8c5260b1a8f2c62c0ffcab9e2b02c",
+        "/admin/js/components/moss-removal-calculator.js": "e397665966fe993607957a05c834abf86f5568e6103d73c8b9405acedb0a8508",
+        "/admin/js/components/graffiti-removal-calculator.js": "522fb5aedfe9dee103790975dc275d54d680e8c11e19d379095a34e455d52918",
+        "/admin/js/components/permanent-lighting-calculator.js": "0ae1bb62c5240532bb27d3945375b9909a6ae6c919ac540d0a31e7907566772a",
+        "/admin/js/components/christmas-lighting-calculator.js": "8df5ab962b1d7c4baedf9ebe9ceae716dd5db1c0290c21b5d18e861a2e496be4",
+        "/admin/js/components/winter-property-care-calculator.js": "77cf90730d5e1cfd49ba5de35d5e2207481fef1a97effc934e059017b709b02e",
+        "/admin/js/components/signature-pad.js": "635676dd74e5bffb570dfc861b3f56fbcfb5bc71143bbace266c66286c0e96b5",
+        "/admin/js/components/change-orders.js": "4a1bf43a5a5875264af61a5b82c8d3a43934bda12a54f32ed99bca002893c6b1",
+        "/admin/js/lib/field-storage.js": "c3b3880dcc919064c663de03db726daa86d00e7d399352aeff521b871a1eec66",
+        "/admin/js/components/property-access.js": "075dd11c03410a89ff78e30881b4d37507e056392a9dbf9550209be4813ad84d"
+      }
+    },
+    {
+      "slug": "handover",
+      "width": 390,
+      "focusStyle": {
+        "outline": "solid",
+        "width": "2px",
+        "shadow": "none"
+      },
+      "targets": [
+        {
+          "tag": "A",
+          "name": "← All jobs",
+          "width": 60.734375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "A",
+          "name": "Customer: FIXTURE Customer",
+          "width": 221.9375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "A",
+          "name": "Property Passport",
+          "width": 144.1875,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "StatusNewReviewingEstimate draftedSite visit scheduledAssessedQuote sentAcceptedDeclinedScheduledIn progressCompletedInvoicedPaidClosedLost",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "A",
+          "name": "5550100",
+          "width": 64.078125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "A",
+          "name": "customer@example.test",
+          "width": 182.296875,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Scheduled for",
+          "width": 332,
+          "height": 48,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Save date",
+          "width": 87.765625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Clear",
+          "width": 57.234375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Mark job complete",
+          "width": 183.875,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "+ Add section",
+          "width": 112.609375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Work out materials",
+          "width": 153.125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Start a sheet",
+          "width": 108.609375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Excuse which requirementEvery requirement on this jobBefore — the state we found it inAfter — the state we left it inInstallation — the run as it was leftComponent — what came out of the boxWinter proof — somebody was thereSite conditionAccess or hazard",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "For which serviceEvery service",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "TEXTAREA",
+          "name": "Reason for the exception",
+          "width": 332,
+          "height": 88,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Authorise the exception",
+          "width": 184.96875,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Refresh accepted completion for handover",
+          "width": 366,
+          "height": 70,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "New estimate",
+          "width": 116.328125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Build quote",
+          "width": 100.390625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "TEXTAREA",
+          "name": "Note",
+          "width": 332,
+          "height": 88,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Who can see itInternal — staff onlyCustomer-visible — can appear on the completion report",
+          "width": 332,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Add note",
+          "width": 83.40625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        }
+      ],
+      "served": {
+        "/admin/index.html": "990cd6645d5f0f84bf5cb1e6d62cd5f3dd2467ec973601ba3e5c8e6ff52c5046",
+        "/admin/js/lib/admin-dom.js": "c9fdd42f9448f54313db12584819439bda526bc7738437ac6238206b37e9e7e4",
+        "/admin/css/admin.css": "dcc7f75392cdb70efe8c5219d388a9683b493a281bc57e9ee5ed986e9795b3cf",
+        "/admin/js/bootstrap.js": "ebbf9f6ba4d75d047c46741d34d89fed93bd3591f95a9e1896f95d5f01f764e5",
+        "/admin/js/main.js": "b1a1264ed882f8c7ae5d350b4ed6250156d5572b3a51774850e7a736680401cf",
+        "/admin/js/lib/measurement-entry.js": "00131806e809d5ab182d139782f7afd81ec8dfcea7dc1efa2865b6c27e83a5b3",
+        "/shared/dom.js": "930fbec42ed4f86792974ce98b0769260f406baa84b3ac6afa037be30cd24dd8",
+        "/admin/js/lib/save.js": "eb3980b09e921931e4c74b69a817afcd886b73673f48d723a532f459aab46bec",
+        "/admin/js/lib/native.js": "95d3b5f30cba36c495bb52d2390928a89ed3c9d000b9e7125dd47bcaf8466f03",
+        "/admin/js/lib/navigation.js": "dc4e8ec84304d484ba7e64ed29745ac9c14e33e11ed33623d1bd140591567458",
+        "/admin/js/views/login.js": "9e344b14ffe1433b399ac464b541f22324f6ffccd7e3655594532f1e88c094b1",
+        "/admin/js/views/dashboard.js": "b574a959458aa05a9ad6718d52514c415f56fc69f900ec4b459ec8fb5be178fd",
+        "/admin/js/views/requests.js": "91aec60573cbb772b0c1472d0b67d4bf6c0ac232d3038ec771c9d8bc740e3e61",
+        "/admin/js/views/job.js": "689cd1a8de3b7e625b376a7804c7fe2add5e517a38649305dbf9d68d72234fc8",
+        "/admin/js/views/customers.js": "1b31842b38572ac23ce56229f7f1b87c2e4d82b05ca194b778436fb8bc86436d",
+        "/admin/js/views/property.js": "b1b6a8e72109698698f123efa94d3c76d065f9ae3238dbb451ee1dd373ab22f9",
+        "/admin/js/views/settings.js": "a5b2e2ed21889a39498faa03f7693e398c9aca2b9d08d862cb0b582e1df4ec6a",
+        "/admin/js/views/winter.js": "32c378f10c27b76ec1b7927e54b732bd32e34ea485a547cb61d258106fe8bc00",
+        "/admin/js/views/operations-routes.js": "93b9204d16c8993300c6f50846368486d6aed3da68dcdf6fa07424d2beab4b0d",
+        "/admin/js/lib/offline-queue.js": "42713f971966e02a49af8b1e4cfd7db0862369c28ef4d1286bdb4dab4180858c",
+        "/shared/vendor/@capacitor/core/dist/index.js": "b81c1c3e42ba3b85bd3b0222ff1d5400c51569e7fd681e0f3b3efb444bbcc363",
+        "/shared/format.js": "ea76e5e081f51b69d0f9c16a939a57fe3ebe03a73f10fa9ee23eadb76b2e1e99",
+        "/admin/js/views/measurements.js": "5b01738f195448e82fc683b44dcb57e749c853afe97a322d1c6ce82b7a1fc003",
+        "/admin/js/views/quote.js": "45a2663cc7593f1192cc87121796427560baed7fafdf946e5d7e2f73c007870c",
+        "/admin/js/components/review-flag.js": "914283c85dfeff133fcc7de04596cad5236a80237ab85a32373d885cccbbe134",
+        "/admin/js/components/next-step.js": "4cebc4f1969d31557a559f894434a8144b4b1ec2b544f7e0b8c0215943df21ef",
+        "/admin/js/components/job-activity.js": "106589a59ef858a05ed6b8f6f4ff73f4d67eacb4c8a4737d55fb349fc7b0edeb",
+        "/admin/js/components/evidence-policy.js": "58e1c9f045434481e6a5aeaab9e2096cc33e8c051c6e69c2c338e7e740250271",
+        "/admin/js/lib/settings-form.js": "e5fec184ced2dd73562b1f3560e84e85fce6cfcff649b0482cba951a7fe868f0",
+        "/admin/js/lib/operations-availability.js": "f046a2fe7ffd61d651e897e0a34629f1e542d1eba16a2334cd67b6abb368c3e5",
+        "/admin/js/lib/field-identity.js": "a4ba0628d39eeccd984847220bc7b62193c49c19ce6ca4971b248c8e62e6d2cb",
+        "/admin/js/lib/field-cache.js": "59037117362527592d886a5e79863e59f4cf84200795641ce2117ce19bee44e8",
+        "/admin/js/lib/outbox-schema.js": "7fbdc7513dcc4fb00e1a8b082554468324fe6148407718d3ad66fcab7c198e26",
+        "/admin/js/lib/field-completion-api.js": "dd4679bc8ed9ce350b1125a3d290a157fb47bc3c512ad59d29e5840df129012b",
+        "/admin/js/components/modifier-groups.js": "256c36097dc420e232e9ca3e20c33ba17262cfd9b6432f8d0800a975c2f24513",
+        "/admin/js/components/heating-wire-calculator.js": "619312594118ea51d6583ef1d8cddcc38f365c8c2961d239ac24c3c749c95689",
+        "/admin/js/components/siding-calculator.js": "ab3a422e25e26e134244d7cba4337dbe45fe388ad3973e517d48a63c5f7e3a2d",
+        "/admin/js/components/gutter-brightening-calculator.js": "fd670403ce595b38b4f1ce8d8b4715e1917486c35b0af0852506d64ab1a8d88e",
+        "/admin/js/components/window-cleaning-calculator.js": "a4864a2e2a386d027b59bd9f684d5475db7c77ab6e70b4fec2bd592558accdd7",
+        "/admin/js/components/concrete-cleaning-calculator.js": "e3f88ba13cd1a0c13adf7800f71b9844566c2b8994de16ba21bc55aa682fbcaa",
+        "/admin/js/components/roof-cleaning-calculator.js": "d2f02081cd2ca2f445bb913c4afe53c6883ea318c7d28963446d818a555f8dd7",
+        "/admin/js/components/deck-cleaning-calculator.js": "8e7383d68d76d5447e59feb16a62d3b9bb17112df047efa4d1c1145a480c45f5",
+        "/admin/js/components/fence-cleaning-calculator.js": "f0fa1fcce6a8c999b37971248d1ece09caa8c5260b1a8f2c62c0ffcab9e2b02c",
+        "/admin/js/components/moss-removal-calculator.js": "e397665966fe993607957a05c834abf86f5568e6103d73c8b9405acedb0a8508",
+        "/admin/js/components/graffiti-removal-calculator.js": "522fb5aedfe9dee103790975dc275d54d680e8c11e19d379095a34e455d52918",
+        "/admin/js/components/permanent-lighting-calculator.js": "0ae1bb62c5240532bb27d3945375b9909a6ae6c919ac540d0a31e7907566772a",
+        "/admin/js/components/christmas-lighting-calculator.js": "8df5ab962b1d7c4baedf9ebe9ceae716dd5db1c0290c21b5d18e861a2e496be4",
+        "/admin/js/components/winter-property-care-calculator.js": "77cf90730d5e1cfd49ba5de35d5e2207481fef1a97effc934e059017b709b02e",
+        "/admin/js/components/signature-pad.js": "635676dd74e5bffb570dfc861b3f56fbcfb5bc71143bbace266c66286c0e96b5",
+        "/admin/js/components/change-orders.js": "4a1bf43a5a5875264af61a5b82c8d3a43934bda12a54f32ed99bca002893c6b1",
+        "/admin/js/lib/field-storage.js": "c3b3880dcc919064c663de03db726daa86d00e7d399352aeff521b871a1eec66",
+        "/admin/js/components/job-materials.js": "55851e2265fd970307ec95e4966fc12ccaa3bcaf7462d44a871a7c98603b56d3",
+        "/admin/js/components/job-material-sheet.js": "28ab9aac81ad3af635879108f70f6a2c023b12305ddc87d94c51bc67c4680441",
+        "/admin/js/components/job-evidence.js": "456518751ad6484d3bcb4cad38d968ac4bbe348ac616759bc02467d0ae7f00b2",
+        "/admin/js/components/customer-handover.js": "6bd3a646bf68d6486c6acc66623ee767a6b02138df906a4934427687e25b0bce"
+      }
+    },
+    {
+      "slug": "inventory",
+      "width": 430,
+      "focusStyle": {
+        "outline": "solid",
+        "width": "2px",
+        "shadow": "none"
+      },
+      "targets": [
+        {
+          "tag": "BUTTON",
+          "name": "Stock",
+          "width": 59.234375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Purchasing",
+          "width": 97.9375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Service parts",
+          "width": 109.78125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Christmas sets",
+          "width": 121.859375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Kits & pieces",
+          "width": 107.65625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Daily load",
+          "width": 89.21875,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Move",
+          "width": 58.734375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Movements",
+          "width": 101.703125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "FIXTURE Cable unit cost",
+          "width": 320,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "FIXTURE Cable reorder point",
+          "width": 320,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "FIXTURE Cable pack size",
+          "width": 320,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Commit location for FIXTURE Cable",
+          "width": 320,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Quantity to commit of FIXTURE Cable",
+          "width": 320,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Commit",
+          "width": 75.828125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "MovementOpening countUsed on a jobDamaged / wastedReturned to shelfCorrection",
+          "width": 320,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Location for FIXTURE Cable",
+          "width": 320,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Quantity for FIXTURE Cable",
+          "width": 320,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Movement note",
+          "width": 320,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Condition for FIXTURE Cable",
+          "width": 320,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Count precision for FIXTURE Cable",
+          "width": 320,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Post movement",
+          "width": 128.625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Mark inactive",
+          "width": 115.265625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Part name",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "SKU",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "CategoryTrackLightControllerPower supplyConnectorClipWireRental setConsumableToolOther",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Counted ineachlinear ftboxrollkitset",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "SupplierNo supplier",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Pack size",
+          "width": 372,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Unit cost",
+          "width": 372,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Reorder point",
+          "width": 372,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Add part",
+          "width": 103.46875,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        }
+      ],
+      "served": {
+        "/admin/js/views/inventory.js": "3682a5424ff33288696ef826c7b4d1fa72147100d1d41db99df258b449abf87b",
+        "/admin/js/lib/admin-dom.js": "c9fdd42f9448f54313db12584819439bda526bc7738437ac6238206b37e9e7e4",
+        "/admin/index.html": "990cd6645d5f0f84bf5cb1e6d62cd5f3dd2467ec973601ba3e5c8e6ff52c5046",
+        "/admin/js/lib/inventory-math.js": "29ae9b5852955540ff05d88b50f0f3b200ddf2d8668938d23d4f8e00a05fc494",
+        "/admin/js/components/seasonal-sets.js": "d3f732ccfc5c0e609c2935476f71e4cb18f753639b74928e79528504c3f65be1",
+        "/admin/js/components/kit-sheets.js": "c378fb391f58b688cb981367913f8e590cb1ba6f843bbee02da6f8ae25fde600",
+        "/admin/js/components/load-plan.js": "d7623fc1b8f1ceeaa99025373742b66e24404ffa831650363dee10d527629d14",
+        "/admin/js/lib/inventory-units.js": "52d367d6f9450c21d021405ea4f3e51d18fcd0a23683a9906dacca35ec1d3067",
+        "/admin/css/admin.css": "dcc7f75392cdb70efe8c5219d388a9683b493a281bc57e9ee5ed986e9795b3cf",
+        "/admin/js/bootstrap.js": "ebbf9f6ba4d75d047c46741d34d89fed93bd3591f95a9e1896f95d5f01f764e5",
+        "/admin/js/main.js": "b1a1264ed882f8c7ae5d350b4ed6250156d5572b3a51774850e7a736680401cf",
+        "/admin/js/lib/measurement-entry.js": "00131806e809d5ab182d139782f7afd81ec8dfcea7dc1efa2865b6c27e83a5b3",
+        "/shared/dom.js": "930fbec42ed4f86792974ce98b0769260f406baa84b3ac6afa037be30cd24dd8",
+        "/admin/js/lib/save.js": "eb3980b09e921931e4c74b69a817afcd886b73673f48d723a532f459aab46bec",
+        "/admin/js/lib/native.js": "95d3b5f30cba36c495bb52d2390928a89ed3c9d000b9e7125dd47bcaf8466f03",
+        "/admin/js/lib/navigation.js": "dc4e8ec84304d484ba7e64ed29745ac9c14e33e11ed33623d1bd140591567458",
+        "/admin/js/views/login.js": "9e344b14ffe1433b399ac464b541f22324f6ffccd7e3655594532f1e88c094b1",
+        "/admin/js/views/dashboard.js": "b574a959458aa05a9ad6718d52514c415f56fc69f900ec4b459ec8fb5be178fd",
+        "/admin/js/views/requests.js": "91aec60573cbb772b0c1472d0b67d4bf6c0ac232d3038ec771c9d8bc740e3e61",
+        "/admin/js/views/job.js": "689cd1a8de3b7e625b376a7804c7fe2add5e517a38649305dbf9d68d72234fc8",
+        "/admin/js/views/customers.js": "1b31842b38572ac23ce56229f7f1b87c2e4d82b05ca194b778436fb8bc86436d",
+        "/admin/js/views/property.js": "b1b6a8e72109698698f123efa94d3c76d065f9ae3238dbb451ee1dd373ab22f9",
+        "/admin/js/views/settings.js": "a5b2e2ed21889a39498faa03f7693e398c9aca2b9d08d862cb0b582e1df4ec6a",
+        "/admin/js/views/winter.js": "32c378f10c27b76ec1b7927e54b732bd32e34ea485a547cb61d258106fe8bc00",
+        "/admin/js/views/operations-routes.js": "93b9204d16c8993300c6f50846368486d6aed3da68dcdf6fa07424d2beab4b0d",
+        "/admin/js/lib/offline-queue.js": "42713f971966e02a49af8b1e4cfd7db0862369c28ef4d1286bdb4dab4180858c",
+        "/shared/vendor/@capacitor/core/dist/index.js": "b81c1c3e42ba3b85bd3b0222ff1d5400c51569e7fd681e0f3b3efb444bbcc363",
+        "/shared/format.js": "ea76e5e081f51b69d0f9c16a939a57fe3ebe03a73f10fa9ee23eadb76b2e1e99",
+        "/admin/js/views/measurements.js": "5b01738f195448e82fc683b44dcb57e749c853afe97a322d1c6ce82b7a1fc003",
+        "/admin/js/views/quote.js": "45a2663cc7593f1192cc87121796427560baed7fafdf946e5d7e2f73c007870c",
+        "/admin/js/components/review-flag.js": "914283c85dfeff133fcc7de04596cad5236a80237ab85a32373d885cccbbe134",
+        "/admin/js/components/next-step.js": "4cebc4f1969d31557a559f894434a8144b4b1ec2b544f7e0b8c0215943df21ef",
+        "/admin/js/components/job-activity.js": "106589a59ef858a05ed6b8f6f4ff73f4d67eacb4c8a4737d55fb349fc7b0edeb",
+        "/admin/js/lib/operations-availability.js": "f046a2fe7ffd61d651e897e0a34629f1e542d1eba16a2334cd67b6abb368c3e5",
+        "/admin/js/components/evidence-policy.js": "58e1c9f045434481e6a5aeaab9e2096cc33e8c051c6e69c2c338e7e740250271",
+        "/admin/js/lib/settings-form.js": "e5fec184ced2dd73562b1f3560e84e85fce6cfcff649b0482cba951a7fe868f0",
+        "/admin/js/lib/field-identity.js": "a4ba0628d39eeccd984847220bc7b62193c49c19ce6ca4971b248c8e62e6d2cb",
+        "/admin/js/lib/field-cache.js": "59037117362527592d886a5e79863e59f4cf84200795641ce2117ce19bee44e8",
+        "/admin/js/lib/outbox-schema.js": "7fbdc7513dcc4fb00e1a8b082554468324fe6148407718d3ad66fcab7c198e26",
+        "/admin/js/lib/field-completion-api.js": "dd4679bc8ed9ce350b1125a3d290a157fb47bc3c512ad59d29e5840df129012b",
+        "/admin/js/components/modifier-groups.js": "256c36097dc420e232e9ca3e20c33ba17262cfd9b6432f8d0800a975c2f24513",
+        "/admin/js/components/heating-wire-calculator.js": "619312594118ea51d6583ef1d8cddcc38f365c8c2961d239ac24c3c749c95689",
+        "/admin/js/components/siding-calculator.js": "ab3a422e25e26e134244d7cba4337dbe45fe388ad3973e517d48a63c5f7e3a2d",
+        "/admin/js/components/gutter-brightening-calculator.js": "fd670403ce595b38b4f1ce8d8b4715e1917486c35b0af0852506d64ab1a8d88e",
+        "/admin/js/components/window-cleaning-calculator.js": "a4864a2e2a386d027b59bd9f684d5475db7c77ab6e70b4fec2bd592558accdd7",
+        "/admin/js/components/concrete-cleaning-calculator.js": "e3f88ba13cd1a0c13adf7800f71b9844566c2b8994de16ba21bc55aa682fbcaa",
+        "/admin/js/components/roof-cleaning-calculator.js": "d2f02081cd2ca2f445bb913c4afe53c6883ea318c7d28963446d818a555f8dd7",
+        "/admin/js/components/deck-cleaning-calculator.js": "8e7383d68d76d5447e59feb16a62d3b9bb17112df047efa4d1c1145a480c45f5",
+        "/admin/js/components/fence-cleaning-calculator.js": "f0fa1fcce6a8c999b37971248d1ece09caa8c5260b1a8f2c62c0ffcab9e2b02c",
+        "/admin/js/components/moss-removal-calculator.js": "e397665966fe993607957a05c834abf86f5568e6103d73c8b9405acedb0a8508",
+        "/admin/js/components/graffiti-removal-calculator.js": "522fb5aedfe9dee103790975dc275d54d680e8c11e19d379095a34e455d52918",
+        "/admin/js/components/permanent-lighting-calculator.js": "0ae1bb62c5240532bb27d3945375b9909a6ae6c919ac540d0a31e7907566772a",
+        "/admin/js/components/christmas-lighting-calculator.js": "8df5ab962b1d7c4baedf9ebe9ceae716dd5db1c0290c21b5d18e861a2e496be4",
+        "/admin/js/components/winter-property-care-calculator.js": "77cf90730d5e1cfd49ba5de35d5e2207481fef1a97effc934e059017b709b02e",
+        "/admin/js/components/signature-pad.js": "635676dd74e5bffb570dfc861b3f56fbcfb5bc71143bbace266c66286c0e96b5",
+        "/admin/js/components/change-orders.js": "4a1bf43a5a5875264af61a5b82c8d3a43934bda12a54f32ed99bca002893c6b1",
+        "/admin/js/lib/field-storage.js": "c3b3880dcc919064c663de03db726daa86d00e7d399352aeff521b871a1eec66"
+      },
+      "selectOptions": [
+        [
+          "base",
+          "car_a"
+        ],
+        [
+          "opening",
+          "consumed",
+          "damaged",
+          "returned",
+          "adjustment"
+        ],
+        [
+          "base",
+          "car_a"
+        ],
+        [
+          "usable",
+          "damaged"
+        ],
+        [
+          "exact",
+          "estimated"
+        ],
+        [
+          "track",
+          "light",
+          "controller",
+          "power_supply",
+          "connector",
+          "clip",
+          "wire",
+          "rental_set",
+          "consumable",
+          "tool",
+          "other"
+        ],
+        [
+          "each",
+          "linear_ft",
+          "box",
+          "roll",
+          "kit",
+          "set"
+        ],
+        [
+          ""
+        ]
+      ],
+      "levelCreationControl": false
+    },
+    {
+      "slug": "dispatch",
+      "width": 430,
+      "focusStyle": {
+        "outline": "solid",
+        "width": "2px",
+        "shadow": "none"
+      },
+      "targets": [
+        {
+          "tag": "A",
+          "name": "← Today’s jobs",
+          "width": 90.703125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "A",
+          "name": "Review this vehicle’s loading",
+          "width": 260.6875,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "VehicleCar ACar B",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Day",
+          "width": 372,
+          "height": 48,
+          "disabled": false,
+          "below44": false
+        }
+      ],
+      "served": {
+        "/admin/js/components/dispatch-day.js": "fc9f4bf9c11eb4f8e51f7c15542c899272538d778ff895ac77ff3aedfc5dbd86",
+        "/admin/js/lib/admin-dom.js": "c9fdd42f9448f54313db12584819439bda526bc7738437ac6238206b37e9e7e4",
+        "/admin/index.html": "990cd6645d5f0f84bf5cb1e6d62cd5f3dd2467ec973601ba3e5c8e6ff52c5046",
+        "/admin/css/admin.css": "dcc7f75392cdb70efe8c5219d388a9683b493a281bc57e9ee5ed986e9795b3cf",
+        "/admin/js/bootstrap.js": "ebbf9f6ba4d75d047c46741d34d89fed93bd3591f95a9e1896f95d5f01f764e5",
+        "/admin/js/main.js": "b1a1264ed882f8c7ae5d350b4ed6250156d5572b3a51774850e7a736680401cf",
+        "/admin/js/lib/measurement-entry.js": "00131806e809d5ab182d139782f7afd81ec8dfcea7dc1efa2865b6c27e83a5b3",
+        "/shared/dom.js": "930fbec42ed4f86792974ce98b0769260f406baa84b3ac6afa037be30cd24dd8",
+        "/admin/js/lib/save.js": "eb3980b09e921931e4c74b69a817afcd886b73673f48d723a532f459aab46bec",
+        "/admin/js/lib/native.js": "95d3b5f30cba36c495bb52d2390928a89ed3c9d000b9e7125dd47bcaf8466f03",
+        "/admin/js/lib/navigation.js": "dc4e8ec84304d484ba7e64ed29745ac9c14e33e11ed33623d1bd140591567458",
+        "/admin/js/views/login.js": "9e344b14ffe1433b399ac464b541f22324f6ffccd7e3655594532f1e88c094b1",
+        "/admin/js/views/dashboard.js": "b574a959458aa05a9ad6718d52514c415f56fc69f900ec4b459ec8fb5be178fd",
+        "/admin/js/views/requests.js": "91aec60573cbb772b0c1472d0b67d4bf6c0ac232d3038ec771c9d8bc740e3e61",
+        "/admin/js/views/job.js": "689cd1a8de3b7e625b376a7804c7fe2add5e517a38649305dbf9d68d72234fc8",
+        "/admin/js/views/customers.js": "1b31842b38572ac23ce56229f7f1b87c2e4d82b05ca194b778436fb8bc86436d",
+        "/admin/js/views/property.js": "b1b6a8e72109698698f123efa94d3c76d065f9ae3238dbb451ee1dd373ab22f9",
+        "/admin/js/views/settings.js": "a5b2e2ed21889a39498faa03f7693e398c9aca2b9d08d862cb0b582e1df4ec6a",
+        "/admin/js/views/winter.js": "32c378f10c27b76ec1b7927e54b732bd32e34ea485a547cb61d258106fe8bc00",
+        "/admin/js/views/operations-routes.js": "93b9204d16c8993300c6f50846368486d6aed3da68dcdf6fa07424d2beab4b0d",
+        "/admin/js/lib/offline-queue.js": "42713f971966e02a49af8b1e4cfd7db0862369c28ef4d1286bdb4dab4180858c",
+        "/shared/vendor/@capacitor/core/dist/index.js": "b81c1c3e42ba3b85bd3b0222ff1d5400c51569e7fd681e0f3b3efb444bbcc363",
+        "/shared/format.js": "ea76e5e081f51b69d0f9c16a939a57fe3ebe03a73f10fa9ee23eadb76b2e1e99",
+        "/admin/js/views/measurements.js": "5b01738f195448e82fc683b44dcb57e749c853afe97a322d1c6ce82b7a1fc003",
+        "/admin/js/views/quote.js": "45a2663cc7593f1192cc87121796427560baed7fafdf946e5d7e2f73c007870c",
+        "/admin/js/components/review-flag.js": "914283c85dfeff133fcc7de04596cad5236a80237ab85a32373d885cccbbe134",
+        "/admin/js/components/next-step.js": "4cebc4f1969d31557a559f894434a8144b4b1ec2b544f7e0b8c0215943df21ef",
+        "/admin/js/components/job-activity.js": "106589a59ef858a05ed6b8f6f4ff73f4d67eacb4c8a4737d55fb349fc7b0edeb",
+        "/admin/js/components/evidence-policy.js": "58e1c9f045434481e6a5aeaab9e2096cc33e8c051c6e69c2c338e7e740250271",
+        "/admin/js/lib/settings-form.js": "e5fec184ced2dd73562b1f3560e84e85fce6cfcff649b0482cba951a7fe868f0",
+        "/admin/js/lib/operations-availability.js": "f046a2fe7ffd61d651e897e0a34629f1e542d1eba16a2334cd67b6abb368c3e5",
+        "/admin/js/lib/field-identity.js": "a4ba0628d39eeccd984847220bc7b62193c49c19ce6ca4971b248c8e62e6d2cb",
+        "/admin/js/lib/field-cache.js": "59037117362527592d886a5e79863e59f4cf84200795641ce2117ce19bee44e8",
+        "/admin/js/lib/outbox-schema.js": "7fbdc7513dcc4fb00e1a8b082554468324fe6148407718d3ad66fcab7c198e26",
+        "/admin/js/lib/field-completion-api.js": "dd4679bc8ed9ce350b1125a3d290a157fb47bc3c512ad59d29e5840df129012b",
+        "/admin/js/components/modifier-groups.js": "256c36097dc420e232e9ca3e20c33ba17262cfd9b6432f8d0800a975c2f24513",
+        "/admin/js/components/heating-wire-calculator.js": "619312594118ea51d6583ef1d8cddcc38f365c8c2961d239ac24c3c749c95689",
+        "/admin/js/components/siding-calculator.js": "ab3a422e25e26e134244d7cba4337dbe45fe388ad3973e517d48a63c5f7e3a2d",
+        "/admin/js/components/gutter-brightening-calculator.js": "fd670403ce595b38b4f1ce8d8b4715e1917486c35b0af0852506d64ab1a8d88e",
+        "/admin/js/components/window-cleaning-calculator.js": "a4864a2e2a386d027b59bd9f684d5475db7c77ab6e70b4fec2bd592558accdd7",
+        "/admin/js/components/concrete-cleaning-calculator.js": "e3f88ba13cd1a0c13adf7800f71b9844566c2b8994de16ba21bc55aa682fbcaa",
+        "/admin/js/components/roof-cleaning-calculator.js": "d2f02081cd2ca2f445bb913c4afe53c6883ea318c7d28963446d818a555f8dd7",
+        "/admin/js/components/deck-cleaning-calculator.js": "8e7383d68d76d5447e59feb16a62d3b9bb17112df047efa4d1c1145a480c45f5",
+        "/admin/js/components/fence-cleaning-calculator.js": "f0fa1fcce6a8c999b37971248d1ece09caa8c5260b1a8f2c62c0ffcab9e2b02c",
+        "/admin/js/components/moss-removal-calculator.js": "e397665966fe993607957a05c834abf86f5568e6103d73c8b9405acedb0a8508",
+        "/admin/js/components/graffiti-removal-calculator.js": "522fb5aedfe9dee103790975dc275d54d680e8c11e19d379095a34e455d52918",
+        "/admin/js/components/permanent-lighting-calculator.js": "0ae1bb62c5240532bb27d3945375b9909a6ae6c919ac540d0a31e7907566772a",
+        "/admin/js/components/christmas-lighting-calculator.js": "8df5ab962b1d7c4baedf9ebe9ceae716dd5db1c0290c21b5d18e861a2e496be4",
+        "/admin/js/components/winter-property-care-calculator.js": "77cf90730d5e1cfd49ba5de35d5e2207481fef1a97effc934e059017b709b02e",
+        "/admin/js/components/signature-pad.js": "635676dd74e5bffb570dfc861b3f56fbcfb5bc71143bbace266c66286c0e96b5",
+        "/admin/js/components/change-orders.js": "4a1bf43a5a5875264af61a5b82c8d3a43934bda12a54f32ed99bca002893c6b1",
+        "/admin/js/lib/field-storage.js": "c3b3880dcc919064c663de03db726daa86d00e7d399352aeff521b871a1eec66"
+      }
+    },
+    {
+      "slug": "property",
+      "width": 430,
+      "focusStyle": {
+        "outline": "solid",
+        "width": "2px",
+        "shadow": "none"
+      },
+      "targets": [
+        {
+          "tag": "A",
+          "name": "← FIXTURE Customer",
+          "width": 165.4375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Address line 1",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Address line 2",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "City",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Province",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Postal code",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Property typeNot statedResidentialCommercialStrataIndustrial",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Storeys note",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "TEXTAREA",
+          "name": "Access note",
+          "width": 372,
+          "height": 88,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "TEXTAREA",
+          "name": "Property notes",
+          "width": 372,
+          "height": 94,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Save property",
+          "width": 145.078125,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Cancel",
+          "width": 86.9375,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Entrance",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Hazard",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Parking",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Internal note",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Access code",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Customer-facing note",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Save details",
+          "width": 102.8125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Add a zone",
+          "width": 95.890625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        }
+      ],
+      "served": {
+        "/admin/index.html": "990cd6645d5f0f84bf5cb1e6d62cd5f3dd2467ec973601ba3e5c8e6ff52c5046",
+        "/admin/js/lib/admin-dom.js": "c9fdd42f9448f54313db12584819439bda526bc7738437ac6238206b37e9e7e4",
+        "/admin/css/admin.css": "dcc7f75392cdb70efe8c5219d388a9683b493a281bc57e9ee5ed986e9795b3cf",
+        "/admin/js/bootstrap.js": "ebbf9f6ba4d75d047c46741d34d89fed93bd3591f95a9e1896f95d5f01f764e5",
+        "/admin/js/main.js": "b1a1264ed882f8c7ae5d350b4ed6250156d5572b3a51774850e7a736680401cf",
+        "/admin/js/lib/measurement-entry.js": "00131806e809d5ab182d139782f7afd81ec8dfcea7dc1efa2865b6c27e83a5b3",
+        "/shared/dom.js": "930fbec42ed4f86792974ce98b0769260f406baa84b3ac6afa037be30cd24dd8",
+        "/admin/js/lib/save.js": "eb3980b09e921931e4c74b69a817afcd886b73673f48d723a532f459aab46bec",
+        "/admin/js/lib/native.js": "95d3b5f30cba36c495bb52d2390928a89ed3c9d000b9e7125dd47bcaf8466f03",
+        "/admin/js/lib/navigation.js": "dc4e8ec84304d484ba7e64ed29745ac9c14e33e11ed33623d1bd140591567458",
+        "/admin/js/views/login.js": "9e344b14ffe1433b399ac464b541f22324f6ffccd7e3655594532f1e88c094b1",
+        "/admin/js/views/dashboard.js": "b574a959458aa05a9ad6718d52514c415f56fc69f900ec4b459ec8fb5be178fd",
+        "/admin/js/views/requests.js": "91aec60573cbb772b0c1472d0b67d4bf6c0ac232d3038ec771c9d8bc740e3e61",
+        "/admin/js/views/job.js": "689cd1a8de3b7e625b376a7804c7fe2add5e517a38649305dbf9d68d72234fc8",
+        "/admin/js/views/customers.js": "1b31842b38572ac23ce56229f7f1b87c2e4d82b05ca194b778436fb8bc86436d",
+        "/admin/js/views/property.js": "b1b6a8e72109698698f123efa94d3c76d065f9ae3238dbb451ee1dd373ab22f9",
+        "/admin/js/views/settings.js": "a5b2e2ed21889a39498faa03f7693e398c9aca2b9d08d862cb0b582e1df4ec6a",
+        "/admin/js/views/winter.js": "32c378f10c27b76ec1b7927e54b732bd32e34ea485a547cb61d258106fe8bc00",
+        "/admin/js/views/operations-routes.js": "93b9204d16c8993300c6f50846368486d6aed3da68dcdf6fa07424d2beab4b0d",
+        "/admin/js/lib/offline-queue.js": "42713f971966e02a49af8b1e4cfd7db0862369c28ef4d1286bdb4dab4180858c",
+        "/shared/vendor/@capacitor/core/dist/index.js": "b81c1c3e42ba3b85bd3b0222ff1d5400c51569e7fd681e0f3b3efb444bbcc363",
+        "/shared/format.js": "ea76e5e081f51b69d0f9c16a939a57fe3ebe03a73f10fa9ee23eadb76b2e1e99",
+        "/admin/js/views/measurements.js": "5b01738f195448e82fc683b44dcb57e749c853afe97a322d1c6ce82b7a1fc003",
+        "/admin/js/views/quote.js": "45a2663cc7593f1192cc87121796427560baed7fafdf946e5d7e2f73c007870c",
+        "/admin/js/components/review-flag.js": "914283c85dfeff133fcc7de04596cad5236a80237ab85a32373d885cccbbe134",
+        "/admin/js/components/next-step.js": "4cebc4f1969d31557a559f894434a8144b4b1ec2b544f7e0b8c0215943df21ef",
+        "/admin/js/components/job-activity.js": "106589a59ef858a05ed6b8f6f4ff73f4d67eacb4c8a4737d55fb349fc7b0edeb",
+        "/admin/js/components/evidence-policy.js": "58e1c9f045434481e6a5aeaab9e2096cc33e8c051c6e69c2c338e7e740250271",
+        "/admin/js/lib/settings-form.js": "e5fec184ced2dd73562b1f3560e84e85fce6cfcff649b0482cba951a7fe868f0",
+        "/admin/js/lib/operations-availability.js": "f046a2fe7ffd61d651e897e0a34629f1e542d1eba16a2334cd67b6abb368c3e5",
+        "/admin/js/lib/field-identity.js": "a4ba0628d39eeccd984847220bc7b62193c49c19ce6ca4971b248c8e62e6d2cb",
+        "/admin/js/lib/field-cache.js": "59037117362527592d886a5e79863e59f4cf84200795641ce2117ce19bee44e8",
+        "/admin/js/lib/outbox-schema.js": "7fbdc7513dcc4fb00e1a8b082554468324fe6148407718d3ad66fcab7c198e26",
+        "/admin/js/lib/field-completion-api.js": "dd4679bc8ed9ce350b1125a3d290a157fb47bc3c512ad59d29e5840df129012b",
+        "/admin/js/components/modifier-groups.js": "256c36097dc420e232e9ca3e20c33ba17262cfd9b6432f8d0800a975c2f24513",
+        "/admin/js/components/heating-wire-calculator.js": "619312594118ea51d6583ef1d8cddcc38f365c8c2961d239ac24c3c749c95689",
+        "/admin/js/components/siding-calculator.js": "ab3a422e25e26e134244d7cba4337dbe45fe388ad3973e517d48a63c5f7e3a2d",
+        "/admin/js/components/gutter-brightening-calculator.js": "fd670403ce595b38b4f1ce8d8b4715e1917486c35b0af0852506d64ab1a8d88e",
+        "/admin/js/components/window-cleaning-calculator.js": "a4864a2e2a386d027b59bd9f684d5475db7c77ab6e70b4fec2bd592558accdd7",
+        "/admin/js/components/concrete-cleaning-calculator.js": "e3f88ba13cd1a0c13adf7800f71b9844566c2b8994de16ba21bc55aa682fbcaa",
+        "/admin/js/components/roof-cleaning-calculator.js": "d2f02081cd2ca2f445bb913c4afe53c6883ea318c7d28963446d818a555f8dd7",
+        "/admin/js/components/deck-cleaning-calculator.js": "8e7383d68d76d5447e59feb16a62d3b9bb17112df047efa4d1c1145a480c45f5",
+        "/admin/js/components/fence-cleaning-calculator.js": "f0fa1fcce6a8c999b37971248d1ece09caa8c5260b1a8f2c62c0ffcab9e2b02c",
+        "/admin/js/components/moss-removal-calculator.js": "e397665966fe993607957a05c834abf86f5568e6103d73c8b9405acedb0a8508",
+        "/admin/js/components/graffiti-removal-calculator.js": "522fb5aedfe9dee103790975dc275d54d680e8c11e19d379095a34e455d52918",
+        "/admin/js/components/permanent-lighting-calculator.js": "0ae1bb62c5240532bb27d3945375b9909a6ae6c919ac540d0a31e7907566772a",
+        "/admin/js/components/christmas-lighting-calculator.js": "8df5ab962b1d7c4baedf9ebe9ceae716dd5db1c0290c21b5d18e861a2e496be4",
+        "/admin/js/components/winter-property-care-calculator.js": "77cf90730d5e1cfd49ba5de35d5e2207481fef1a97effc934e059017b709b02e",
+        "/admin/js/components/signature-pad.js": "635676dd74e5bffb570dfc861b3f56fbcfb5bc71143bbace266c66286c0e96b5",
+        "/admin/js/components/change-orders.js": "4a1bf43a5a5875264af61a5b82c8d3a43934bda12a54f32ed99bca002893c6b1",
+        "/admin/js/lib/field-storage.js": "c3b3880dcc919064c663de03db726daa86d00e7d399352aeff521b871a1eec66",
+        "/admin/js/components/property-access.js": "075dd11c03410a89ff78e30881b4d37507e056392a9dbf9550209be4813ad84d"
+      }
+    },
+    {
+      "slug": "handover",
+      "width": 430,
+      "focusStyle": {
+        "outline": "solid",
+        "width": "2px",
+        "shadow": "none"
+      },
+      "targets": [
+        {
+          "tag": "A",
+          "name": "← All jobs",
+          "width": 60.734375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "A",
+          "name": "Customer: FIXTURE Customer",
+          "width": 221.9375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "A",
+          "name": "Property Passport",
+          "width": 144.1875,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "StatusNewReviewingEstimate draftedSite visit scheduledAssessedQuote sentAcceptedDeclinedScheduledIn progressCompletedInvoicedPaidClosedLost",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "A",
+          "name": "5550100",
+          "width": 64.078125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "A",
+          "name": "customer@example.test",
+          "width": 182.296875,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Scheduled for",
+          "width": 372,
+          "height": 48,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Save date",
+          "width": 87.765625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Clear",
+          "width": 57.234375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Mark job complete",
+          "width": 183.875,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "+ Add section",
+          "width": 112.609375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Work out materials",
+          "width": 153.125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Start a sheet",
+          "width": 108.609375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Excuse which requirementEvery requirement on this jobBefore — the state we found it inAfter — the state we left it inInstallation — the run as it was leftComponent — what came out of the boxWinter proof — somebody was thereSite conditionAccess or hazard",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "For which serviceEvery service",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "TEXTAREA",
+          "name": "Reason for the exception",
+          "width": 372,
+          "height": 88,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Authorise the exception",
+          "width": 184.96875,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Refresh accepted completion for handover",
+          "width": 374.078125,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "New estimate",
+          "width": 116.328125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Build quote",
+          "width": 100.390625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "TEXTAREA",
+          "name": "Note",
+          "width": 372,
+          "height": 88,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Who can see itInternal — staff onlyCustomer-visible — can appear on the completion report",
+          "width": 372,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Add note",
+          "width": 83.40625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        }
+      ],
+      "served": {
+        "/admin/index.html": "990cd6645d5f0f84bf5cb1e6d62cd5f3dd2467ec973601ba3e5c8e6ff52c5046",
+        "/admin/js/lib/admin-dom.js": "c9fdd42f9448f54313db12584819439bda526bc7738437ac6238206b37e9e7e4",
+        "/admin/css/admin.css": "dcc7f75392cdb70efe8c5219d388a9683b493a281bc57e9ee5ed986e9795b3cf",
+        "/admin/js/bootstrap.js": "ebbf9f6ba4d75d047c46741d34d89fed93bd3591f95a9e1896f95d5f01f764e5",
+        "/admin/js/main.js": "b1a1264ed882f8c7ae5d350b4ed6250156d5572b3a51774850e7a736680401cf",
+        "/admin/js/lib/measurement-entry.js": "00131806e809d5ab182d139782f7afd81ec8dfcea7dc1efa2865b6c27e83a5b3",
+        "/shared/dom.js": "930fbec42ed4f86792974ce98b0769260f406baa84b3ac6afa037be30cd24dd8",
+        "/admin/js/lib/save.js": "eb3980b09e921931e4c74b69a817afcd886b73673f48d723a532f459aab46bec",
+        "/admin/js/lib/native.js": "95d3b5f30cba36c495bb52d2390928a89ed3c9d000b9e7125dd47bcaf8466f03",
+        "/admin/js/lib/navigation.js": "dc4e8ec84304d484ba7e64ed29745ac9c14e33e11ed33623d1bd140591567458",
+        "/admin/js/views/login.js": "9e344b14ffe1433b399ac464b541f22324f6ffccd7e3655594532f1e88c094b1",
+        "/admin/js/views/dashboard.js": "b574a959458aa05a9ad6718d52514c415f56fc69f900ec4b459ec8fb5be178fd",
+        "/admin/js/views/requests.js": "91aec60573cbb772b0c1472d0b67d4bf6c0ac232d3038ec771c9d8bc740e3e61",
+        "/admin/js/views/job.js": "689cd1a8de3b7e625b376a7804c7fe2add5e517a38649305dbf9d68d72234fc8",
+        "/admin/js/views/customers.js": "1b31842b38572ac23ce56229f7f1b87c2e4d82b05ca194b778436fb8bc86436d",
+        "/admin/js/views/property.js": "b1b6a8e72109698698f123efa94d3c76d065f9ae3238dbb451ee1dd373ab22f9",
+        "/admin/js/views/settings.js": "a5b2e2ed21889a39498faa03f7693e398c9aca2b9d08d862cb0b582e1df4ec6a",
+        "/admin/js/views/winter.js": "32c378f10c27b76ec1b7927e54b732bd32e34ea485a547cb61d258106fe8bc00",
+        "/admin/js/views/operations-routes.js": "93b9204d16c8993300c6f50846368486d6aed3da68dcdf6fa07424d2beab4b0d",
+        "/admin/js/lib/offline-queue.js": "42713f971966e02a49af8b1e4cfd7db0862369c28ef4d1286bdb4dab4180858c",
+        "/shared/vendor/@capacitor/core/dist/index.js": "b81c1c3e42ba3b85bd3b0222ff1d5400c51569e7fd681e0f3b3efb444bbcc363",
+        "/shared/format.js": "ea76e5e081f51b69d0f9c16a939a57fe3ebe03a73f10fa9ee23eadb76b2e1e99",
+        "/admin/js/views/measurements.js": "5b01738f195448e82fc683b44dcb57e749c853afe97a322d1c6ce82b7a1fc003",
+        "/admin/js/views/quote.js": "45a2663cc7593f1192cc87121796427560baed7fafdf946e5d7e2f73c007870c",
+        "/admin/js/components/review-flag.js": "914283c85dfeff133fcc7de04596cad5236a80237ab85a32373d885cccbbe134",
+        "/admin/js/components/next-step.js": "4cebc4f1969d31557a559f894434a8144b4b1ec2b544f7e0b8c0215943df21ef",
+        "/admin/js/components/job-activity.js": "106589a59ef858a05ed6b8f6f4ff73f4d67eacb4c8a4737d55fb349fc7b0edeb",
+        "/admin/js/lib/operations-availability.js": "f046a2fe7ffd61d651e897e0a34629f1e542d1eba16a2334cd67b6abb368c3e5",
+        "/admin/js/components/evidence-policy.js": "58e1c9f045434481e6a5aeaab9e2096cc33e8c051c6e69c2c338e7e740250271",
+        "/admin/js/lib/settings-form.js": "e5fec184ced2dd73562b1f3560e84e85fce6cfcff649b0482cba951a7fe868f0",
+        "/admin/js/lib/field-identity.js": "a4ba0628d39eeccd984847220bc7b62193c49c19ce6ca4971b248c8e62e6d2cb",
+        "/admin/js/lib/field-cache.js": "59037117362527592d886a5e79863e59f4cf84200795641ce2117ce19bee44e8",
+        "/admin/js/lib/outbox-schema.js": "7fbdc7513dcc4fb00e1a8b082554468324fe6148407718d3ad66fcab7c198e26",
+        "/admin/js/lib/field-completion-api.js": "dd4679bc8ed9ce350b1125a3d290a157fb47bc3c512ad59d29e5840df129012b",
+        "/admin/js/components/modifier-groups.js": "256c36097dc420e232e9ca3e20c33ba17262cfd9b6432f8d0800a975c2f24513",
+        "/admin/js/components/heating-wire-calculator.js": "619312594118ea51d6583ef1d8cddcc38f365c8c2961d239ac24c3c749c95689",
+        "/admin/js/components/siding-calculator.js": "ab3a422e25e26e134244d7cba4337dbe45fe388ad3973e517d48a63c5f7e3a2d",
+        "/admin/js/components/gutter-brightening-calculator.js": "fd670403ce595b38b4f1ce8d8b4715e1917486c35b0af0852506d64ab1a8d88e",
+        "/admin/js/components/window-cleaning-calculator.js": "a4864a2e2a386d027b59bd9f684d5475db7c77ab6e70b4fec2bd592558accdd7",
+        "/admin/js/components/concrete-cleaning-calculator.js": "e3f88ba13cd1a0c13adf7800f71b9844566c2b8994de16ba21bc55aa682fbcaa",
+        "/admin/js/components/roof-cleaning-calculator.js": "d2f02081cd2ca2f445bb913c4afe53c6883ea318c7d28963446d818a555f8dd7",
+        "/admin/js/components/deck-cleaning-calculator.js": "8e7383d68d76d5447e59feb16a62d3b9bb17112df047efa4d1c1145a480c45f5",
+        "/admin/js/components/fence-cleaning-calculator.js": "f0fa1fcce6a8c999b37971248d1ece09caa8c5260b1a8f2c62c0ffcab9e2b02c",
+        "/admin/js/components/moss-removal-calculator.js": "e397665966fe993607957a05c834abf86f5568e6103d73c8b9405acedb0a8508",
+        "/admin/js/components/graffiti-removal-calculator.js": "522fb5aedfe9dee103790975dc275d54d680e8c11e19d379095a34e455d52918",
+        "/admin/js/components/permanent-lighting-calculator.js": "0ae1bb62c5240532bb27d3945375b9909a6ae6c919ac540d0a31e7907566772a",
+        "/admin/js/components/christmas-lighting-calculator.js": "8df5ab962b1d7c4baedf9ebe9ceae716dd5db1c0290c21b5d18e861a2e496be4",
+        "/admin/js/components/winter-property-care-calculator.js": "77cf90730d5e1cfd49ba5de35d5e2207481fef1a97effc934e059017b709b02e",
+        "/admin/js/components/signature-pad.js": "635676dd74e5bffb570dfc861b3f56fbcfb5bc71143bbace266c66286c0e96b5",
+        "/admin/js/components/change-orders.js": "4a1bf43a5a5875264af61a5b82c8d3a43934bda12a54f32ed99bca002893c6b1",
+        "/admin/js/lib/field-storage.js": "c3b3880dcc919064c663de03db726daa86d00e7d399352aeff521b871a1eec66",
+        "/admin/js/components/job-materials.js": "55851e2265fd970307ec95e4966fc12ccaa3bcaf7462d44a871a7c98603b56d3",
+        "/admin/js/components/job-material-sheet.js": "28ab9aac81ad3af635879108f70f6a2c023b12305ddc87d94c51bc67c4680441",
+        "/admin/js/components/job-evidence.js": "456518751ad6484d3bcb4cad38d968ac4bbe348ac616759bc02467d0ae7f00b2",
+        "/admin/js/components/customer-handover.js": "6bd3a646bf68d6486c6acc66623ee767a6b02138df906a4934427687e25b0bce"
+      }
+    },
+    {
+      "slug": "inventory",
+      "width": 1280,
+      "focusStyle": {
+        "outline": "solid",
+        "width": "2px",
+        "shadow": "none"
+      },
+      "targets": [
+        {
+          "tag": "BUTTON",
+          "name": "Stock",
+          "width": 59.234375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Purchasing",
+          "width": 97.9375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Service parts",
+          "width": 109.78125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Christmas sets",
+          "width": 121.859375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Kits & pieces",
+          "width": 107.65625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Daily load",
+          "width": 89.21875,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Move",
+          "width": 58.734375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Movements",
+          "width": 101.703125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "FIXTURE Cable unit cost",
+          "width": 316.65625,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "FIXTURE Cable reorder point",
+          "width": 316.671875,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "FIXTURE Cable pack size",
+          "width": 316.65625,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Commit location for FIXTURE Cable",
+          "width": 481,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Quantity to commit of FIXTURE Cable",
+          "width": 481,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Commit",
+          "width": 75.828125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "MovementOpening countUsed on a jobDamaged / wastedReturned to shelfCorrection",
+          "width": 481,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Location for FIXTURE Cable",
+          "width": 481,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Quantity for FIXTURE Cable",
+          "width": 481,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Movement note",
+          "width": 481,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Condition for FIXTURE Cable",
+          "width": 481,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Count precision for FIXTURE Cable",
+          "width": 481,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Post movement",
+          "width": 128.625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Mark inactive",
+          "width": 115.265625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Part name",
+          "width": 507,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "SKU",
+          "width": 507,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "CategoryTrackLightControllerPower supplyConnectorClipWireRental setConsumableToolOther",
+          "width": 334,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Counted ineachlinear ftboxrollkitset",
+          "width": 334,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "SupplierNo supplier",
+          "width": 334,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Pack size",
+          "width": 334,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Unit cost",
+          "width": 334,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Reorder point",
+          "width": 334,
+          "height": 49.609375,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Add part",
+          "width": 103.46875,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        }
+      ],
+      "served": {
+        "/admin/js/views/inventory.js": "3682a5424ff33288696ef826c7b4d1fa72147100d1d41db99df258b449abf87b",
+        "/admin/js/lib/admin-dom.js": "c9fdd42f9448f54313db12584819439bda526bc7738437ac6238206b37e9e7e4",
+        "/admin/js/lib/inventory-math.js": "29ae9b5852955540ff05d88b50f0f3b200ddf2d8668938d23d4f8e00a05fc494",
+        "/admin/js/components/seasonal-sets.js": "d3f732ccfc5c0e609c2935476f71e4cb18f753639b74928e79528504c3f65be1",
+        "/admin/js/components/kit-sheets.js": "c378fb391f58b688cb981367913f8e590cb1ba6f843bbee02da6f8ae25fde600",
+        "/admin/js/components/load-plan.js": "d7623fc1b8f1ceeaa99025373742b66e24404ffa831650363dee10d527629d14",
+        "/admin/js/lib/inventory-units.js": "52d367d6f9450c21d021405ea4f3e51d18fcd0a23683a9906dacca35ec1d3067",
+        "/admin/index.html": "990cd6645d5f0f84bf5cb1e6d62cd5f3dd2467ec973601ba3e5c8e6ff52c5046",
+        "/admin/css/admin.css": "dcc7f75392cdb70efe8c5219d388a9683b493a281bc57e9ee5ed986e9795b3cf",
+        "/admin/js/bootstrap.js": "ebbf9f6ba4d75d047c46741d34d89fed93bd3591f95a9e1896f95d5f01f764e5",
+        "/admin/js/main.js": "b1a1264ed882f8c7ae5d350b4ed6250156d5572b3a51774850e7a736680401cf",
+        "/admin/js/lib/measurement-entry.js": "00131806e809d5ab182d139782f7afd81ec8dfcea7dc1efa2865b6c27e83a5b3",
+        "/shared/dom.js": "930fbec42ed4f86792974ce98b0769260f406baa84b3ac6afa037be30cd24dd8",
+        "/admin/js/lib/save.js": "eb3980b09e921931e4c74b69a817afcd886b73673f48d723a532f459aab46bec",
+        "/admin/js/lib/native.js": "95d3b5f30cba36c495bb52d2390928a89ed3c9d000b9e7125dd47bcaf8466f03",
+        "/admin/js/lib/navigation.js": "dc4e8ec84304d484ba7e64ed29745ac9c14e33e11ed33623d1bd140591567458",
+        "/admin/js/views/login.js": "9e344b14ffe1433b399ac464b541f22324f6ffccd7e3655594532f1e88c094b1",
+        "/admin/js/views/dashboard.js": "b574a959458aa05a9ad6718d52514c415f56fc69f900ec4b459ec8fb5be178fd",
+        "/admin/js/views/requests.js": "91aec60573cbb772b0c1472d0b67d4bf6c0ac232d3038ec771c9d8bc740e3e61",
+        "/admin/js/views/job.js": "689cd1a8de3b7e625b376a7804c7fe2add5e517a38649305dbf9d68d72234fc8",
+        "/admin/js/views/customers.js": "1b31842b38572ac23ce56229f7f1b87c2e4d82b05ca194b778436fb8bc86436d",
+        "/admin/js/views/property.js": "b1b6a8e72109698698f123efa94d3c76d065f9ae3238dbb451ee1dd373ab22f9",
+        "/admin/js/views/settings.js": "a5b2e2ed21889a39498faa03f7693e398c9aca2b9d08d862cb0b582e1df4ec6a",
+        "/admin/js/views/winter.js": "32c378f10c27b76ec1b7927e54b732bd32e34ea485a547cb61d258106fe8bc00",
+        "/admin/js/views/operations-routes.js": "93b9204d16c8993300c6f50846368486d6aed3da68dcdf6fa07424d2beab4b0d",
+        "/admin/js/lib/offline-queue.js": "42713f971966e02a49af8b1e4cfd7db0862369c28ef4d1286bdb4dab4180858c",
+        "/shared/vendor/@capacitor/core/dist/index.js": "b81c1c3e42ba3b85bd3b0222ff1d5400c51569e7fd681e0f3b3efb444bbcc363",
+        "/shared/format.js": "ea76e5e081f51b69d0f9c16a939a57fe3ebe03a73f10fa9ee23eadb76b2e1e99",
+        "/admin/js/views/measurements.js": "5b01738f195448e82fc683b44dcb57e749c853afe97a322d1c6ce82b7a1fc003",
+        "/admin/js/views/quote.js": "45a2663cc7593f1192cc87121796427560baed7fafdf946e5d7e2f73c007870c",
+        "/admin/js/components/review-flag.js": "914283c85dfeff133fcc7de04596cad5236a80237ab85a32373d885cccbbe134",
+        "/admin/js/components/next-step.js": "4cebc4f1969d31557a559f894434a8144b4b1ec2b544f7e0b8c0215943df21ef",
+        "/admin/js/components/job-activity.js": "106589a59ef858a05ed6b8f6f4ff73f4d67eacb4c8a4737d55fb349fc7b0edeb",
+        "/admin/js/components/evidence-policy.js": "58e1c9f045434481e6a5aeaab9e2096cc33e8c051c6e69c2c338e7e740250271",
+        "/admin/js/lib/settings-form.js": "e5fec184ced2dd73562b1f3560e84e85fce6cfcff649b0482cba951a7fe868f0",
+        "/admin/js/lib/operations-availability.js": "f046a2fe7ffd61d651e897e0a34629f1e542d1eba16a2334cd67b6abb368c3e5",
+        "/admin/js/lib/field-identity.js": "a4ba0628d39eeccd984847220bc7b62193c49c19ce6ca4971b248c8e62e6d2cb",
+        "/admin/js/lib/field-cache.js": "59037117362527592d886a5e79863e59f4cf84200795641ce2117ce19bee44e8",
+        "/admin/js/lib/outbox-schema.js": "7fbdc7513dcc4fb00e1a8b082554468324fe6148407718d3ad66fcab7c198e26",
+        "/admin/js/lib/field-completion-api.js": "dd4679bc8ed9ce350b1125a3d290a157fb47bc3c512ad59d29e5840df129012b",
+        "/admin/js/components/modifier-groups.js": "256c36097dc420e232e9ca3e20c33ba17262cfd9b6432f8d0800a975c2f24513",
+        "/admin/js/components/heating-wire-calculator.js": "619312594118ea51d6583ef1d8cddcc38f365c8c2961d239ac24c3c749c95689",
+        "/admin/js/components/siding-calculator.js": "ab3a422e25e26e134244d7cba4337dbe45fe388ad3973e517d48a63c5f7e3a2d",
+        "/admin/js/components/gutter-brightening-calculator.js": "fd670403ce595b38b4f1ce8d8b4715e1917486c35b0af0852506d64ab1a8d88e",
+        "/admin/js/components/window-cleaning-calculator.js": "a4864a2e2a386d027b59bd9f684d5475db7c77ab6e70b4fec2bd592558accdd7",
+        "/admin/js/components/concrete-cleaning-calculator.js": "e3f88ba13cd1a0c13adf7800f71b9844566c2b8994de16ba21bc55aa682fbcaa",
+        "/admin/js/components/roof-cleaning-calculator.js": "d2f02081cd2ca2f445bb913c4afe53c6883ea318c7d28963446d818a555f8dd7",
+        "/admin/js/components/deck-cleaning-calculator.js": "8e7383d68d76d5447e59feb16a62d3b9bb17112df047efa4d1c1145a480c45f5",
+        "/admin/js/components/fence-cleaning-calculator.js": "f0fa1fcce6a8c999b37971248d1ece09caa8c5260b1a8f2c62c0ffcab9e2b02c",
+        "/admin/js/components/moss-removal-calculator.js": "e397665966fe993607957a05c834abf86f5568e6103d73c8b9405acedb0a8508",
+        "/admin/js/components/graffiti-removal-calculator.js": "522fb5aedfe9dee103790975dc275d54d680e8c11e19d379095a34e455d52918",
+        "/admin/js/components/permanent-lighting-calculator.js": "0ae1bb62c5240532bb27d3945375b9909a6ae6c919ac540d0a31e7907566772a",
+        "/admin/js/components/christmas-lighting-calculator.js": "8df5ab962b1d7c4baedf9ebe9ceae716dd5db1c0290c21b5d18e861a2e496be4",
+        "/admin/js/components/winter-property-care-calculator.js": "77cf90730d5e1cfd49ba5de35d5e2207481fef1a97effc934e059017b709b02e",
+        "/admin/js/components/signature-pad.js": "635676dd74e5bffb570dfc861b3f56fbcfb5bc71143bbace266c66286c0e96b5",
+        "/admin/js/components/change-orders.js": "4a1bf43a5a5875264af61a5b82c8d3a43934bda12a54f32ed99bca002893c6b1",
+        "/admin/js/lib/field-storage.js": "c3b3880dcc919064c663de03db726daa86d00e7d399352aeff521b871a1eec66"
+      },
+      "selectOptions": [
+        [
+          "base",
+          "car_a"
+        ],
+        [
+          "opening",
+          "consumed",
+          "damaged",
+          "returned",
+          "adjustment"
+        ],
+        [
+          "base",
+          "car_a"
+        ],
+        [
+          "usable",
+          "damaged"
+        ],
+        [
+          "exact",
+          "estimated"
+        ],
+        [
+          "track",
+          "light",
+          "controller",
+          "power_supply",
+          "connector",
+          "clip",
+          "wire",
+          "rental_set",
+          "consumable",
+          "tool",
+          "other"
+        ],
+        [
+          "each",
+          "linear_ft",
+          "box",
+          "roll",
+          "kit",
+          "set"
+        ],
+        [
+          ""
+        ]
+      ],
+      "levelCreationControl": false
+    },
+    {
+      "slug": "dispatch",
+      "width": 1280,
+      "focusStyle": {
+        "outline": "solid",
+        "width": "2px",
+        "shadow": "none"
+      },
+      "targets": [
+        {
+          "tag": "A",
+          "name": "← Today’s jobs",
+          "width": 90.703125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "A",
+          "name": "Review this vehicle’s loading",
+          "width": 260.6875,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "VehicleCar ACar B",
+          "width": 507,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Day",
+          "width": 507,
+          "height": 48,
+          "disabled": false,
+          "below44": false
+        }
+      ],
+      "served": {
+        "/admin/js/components/dispatch-day.js": "fc9f4bf9c11eb4f8e51f7c15542c899272538d778ff895ac77ff3aedfc5dbd86",
+        "/admin/index.html": "990cd6645d5f0f84bf5cb1e6d62cd5f3dd2467ec973601ba3e5c8e6ff52c5046",
+        "/admin/js/lib/admin-dom.js": "c9fdd42f9448f54313db12584819439bda526bc7738437ac6238206b37e9e7e4",
+        "/admin/css/admin.css": "dcc7f75392cdb70efe8c5219d388a9683b493a281bc57e9ee5ed986e9795b3cf",
+        "/admin/js/bootstrap.js": "ebbf9f6ba4d75d047c46741d34d89fed93bd3591f95a9e1896f95d5f01f764e5",
+        "/admin/js/main.js": "b1a1264ed882f8c7ae5d350b4ed6250156d5572b3a51774850e7a736680401cf",
+        "/admin/js/lib/measurement-entry.js": "00131806e809d5ab182d139782f7afd81ec8dfcea7dc1efa2865b6c27e83a5b3",
+        "/shared/dom.js": "930fbec42ed4f86792974ce98b0769260f406baa84b3ac6afa037be30cd24dd8",
+        "/admin/js/lib/save.js": "eb3980b09e921931e4c74b69a817afcd886b73673f48d723a532f459aab46bec",
+        "/admin/js/lib/native.js": "95d3b5f30cba36c495bb52d2390928a89ed3c9d000b9e7125dd47bcaf8466f03",
+        "/admin/js/lib/navigation.js": "dc4e8ec84304d484ba7e64ed29745ac9c14e33e11ed33623d1bd140591567458",
+        "/admin/js/views/login.js": "9e344b14ffe1433b399ac464b541f22324f6ffccd7e3655594532f1e88c094b1",
+        "/admin/js/views/dashboard.js": "b574a959458aa05a9ad6718d52514c415f56fc69f900ec4b459ec8fb5be178fd",
+        "/admin/js/views/requests.js": "91aec60573cbb772b0c1472d0b67d4bf6c0ac232d3038ec771c9d8bc740e3e61",
+        "/admin/js/views/job.js": "689cd1a8de3b7e625b376a7804c7fe2add5e517a38649305dbf9d68d72234fc8",
+        "/admin/js/views/customers.js": "1b31842b38572ac23ce56229f7f1b87c2e4d82b05ca194b778436fb8bc86436d",
+        "/admin/js/views/property.js": "b1b6a8e72109698698f123efa94d3c76d065f9ae3238dbb451ee1dd373ab22f9",
+        "/admin/js/views/settings.js": "a5b2e2ed21889a39498faa03f7693e398c9aca2b9d08d862cb0b582e1df4ec6a",
+        "/admin/js/views/winter.js": "32c378f10c27b76ec1b7927e54b732bd32e34ea485a547cb61d258106fe8bc00",
+        "/admin/js/views/operations-routes.js": "93b9204d16c8993300c6f50846368486d6aed3da68dcdf6fa07424d2beab4b0d",
+        "/admin/js/lib/offline-queue.js": "42713f971966e02a49af8b1e4cfd7db0862369c28ef4d1286bdb4dab4180858c",
+        "/shared/format.js": "ea76e5e081f51b69d0f9c16a939a57fe3ebe03a73f10fa9ee23eadb76b2e1e99",
+        "/shared/vendor/@capacitor/core/dist/index.js": "b81c1c3e42ba3b85bd3b0222ff1d5400c51569e7fd681e0f3b3efb444bbcc363",
+        "/admin/js/views/measurements.js": "5b01738f195448e82fc683b44dcb57e749c853afe97a322d1c6ce82b7a1fc003",
+        "/admin/js/views/quote.js": "45a2663cc7593f1192cc87121796427560baed7fafdf946e5d7e2f73c007870c",
+        "/admin/js/components/review-flag.js": "914283c85dfeff133fcc7de04596cad5236a80237ab85a32373d885cccbbe134",
+        "/admin/js/components/next-step.js": "4cebc4f1969d31557a559f894434a8144b4b1ec2b544f7e0b8c0215943df21ef",
+        "/admin/js/components/job-activity.js": "106589a59ef858a05ed6b8f6f4ff73f4d67eacb4c8a4737d55fb349fc7b0edeb",
+        "/admin/js/components/evidence-policy.js": "58e1c9f045434481e6a5aeaab9e2096cc33e8c051c6e69c2c338e7e740250271",
+        "/admin/js/lib/settings-form.js": "e5fec184ced2dd73562b1f3560e84e85fce6cfcff649b0482cba951a7fe868f0",
+        "/admin/js/lib/operations-availability.js": "f046a2fe7ffd61d651e897e0a34629f1e542d1eba16a2334cd67b6abb368c3e5",
+        "/admin/js/lib/field-identity.js": "a4ba0628d39eeccd984847220bc7b62193c49c19ce6ca4971b248c8e62e6d2cb",
+        "/admin/js/lib/field-cache.js": "59037117362527592d886a5e79863e59f4cf84200795641ce2117ce19bee44e8",
+        "/admin/js/lib/outbox-schema.js": "7fbdc7513dcc4fb00e1a8b082554468324fe6148407718d3ad66fcab7c198e26",
+        "/admin/js/lib/field-completion-api.js": "dd4679bc8ed9ce350b1125a3d290a157fb47bc3c512ad59d29e5840df129012b",
+        "/admin/js/components/modifier-groups.js": "256c36097dc420e232e9ca3e20c33ba17262cfd9b6432f8d0800a975c2f24513",
+        "/admin/js/components/heating-wire-calculator.js": "619312594118ea51d6583ef1d8cddcc38f365c8c2961d239ac24c3c749c95689",
+        "/admin/js/components/siding-calculator.js": "ab3a422e25e26e134244d7cba4337dbe45fe388ad3973e517d48a63c5f7e3a2d",
+        "/admin/js/components/gutter-brightening-calculator.js": "fd670403ce595b38b4f1ce8d8b4715e1917486c35b0af0852506d64ab1a8d88e",
+        "/admin/js/components/window-cleaning-calculator.js": "a4864a2e2a386d027b59bd9f684d5475db7c77ab6e70b4fec2bd592558accdd7",
+        "/admin/js/components/concrete-cleaning-calculator.js": "e3f88ba13cd1a0c13adf7800f71b9844566c2b8994de16ba21bc55aa682fbcaa",
+        "/admin/js/components/roof-cleaning-calculator.js": "d2f02081cd2ca2f445bb913c4afe53c6883ea318c7d28963446d818a555f8dd7",
+        "/admin/js/components/deck-cleaning-calculator.js": "8e7383d68d76d5447e59feb16a62d3b9bb17112df047efa4d1c1145a480c45f5",
+        "/admin/js/components/fence-cleaning-calculator.js": "f0fa1fcce6a8c999b37971248d1ece09caa8c5260b1a8f2c62c0ffcab9e2b02c",
+        "/admin/js/components/moss-removal-calculator.js": "e397665966fe993607957a05c834abf86f5568e6103d73c8b9405acedb0a8508",
+        "/admin/js/components/graffiti-removal-calculator.js": "522fb5aedfe9dee103790975dc275d54d680e8c11e19d379095a34e455d52918",
+        "/admin/js/components/permanent-lighting-calculator.js": "0ae1bb62c5240532bb27d3945375b9909a6ae6c919ac540d0a31e7907566772a",
+        "/admin/js/components/christmas-lighting-calculator.js": "8df5ab962b1d7c4baedf9ebe9ceae716dd5db1c0290c21b5d18e861a2e496be4",
+        "/admin/js/components/winter-property-care-calculator.js": "77cf90730d5e1cfd49ba5de35d5e2207481fef1a97effc934e059017b709b02e",
+        "/admin/js/components/signature-pad.js": "635676dd74e5bffb570dfc861b3f56fbcfb5bc71143bbace266c66286c0e96b5",
+        "/admin/js/components/change-orders.js": "4a1bf43a5a5875264af61a5b82c8d3a43934bda12a54f32ed99bca002893c6b1",
+        "/admin/js/lib/field-storage.js": "c3b3880dcc919064c663de03db726daa86d00e7d399352aeff521b871a1eec66"
+      }
+    },
+    {
+      "slug": "property",
+      "width": 1280,
+      "focusStyle": {
+        "outline": "solid",
+        "width": "2px",
+        "shadow": "none"
+      },
+      "targets": [
+        {
+          "tag": "A",
+          "name": "← FIXTURE Customer",
+          "width": 165.4375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Address line 1",
+          "width": 507,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Address line 2",
+          "width": 507,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "City",
+          "width": 334,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Province",
+          "width": 334,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Postal code",
+          "width": 334,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Property typeNot statedResidentialCommercialStrataIndustrial",
+          "width": 507,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Storeys note",
+          "width": 507,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "TEXTAREA",
+          "name": "Access note",
+          "width": 1026,
+          "height": 88,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "TEXTAREA",
+          "name": "Property notes",
+          "width": 1026,
+          "height": 94,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Save property",
+          "width": 145.078125,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Cancel",
+          "width": 86.9375,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Entrance",
+          "width": 1026,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Hazard",
+          "width": 1026,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Parking",
+          "width": 1026,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Internal note",
+          "width": 1026,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Access code",
+          "width": 1026,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Customer-facing note",
+          "width": 1026,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Save details",
+          "width": 102.8125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Add a zone",
+          "width": 95.890625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        }
+      ],
+      "served": {
+        "/admin/index.html": "990cd6645d5f0f84bf5cb1e6d62cd5f3dd2467ec973601ba3e5c8e6ff52c5046",
+        "/admin/js/lib/admin-dom.js": "c9fdd42f9448f54313db12584819439bda526bc7738437ac6238206b37e9e7e4",
+        "/admin/css/admin.css": "dcc7f75392cdb70efe8c5219d388a9683b493a281bc57e9ee5ed986e9795b3cf",
+        "/admin/js/bootstrap.js": "ebbf9f6ba4d75d047c46741d34d89fed93bd3591f95a9e1896f95d5f01f764e5",
+        "/admin/js/main.js": "b1a1264ed882f8c7ae5d350b4ed6250156d5572b3a51774850e7a736680401cf",
+        "/admin/js/lib/measurement-entry.js": "00131806e809d5ab182d139782f7afd81ec8dfcea7dc1efa2865b6c27e83a5b3",
+        "/shared/dom.js": "930fbec42ed4f86792974ce98b0769260f406baa84b3ac6afa037be30cd24dd8",
+        "/admin/js/lib/save.js": "eb3980b09e921931e4c74b69a817afcd886b73673f48d723a532f459aab46bec",
+        "/admin/js/lib/native.js": "95d3b5f30cba36c495bb52d2390928a89ed3c9d000b9e7125dd47bcaf8466f03",
+        "/admin/js/lib/navigation.js": "dc4e8ec84304d484ba7e64ed29745ac9c14e33e11ed33623d1bd140591567458",
+        "/admin/js/views/login.js": "9e344b14ffe1433b399ac464b541f22324f6ffccd7e3655594532f1e88c094b1",
+        "/admin/js/views/dashboard.js": "b574a959458aa05a9ad6718d52514c415f56fc69f900ec4b459ec8fb5be178fd",
+        "/admin/js/views/requests.js": "91aec60573cbb772b0c1472d0b67d4bf6c0ac232d3038ec771c9d8bc740e3e61",
+        "/admin/js/views/job.js": "689cd1a8de3b7e625b376a7804c7fe2add5e517a38649305dbf9d68d72234fc8",
+        "/admin/js/views/customers.js": "1b31842b38572ac23ce56229f7f1b87c2e4d82b05ca194b778436fb8bc86436d",
+        "/admin/js/views/property.js": "b1b6a8e72109698698f123efa94d3c76d065f9ae3238dbb451ee1dd373ab22f9",
+        "/admin/js/views/settings.js": "a5b2e2ed21889a39498faa03f7693e398c9aca2b9d08d862cb0b582e1df4ec6a",
+        "/admin/js/views/winter.js": "32c378f10c27b76ec1b7927e54b732bd32e34ea485a547cb61d258106fe8bc00",
+        "/admin/js/views/operations-routes.js": "93b9204d16c8993300c6f50846368486d6aed3da68dcdf6fa07424d2beab4b0d",
+        "/admin/js/lib/offline-queue.js": "42713f971966e02a49af8b1e4cfd7db0862369c28ef4d1286bdb4dab4180858c",
+        "/shared/vendor/@capacitor/core/dist/index.js": "b81c1c3e42ba3b85bd3b0222ff1d5400c51569e7fd681e0f3b3efb444bbcc363",
+        "/shared/format.js": "ea76e5e081f51b69d0f9c16a939a57fe3ebe03a73f10fa9ee23eadb76b2e1e99",
+        "/admin/js/views/measurements.js": "5b01738f195448e82fc683b44dcb57e749c853afe97a322d1c6ce82b7a1fc003",
+        "/admin/js/views/quote.js": "45a2663cc7593f1192cc87121796427560baed7fafdf946e5d7e2f73c007870c",
+        "/admin/js/components/review-flag.js": "914283c85dfeff133fcc7de04596cad5236a80237ab85a32373d885cccbbe134",
+        "/admin/js/components/next-step.js": "4cebc4f1969d31557a559f894434a8144b4b1ec2b544f7e0b8c0215943df21ef",
+        "/admin/js/components/job-activity.js": "106589a59ef858a05ed6b8f6f4ff73f4d67eacb4c8a4737d55fb349fc7b0edeb",
+        "/admin/js/components/evidence-policy.js": "58e1c9f045434481e6a5aeaab9e2096cc33e8c051c6e69c2c338e7e740250271",
+        "/admin/js/lib/settings-form.js": "e5fec184ced2dd73562b1f3560e84e85fce6cfcff649b0482cba951a7fe868f0",
+        "/admin/js/lib/operations-availability.js": "f046a2fe7ffd61d651e897e0a34629f1e542d1eba16a2334cd67b6abb368c3e5",
+        "/admin/js/lib/field-identity.js": "a4ba0628d39eeccd984847220bc7b62193c49c19ce6ca4971b248c8e62e6d2cb",
+        "/admin/js/lib/field-cache.js": "59037117362527592d886a5e79863e59f4cf84200795641ce2117ce19bee44e8",
+        "/admin/js/lib/outbox-schema.js": "7fbdc7513dcc4fb00e1a8b082554468324fe6148407718d3ad66fcab7c198e26",
+        "/admin/js/lib/field-completion-api.js": "dd4679bc8ed9ce350b1125a3d290a157fb47bc3c512ad59d29e5840df129012b",
+        "/admin/js/components/modifier-groups.js": "256c36097dc420e232e9ca3e20c33ba17262cfd9b6432f8d0800a975c2f24513",
+        "/admin/js/components/heating-wire-calculator.js": "619312594118ea51d6583ef1d8cddcc38f365c8c2961d239ac24c3c749c95689",
+        "/admin/js/components/siding-calculator.js": "ab3a422e25e26e134244d7cba4337dbe45fe388ad3973e517d48a63c5f7e3a2d",
+        "/admin/js/components/gutter-brightening-calculator.js": "fd670403ce595b38b4f1ce8d8b4715e1917486c35b0af0852506d64ab1a8d88e",
+        "/admin/js/components/window-cleaning-calculator.js": "a4864a2e2a386d027b59bd9f684d5475db7c77ab6e70b4fec2bd592558accdd7",
+        "/admin/js/components/concrete-cleaning-calculator.js": "e3f88ba13cd1a0c13adf7800f71b9844566c2b8994de16ba21bc55aa682fbcaa",
+        "/admin/js/components/roof-cleaning-calculator.js": "d2f02081cd2ca2f445bb913c4afe53c6883ea318c7d28963446d818a555f8dd7",
+        "/admin/js/components/deck-cleaning-calculator.js": "8e7383d68d76d5447e59feb16a62d3b9bb17112df047efa4d1c1145a480c45f5",
+        "/admin/js/components/fence-cleaning-calculator.js": "f0fa1fcce6a8c999b37971248d1ece09caa8c5260b1a8f2c62c0ffcab9e2b02c",
+        "/admin/js/components/moss-removal-calculator.js": "e397665966fe993607957a05c834abf86f5568e6103d73c8b9405acedb0a8508",
+        "/admin/js/components/graffiti-removal-calculator.js": "522fb5aedfe9dee103790975dc275d54d680e8c11e19d379095a34e455d52918",
+        "/admin/js/components/permanent-lighting-calculator.js": "0ae1bb62c5240532bb27d3945375b9909a6ae6c919ac540d0a31e7907566772a",
+        "/admin/js/components/christmas-lighting-calculator.js": "8df5ab962b1d7c4baedf9ebe9ceae716dd5db1c0290c21b5d18e861a2e496be4",
+        "/admin/js/components/winter-property-care-calculator.js": "77cf90730d5e1cfd49ba5de35d5e2207481fef1a97effc934e059017b709b02e",
+        "/admin/js/components/signature-pad.js": "635676dd74e5bffb570dfc861b3f56fbcfb5bc71143bbace266c66286c0e96b5",
+        "/admin/js/components/change-orders.js": "4a1bf43a5a5875264af61a5b82c8d3a43934bda12a54f32ed99bca002893c6b1",
+        "/admin/js/lib/field-storage.js": "c3b3880dcc919064c663de03db726daa86d00e7d399352aeff521b871a1eec66",
+        "/admin/js/components/property-access.js": "075dd11c03410a89ff78e30881b4d37507e056392a9dbf9550209be4813ad84d"
+      }
+    },
+    {
+      "slug": "handover",
+      "width": 1280,
+      "focusStyle": {
+        "outline": "solid",
+        "width": "2px",
+        "shadow": "none"
+      },
+      "targets": [
+        {
+          "tag": "A",
+          "name": "← All jobs",
+          "width": 60.734375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "A",
+          "name": "Customer: FIXTURE Customer",
+          "width": 221.9375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "A",
+          "name": "Property Passport",
+          "width": 144.1875,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "StatusNewReviewingEstimate draftedSite visit scheduledAssessedQuote sentAcceptedDeclinedScheduledIn progressCompletedInvoicedPaidClosedLost",
+          "width": 334,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "A",
+          "name": "5550100",
+          "width": 64.078125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "A",
+          "name": "customer@example.test",
+          "width": 182.296875,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "INPUT",
+          "name": "Scheduled for",
+          "width": 507,
+          "height": 48,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Save date",
+          "width": 87.765625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Clear",
+          "width": 57.234375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Mark job complete",
+          "width": 183.875,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "+ Add section",
+          "width": 112.609375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Work out materials",
+          "width": 153.125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Start a sheet",
+          "width": 108.609375,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Excuse which requirementEvery requirement on this jobBefore — the state we found it inAfter — the state we left it inInstallation — the run as it was leftComponent — what came out of the boxWinter proof — somebody was thereSite conditionAccess or hazard",
+          "width": 507,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "For which serviceEvery service",
+          "width": 507,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "TEXTAREA",
+          "name": "Reason for the exception",
+          "width": 1026,
+          "height": 88,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Authorise the exception",
+          "width": 184.96875,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Refresh accepted completion for handover",
+          "width": 374.078125,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "New estimate",
+          "width": 116.328125,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Build quote",
+          "width": 100.390625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "TEXTAREA",
+          "name": "Note",
+          "width": 1026,
+          "height": 88,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "SELECT",
+          "name": "Who can see itInternal — staff onlyCustomer-visible — can appear on the completion report",
+          "width": 1026,
+          "height": 46,
+          "disabled": false,
+          "below44": false
+        },
+        {
+          "tag": "BUTTON",
+          "name": "Add note",
+          "width": 83.40625,
+          "height": 44,
+          "disabled": false,
+          "below44": false
+        }
+      ],
+      "served": {
+        "/admin/js/lib/admin-dom.js": "c9fdd42f9448f54313db12584819439bda526bc7738437ac6238206b37e9e7e4",
+        "/admin/index.html": "990cd6645d5f0f84bf5cb1e6d62cd5f3dd2467ec973601ba3e5c8e6ff52c5046",
+        "/admin/css/admin.css": "dcc7f75392cdb70efe8c5219d388a9683b493a281bc57e9ee5ed986e9795b3cf",
+        "/admin/js/bootstrap.js": "ebbf9f6ba4d75d047c46741d34d89fed93bd3591f95a9e1896f95d5f01f764e5",
+        "/admin/js/main.js": "b1a1264ed882f8c7ae5d350b4ed6250156d5572b3a51774850e7a736680401cf",
+        "/admin/js/lib/measurement-entry.js": "00131806e809d5ab182d139782f7afd81ec8dfcea7dc1efa2865b6c27e83a5b3",
+        "/shared/dom.js": "930fbec42ed4f86792974ce98b0769260f406baa84b3ac6afa037be30cd24dd8",
+        "/admin/js/lib/save.js": "eb3980b09e921931e4c74b69a817afcd886b73673f48d723a532f459aab46bec",
+        "/admin/js/lib/native.js": "95d3b5f30cba36c495bb52d2390928a89ed3c9d000b9e7125dd47bcaf8466f03",
+        "/admin/js/lib/navigation.js": "dc4e8ec84304d484ba7e64ed29745ac9c14e33e11ed33623d1bd140591567458",
+        "/admin/js/views/login.js": "9e344b14ffe1433b399ac464b541f22324f6ffccd7e3655594532f1e88c094b1",
+        "/admin/js/views/dashboard.js": "b574a959458aa05a9ad6718d52514c415f56fc69f900ec4b459ec8fb5be178fd",
+        "/admin/js/views/requests.js": "91aec60573cbb772b0c1472d0b67d4bf6c0ac232d3038ec771c9d8bc740e3e61",
+        "/admin/js/views/job.js": "689cd1a8de3b7e625b376a7804c7fe2add5e517a38649305dbf9d68d72234fc8",
+        "/admin/js/views/customers.js": "1b31842b38572ac23ce56229f7f1b87c2e4d82b05ca194b778436fb8bc86436d",
+        "/admin/js/views/property.js": "b1b6a8e72109698698f123efa94d3c76d065f9ae3238dbb451ee1dd373ab22f9",
+        "/admin/js/views/settings.js": "a5b2e2ed21889a39498faa03f7693e398c9aca2b9d08d862cb0b582e1df4ec6a",
+        "/admin/js/views/winter.js": "32c378f10c27b76ec1b7927e54b732bd32e34ea485a547cb61d258106fe8bc00",
+        "/admin/js/views/operations-routes.js": "93b9204d16c8993300c6f50846368486d6aed3da68dcdf6fa07424d2beab4b0d",
+        "/admin/js/lib/offline-queue.js": "42713f971966e02a49af8b1e4cfd7db0862369c28ef4d1286bdb4dab4180858c",
+        "/shared/vendor/@capacitor/core/dist/index.js": "b81c1c3e42ba3b85bd3b0222ff1d5400c51569e7fd681e0f3b3efb444bbcc363",
+        "/shared/format.js": "ea76e5e081f51b69d0f9c16a939a57fe3ebe03a73f10fa9ee23eadb76b2e1e99",
+        "/admin/js/views/measurements.js": "5b01738f195448e82fc683b44dcb57e749c853afe97a322d1c6ce82b7a1fc003",
+        "/admin/js/views/quote.js": "45a2663cc7593f1192cc87121796427560baed7fafdf946e5d7e2f73c007870c",
+        "/admin/js/components/review-flag.js": "914283c85dfeff133fcc7de04596cad5236a80237ab85a32373d885cccbbe134",
+        "/admin/js/components/next-step.js": "4cebc4f1969d31557a559f894434a8144b4b1ec2b544f7e0b8c0215943df21ef",
+        "/admin/js/components/job-activity.js": "106589a59ef858a05ed6b8f6f4ff73f4d67eacb4c8a4737d55fb349fc7b0edeb",
+        "/admin/js/lib/operations-availability.js": "f046a2fe7ffd61d651e897e0a34629f1e542d1eba16a2334cd67b6abb368c3e5",
+        "/admin/js/components/evidence-policy.js": "58e1c9f045434481e6a5aeaab9e2096cc33e8c051c6e69c2c338e7e740250271",
+        "/admin/js/lib/settings-form.js": "e5fec184ced2dd73562b1f3560e84e85fce6cfcff649b0482cba951a7fe868f0",
+        "/admin/js/lib/field-identity.js": "a4ba0628d39eeccd984847220bc7b62193c49c19ce6ca4971b248c8e62e6d2cb",
+        "/admin/js/lib/field-cache.js": "59037117362527592d886a5e79863e59f4cf84200795641ce2117ce19bee44e8",
+        "/admin/js/lib/outbox-schema.js": "7fbdc7513dcc4fb00e1a8b082554468324fe6148407718d3ad66fcab7c198e26",
+        "/admin/js/lib/field-completion-api.js": "dd4679bc8ed9ce350b1125a3d290a157fb47bc3c512ad59d29e5840df129012b",
+        "/admin/js/components/modifier-groups.js": "256c36097dc420e232e9ca3e20c33ba17262cfd9b6432f8d0800a975c2f24513",
+        "/admin/js/components/heating-wire-calculator.js": "619312594118ea51d6583ef1d8cddcc38f365c8c2961d239ac24c3c749c95689",
+        "/admin/js/components/siding-calculator.js": "ab3a422e25e26e134244d7cba4337dbe45fe388ad3973e517d48a63c5f7e3a2d",
+        "/admin/js/components/gutter-brightening-calculator.js": "fd670403ce595b38b4f1ce8d8b4715e1917486c35b0af0852506d64ab1a8d88e",
+        "/admin/js/components/window-cleaning-calculator.js": "a4864a2e2a386d027b59bd9f684d5475db7c77ab6e70b4fec2bd592558accdd7",
+        "/admin/js/components/concrete-cleaning-calculator.js": "e3f88ba13cd1a0c13adf7800f71b9844566c2b8994de16ba21bc55aa682fbcaa",
+        "/admin/js/components/roof-cleaning-calculator.js": "d2f02081cd2ca2f445bb913c4afe53c6883ea318c7d28963446d818a555f8dd7",
+        "/admin/js/components/deck-cleaning-calculator.js": "8e7383d68d76d5447e59feb16a62d3b9bb17112df047efa4d1c1145a480c45f5",
+        "/admin/js/components/fence-cleaning-calculator.js": "f0fa1fcce6a8c999b37971248d1ece09caa8c5260b1a8f2c62c0ffcab9e2b02c",
+        "/admin/js/components/moss-removal-calculator.js": "e397665966fe993607957a05c834abf86f5568e6103d73c8b9405acedb0a8508",
+        "/admin/js/components/graffiti-removal-calculator.js": "522fb5aedfe9dee103790975dc275d54d680e8c11e19d379095a34e455d52918",
+        "/admin/js/components/permanent-lighting-calculator.js": "0ae1bb62c5240532bb27d3945375b9909a6ae6c919ac540d0a31e7907566772a",
+        "/admin/js/components/christmas-lighting-calculator.js": "8df5ab962b1d7c4baedf9ebe9ceae716dd5db1c0290c21b5d18e861a2e496be4",
+        "/admin/js/components/winter-property-care-calculator.js": "77cf90730d5e1cfd49ba5de35d5e2207481fef1a97effc934e059017b709b02e",
+        "/admin/js/components/signature-pad.js": "635676dd74e5bffb570dfc861b3f56fbcfb5bc71143bbace266c66286c0e96b5",
+        "/admin/js/components/change-orders.js": "4a1bf43a5a5875264af61a5b82c8d3a43934bda12a54f32ed99bca002893c6b1",
+        "/admin/js/lib/field-storage.js": "c3b3880dcc919064c663de03db726daa86d00e7d399352aeff521b871a1eec66",
+        "/admin/js/components/job-materials.js": "55851e2265fd970307ec95e4966fc12ccaa3bcaf7462d44a871a7c98603b56d3",
+        "/admin/js/components/job-material-sheet.js": "28ab9aac81ad3af635879108f70f6a2c023b12305ddc87d94c51bc67c4680441",
+        "/admin/js/components/job-evidence.js": "456518751ad6484d3bcb4cad38d968ac4bbe348ac616759bc02467d0ae7f00b2",
+        "/admin/js/components/customer-handover.js": "6bd3a646bf68d6486c6acc66623ee767a6b02138df906a4934427687e25b0bce"
+      }
+    },
+    {
+      "slug": "dispatch-crew",
+      "width": 390,
+      "claimTarget": {
+        "x": 55,
+        "y": 843.90625,
+        "width": 200.5,
+        "height": 46
+      },
+      "served": {
+        "/admin/js/components/dispatch-day.js": "fc9f4bf9c11eb4f8e51f7c15542c899272538d778ff895ac77ff3aedfc5dbd86",
+        "/admin/index.html": "990cd6645d5f0f84bf5cb1e6d62cd5f3dd2467ec973601ba3e5c8e6ff52c5046",
+        "/admin/js/lib/admin-dom.js": "c9fdd42f9448f54313db12584819439bda526bc7738437ac6238206b37e9e7e4",
+        "/admin/css/admin.css": "dcc7f75392cdb70efe8c5219d388a9683b493a281bc57e9ee5ed986e9795b3cf",
+        "/admin/js/bootstrap.js": "ebbf9f6ba4d75d047c46741d34d89fed93bd3591f95a9e1896f95d5f01f764e5",
+        "/admin/js/main.js": "b1a1264ed882f8c7ae5d350b4ed6250156d5572b3a51774850e7a736680401cf",
+        "/admin/js/lib/measurement-entry.js": "00131806e809d5ab182d139782f7afd81ec8dfcea7dc1efa2865b6c27e83a5b3",
+        "/shared/dom.js": "930fbec42ed4f86792974ce98b0769260f406baa84b3ac6afa037be30cd24dd8",
+        "/admin/js/lib/save.js": "eb3980b09e921931e4c74b69a817afcd886b73673f48d723a532f459aab46bec",
+        "/admin/js/lib/native.js": "95d3b5f30cba36c495bb52d2390928a89ed3c9d000b9e7125dd47bcaf8466f03",
+        "/admin/js/lib/navigation.js": "dc4e8ec84304d484ba7e64ed29745ac9c14e33e11ed33623d1bd140591567458",
+        "/admin/js/views/login.js": "9e344b14ffe1433b399ac464b541f22324f6ffccd7e3655594532f1e88c094b1",
+        "/admin/js/views/dashboard.js": "b574a959458aa05a9ad6718d52514c415f56fc69f900ec4b459ec8fb5be178fd",
+        "/admin/js/views/requests.js": "91aec60573cbb772b0c1472d0b67d4bf6c0ac232d3038ec771c9d8bc740e3e61",
+        "/admin/js/views/job.js": "689cd1a8de3b7e625b376a7804c7fe2add5e517a38649305dbf9d68d72234fc8",
+        "/admin/js/views/customers.js": "1b31842b38572ac23ce56229f7f1b87c2e4d82b05ca194b778436fb8bc86436d",
+        "/admin/js/views/property.js": "b1b6a8e72109698698f123efa94d3c76d065f9ae3238dbb451ee1dd373ab22f9",
+        "/admin/js/views/settings.js": "a5b2e2ed21889a39498faa03f7693e398c9aca2b9d08d862cb0b582e1df4ec6a",
+        "/admin/js/views/winter.js": "32c378f10c27b76ec1b7927e54b732bd32e34ea485a547cb61d258106fe8bc00",
+        "/admin/js/views/operations-routes.js": "93b9204d16c8993300c6f50846368486d6aed3da68dcdf6fa07424d2beab4b0d",
+        "/admin/js/lib/offline-queue.js": "42713f971966e02a49af8b1e4cfd7db0862369c28ef4d1286bdb4dab4180858c",
+        "/shared/vendor/@capacitor/core/dist/index.js": "b81c1c3e42ba3b85bd3b0222ff1d5400c51569e7fd681e0f3b3efb444bbcc363",
+        "/shared/format.js": "ea76e5e081f51b69d0f9c16a939a57fe3ebe03a73f10fa9ee23eadb76b2e1e99",
+        "/admin/js/views/measurements.js": "5b01738f195448e82fc683b44dcb57e749c853afe97a322d1c6ce82b7a1fc003",
+        "/admin/js/views/quote.js": "45a2663cc7593f1192cc87121796427560baed7fafdf946e5d7e2f73c007870c",
+        "/admin/js/components/review-flag.js": "914283c85dfeff133fcc7de04596cad5236a80237ab85a32373d885cccbbe134",
+        "/admin/js/components/next-step.js": "4cebc4f1969d31557a559f894434a8144b4b1ec2b544f7e0b8c0215943df21ef",
+        "/admin/js/components/job-activity.js": "106589a59ef858a05ed6b8f6f4ff73f4d67eacb4c8a4737d55fb349fc7b0edeb",
+        "/admin/js/components/evidence-policy.js": "58e1c9f045434481e6a5aeaab9e2096cc33e8c051c6e69c2c338e7e740250271",
+        "/admin/js/lib/settings-form.js": "e5fec184ced2dd73562b1f3560e84e85fce6cfcff649b0482cba951a7fe868f0",
+        "/admin/js/lib/field-identity.js": "a4ba0628d39eeccd984847220bc7b62193c49c19ce6ca4971b248c8e62e6d2cb",
+        "/admin/js/lib/field-cache.js": "59037117362527592d886a5e79863e59f4cf84200795641ce2117ce19bee44e8",
+        "/admin/js/lib/outbox-schema.js": "7fbdc7513dcc4fb00e1a8b082554468324fe6148407718d3ad66fcab7c198e26",
+        "/admin/js/lib/field-completion-api.js": "dd4679bc8ed9ce350b1125a3d290a157fb47bc3c512ad59d29e5840df129012b",
+        "/admin/js/lib/operations-availability.js": "f046a2fe7ffd61d651e897e0a34629f1e542d1eba16a2334cd67b6abb368c3e5",
+        "/admin/js/components/modifier-groups.js": "256c36097dc420e232e9ca3e20c33ba17262cfd9b6432f8d0800a975c2f24513",
+        "/admin/js/components/heating-wire-calculator.js": "619312594118ea51d6583ef1d8cddcc38f365c8c2961d239ac24c3c749c95689",
+        "/admin/js/components/siding-calculator.js": "ab3a422e25e26e134244d7cba4337dbe45fe388ad3973e517d48a63c5f7e3a2d",
+        "/admin/js/components/gutter-brightening-calculator.js": "fd670403ce595b38b4f1ce8d8b4715e1917486c35b0af0852506d64ab1a8d88e",
+        "/admin/js/components/window-cleaning-calculator.js": "a4864a2e2a386d027b59bd9f684d5475db7c77ab6e70b4fec2bd592558accdd7",
+        "/admin/js/components/concrete-cleaning-calculator.js": "e3f88ba13cd1a0c13adf7800f71b9844566c2b8994de16ba21bc55aa682fbcaa",
+        "/admin/js/components/roof-cleaning-calculator.js": "d2f02081cd2ca2f445bb913c4afe53c6883ea318c7d28963446d818a555f8dd7",
+        "/admin/js/components/deck-cleaning-calculator.js": "8e7383d68d76d5447e59feb16a62d3b9bb17112df047efa4d1c1145a480c45f5",
+        "/admin/js/components/fence-cleaning-calculator.js": "f0fa1fcce6a8c999b37971248d1ece09caa8c5260b1a8f2c62c0ffcab9e2b02c",
+        "/admin/js/components/moss-removal-calculator.js": "e397665966fe993607957a05c834abf86f5568e6103d73c8b9405acedb0a8508",
+        "/admin/js/components/graffiti-removal-calculator.js": "522fb5aedfe9dee103790975dc275d54d680e8c11e19d379095a34e455d52918",
+        "/admin/js/components/permanent-lighting-calculator.js": "0ae1bb62c5240532bb27d3945375b9909a6ae6c919ac540d0a31e7907566772a",
+        "/admin/js/components/christmas-lighting-calculator.js": "8df5ab962b1d7c4baedf9ebe9ceae716dd5db1c0290c21b5d18e861a2e496be4",
+        "/admin/js/components/winter-property-care-calculator.js": "77cf90730d5e1cfd49ba5de35d5e2207481fef1a97effc934e059017b709b02e",
+        "/admin/js/components/signature-pad.js": "635676dd74e5bffb570dfc861b3f56fbcfb5bc71143bbace266c66286c0e96b5",
+        "/admin/js/components/change-orders.js": "4a1bf43a5a5875264af61a5b82c8d3a43934bda12a54f32ed99bca002893c6b1",
+        "/admin/js/lib/field-storage.js": "c3b3880dcc919064c663de03db726daa86d00e7d399352aeff521b871a1eec66"
+      }
+    },
+    {
+      "slug": "dispatch-crew",
+      "width": 430,
+      "claimTarget": {
+        "x": 55,
+        "y": 843.90625,
+        "width": 200.5,
+        "height": 46
+      },
+      "served": {
+        "/admin/js/lib/admin-dom.js": "c9fdd42f9448f54313db12584819439bda526bc7738437ac6238206b37e9e7e4",
+        "/admin/index.html": "990cd6645d5f0f84bf5cb1e6d62cd5f3dd2467ec973601ba3e5c8e6ff52c5046",
+        "/admin/css/admin.css": "dcc7f75392cdb70efe8c5219d388a9683b493a281bc57e9ee5ed986e9795b3cf",
+        "/admin/js/bootstrap.js": "ebbf9f6ba4d75d047c46741d34d89fed93bd3591f95a9e1896f95d5f01f764e5",
+        "/admin/js/main.js": "b1a1264ed882f8c7ae5d350b4ed6250156d5572b3a51774850e7a736680401cf",
+        "/admin/js/lib/measurement-entry.js": "00131806e809d5ab182d139782f7afd81ec8dfcea7dc1efa2865b6c27e83a5b3",
+        "/shared/dom.js": "930fbec42ed4f86792974ce98b0769260f406baa84b3ac6afa037be30cd24dd8",
+        "/admin/js/lib/save.js": "eb3980b09e921931e4c74b69a817afcd886b73673f48d723a532f459aab46bec",
+        "/admin/js/lib/native.js": "95d3b5f30cba36c495bb52d2390928a89ed3c9d000b9e7125dd47bcaf8466f03",
+        "/admin/js/lib/navigation.js": "dc4e8ec84304d484ba7e64ed29745ac9c14e33e11ed33623d1bd140591567458",
+        "/admin/js/views/login.js": "9e344b14ffe1433b399ac464b541f22324f6ffccd7e3655594532f1e88c094b1",
+        "/admin/js/views/dashboard.js": "b574a959458aa05a9ad6718d52514c415f56fc69f900ec4b459ec8fb5be178fd",
+        "/admin/js/views/requests.js": "91aec60573cbb772b0c1472d0b67d4bf6c0ac232d3038ec771c9d8bc740e3e61",
+        "/admin/js/views/job.js": "689cd1a8de3b7e625b376a7804c7fe2add5e517a38649305dbf9d68d72234fc8",
+        "/admin/js/views/customers.js": "1b31842b38572ac23ce56229f7f1b87c2e4d82b05ca194b778436fb8bc86436d",
+        "/admin/js/views/property.js": "b1b6a8e72109698698f123efa94d3c76d065f9ae3238dbb451ee1dd373ab22f9",
+        "/admin/js/views/settings.js": "a5b2e2ed21889a39498faa03f7693e398c9aca2b9d08d862cb0b582e1df4ec6a",
+        "/admin/js/views/winter.js": "32c378f10c27b76ec1b7927e54b732bd32e34ea485a547cb61d258106fe8bc00",
+        "/admin/js/views/operations-routes.js": "93b9204d16c8993300c6f50846368486d6aed3da68dcdf6fa07424d2beab4b0d",
+        "/admin/js/lib/offline-queue.js": "42713f971966e02a49af8b1e4cfd7db0862369c28ef4d1286bdb4dab4180858c",
+        "/shared/vendor/@capacitor/core/dist/index.js": "b81c1c3e42ba3b85bd3b0222ff1d5400c51569e7fd681e0f3b3efb444bbcc363",
+        "/shared/format.js": "ea76e5e081f51b69d0f9c16a939a57fe3ebe03a73f10fa9ee23eadb76b2e1e99",
+        "/admin/js/views/measurements.js": "5b01738f195448e82fc683b44dcb57e749c853afe97a322d1c6ce82b7a1fc003",
+        "/admin/js/views/quote.js": "45a2663cc7593f1192cc87121796427560baed7fafdf946e5d7e2f73c007870c",
+        "/admin/js/components/review-flag.js": "914283c85dfeff133fcc7de04596cad5236a80237ab85a32373d885cccbbe134",
+        "/admin/js/components/next-step.js": "4cebc4f1969d31557a559f894434a8144b4b1ec2b544f7e0b8c0215943df21ef",
+        "/admin/js/components/job-activity.js": "106589a59ef858a05ed6b8f6f4ff73f4d67eacb4c8a4737d55fb349fc7b0edeb",
+        "/admin/js/components/evidence-policy.js": "58e1c9f045434481e6a5aeaab9e2096cc33e8c051c6e69c2c338e7e740250271",
+        "/admin/js/lib/settings-form.js": "e5fec184ced2dd73562b1f3560e84e85fce6cfcff649b0482cba951a7fe868f0",
+        "/admin/js/lib/operations-availability.js": "f046a2fe7ffd61d651e897e0a34629f1e542d1eba16a2334cd67b6abb368c3e5",
+        "/admin/js/lib/field-identity.js": "a4ba0628d39eeccd984847220bc7b62193c49c19ce6ca4971b248c8e62e6d2cb",
+        "/admin/js/lib/field-cache.js": "59037117362527592d886a5e79863e59f4cf84200795641ce2117ce19bee44e8",
+        "/admin/js/lib/outbox-schema.js": "7fbdc7513dcc4fb00e1a8b082554468324fe6148407718d3ad66fcab7c198e26",
+        "/admin/js/lib/field-completion-api.js": "dd4679bc8ed9ce350b1125a3d290a157fb47bc3c512ad59d29e5840df129012b",
+        "/admin/js/components/modifier-groups.js": "256c36097dc420e232e9ca3e20c33ba17262cfd9b6432f8d0800a975c2f24513",
+        "/admin/js/components/heating-wire-calculator.js": "619312594118ea51d6583ef1d8cddcc38f365c8c2961d239ac24c3c749c95689",
+        "/admin/js/components/siding-calculator.js": "ab3a422e25e26e134244d7cba4337dbe45fe388ad3973e517d48a63c5f7e3a2d",
+        "/admin/js/components/gutter-brightening-calculator.js": "fd670403ce595b38b4f1ce8d8b4715e1917486c35b0af0852506d64ab1a8d88e",
+        "/admin/js/components/window-cleaning-calculator.js": "a4864a2e2a386d027b59bd9f684d5475db7c77ab6e70b4fec2bd592558accdd7",
+        "/admin/js/components/concrete-cleaning-calculator.js": "e3f88ba13cd1a0c13adf7800f71b9844566c2b8994de16ba21bc55aa682fbcaa",
+        "/admin/js/components/roof-cleaning-calculator.js": "d2f02081cd2ca2f445bb913c4afe53c6883ea318c7d28963446d818a555f8dd7",
+        "/admin/js/components/deck-cleaning-calculator.js": "8e7383d68d76d5447e59feb16a62d3b9bb17112df047efa4d1c1145a480c45f5",
+        "/admin/js/components/fence-cleaning-calculator.js": "f0fa1fcce6a8c999b37971248d1ece09caa8c5260b1a8f2c62c0ffcab9e2b02c",
+        "/admin/js/components/moss-removal-calculator.js": "e397665966fe993607957a05c834abf86f5568e6103d73c8b9405acedb0a8508",
+        "/admin/js/components/graffiti-removal-calculator.js": "522fb5aedfe9dee103790975dc275d54d680e8c11e19d379095a34e455d52918",
+        "/admin/js/components/permanent-lighting-calculator.js": "0ae1bb62c5240532bb27d3945375b9909a6ae6c919ac540d0a31e7907566772a",
+        "/admin/js/components/christmas-lighting-calculator.js": "8df5ab962b1d7c4baedf9ebe9ceae716dd5db1c0290c21b5d18e861a2e496be4",
+        "/admin/js/components/winter-property-care-calculator.js": "77cf90730d5e1cfd49ba5de35d5e2207481fef1a97effc934e059017b709b02e",
+        "/admin/js/components/signature-pad.js": "635676dd74e5bffb570dfc861b3f56fbcfb5bc71143bbace266c66286c0e96b5",
+        "/admin/js/components/change-orders.js": "4a1bf43a5a5875264af61a5b82c8d3a43934bda12a54f32ed99bca002893c6b1",
+        "/admin/js/lib/field-storage.js": "c3b3880dcc919064c663de03db726daa86d00e7d399352aeff521b871a1eec66",
+        "/admin/js/components/dispatch-day.js": "fc9f4bf9c11eb4f8e51f7c15542c899272538d778ff895ac77ff3aedfc5dbd86"
+      }
+    },
+    {
+      "slug": "dispatch-crew",
+      "width": 1280,
+      "claimTarget": {
+        "x": 492.265625,
+        "y": 613.5625,
+        "width": 200.5,
+        "height": 46
+      },
+      "served": {
+        "/admin/js/lib/admin-dom.js": "c9fdd42f9448f54313db12584819439bda526bc7738437ac6238206b37e9e7e4",
+        "/admin/index.html": "990cd6645d5f0f84bf5cb1e6d62cd5f3dd2467ec973601ba3e5c8e6ff52c5046",
+        "/admin/css/admin.css": "dcc7f75392cdb70efe8c5219d388a9683b493a281bc57e9ee5ed986e9795b3cf",
+        "/admin/js/bootstrap.js": "ebbf9f6ba4d75d047c46741d34d89fed93bd3591f95a9e1896f95d5f01f764e5",
+        "/admin/js/main.js": "b1a1264ed882f8c7ae5d350b4ed6250156d5572b3a51774850e7a736680401cf",
+        "/admin/js/lib/measurement-entry.js": "00131806e809d5ab182d139782f7afd81ec8dfcea7dc1efa2865b6c27e83a5b3",
+        "/shared/dom.js": "930fbec42ed4f86792974ce98b0769260f406baa84b3ac6afa037be30cd24dd8",
+        "/admin/js/lib/save.js": "eb3980b09e921931e4c74b69a817afcd886b73673f48d723a532f459aab46bec",
+        "/admin/js/lib/native.js": "95d3b5f30cba36c495bb52d2390928a89ed3c9d000b9e7125dd47bcaf8466f03",
+        "/admin/js/lib/navigation.js": "dc4e8ec84304d484ba7e64ed29745ac9c14e33e11ed33623d1bd140591567458",
+        "/admin/js/views/login.js": "9e344b14ffe1433b399ac464b541f22324f6ffccd7e3655594532f1e88c094b1",
+        "/admin/js/views/dashboard.js": "b574a959458aa05a9ad6718d52514c415f56fc69f900ec4b459ec8fb5be178fd",
+        "/admin/js/views/requests.js": "91aec60573cbb772b0c1472d0b67d4bf6c0ac232d3038ec771c9d8bc740e3e61",
+        "/admin/js/views/job.js": "689cd1a8de3b7e625b376a7804c7fe2add5e517a38649305dbf9d68d72234fc8",
+        "/admin/js/views/customers.js": "1b31842b38572ac23ce56229f7f1b87c2e4d82b05ca194b778436fb8bc86436d",
+        "/admin/js/views/property.js": "b1b6a8e72109698698f123efa94d3c76d065f9ae3238dbb451ee1dd373ab22f9",
+        "/admin/js/views/settings.js": "a5b2e2ed21889a39498faa03f7693e398c9aca2b9d08d862cb0b582e1df4ec6a",
+        "/admin/js/views/winter.js": "32c378f10c27b76ec1b7927e54b732bd32e34ea485a547cb61d258106fe8bc00",
+        "/admin/js/views/operations-routes.js": "93b9204d16c8993300c6f50846368486d6aed3da68dcdf6fa07424d2beab4b0d",
+        "/admin/js/lib/offline-queue.js": "42713f971966e02a49af8b1e4cfd7db0862369c28ef4d1286bdb4dab4180858c",
+        "/shared/vendor/@capacitor/core/dist/index.js": "b81c1c3e42ba3b85bd3b0222ff1d5400c51569e7fd681e0f3b3efb444bbcc363",
+        "/shared/format.js": "ea76e5e081f51b69d0f9c16a939a57fe3ebe03a73f10fa9ee23eadb76b2e1e99",
+        "/admin/js/views/measurements.js": "5b01738f195448e82fc683b44dcb57e749c853afe97a322d1c6ce82b7a1fc003",
+        "/admin/js/views/quote.js": "45a2663cc7593f1192cc87121796427560baed7fafdf946e5d7e2f73c007870c",
+        "/admin/js/components/review-flag.js": "914283c85dfeff133fcc7de04596cad5236a80237ab85a32373d885cccbbe134",
+        "/admin/js/components/next-step.js": "4cebc4f1969d31557a559f894434a8144b4b1ec2b544f7e0b8c0215943df21ef",
+        "/admin/js/components/job-activity.js": "106589a59ef858a05ed6b8f6f4ff73f4d67eacb4c8a4737d55fb349fc7b0edeb",
+        "/admin/js/components/evidence-policy.js": "58e1c9f045434481e6a5aeaab9e2096cc33e8c051c6e69c2c338e7e740250271",
+        "/admin/js/lib/settings-form.js": "e5fec184ced2dd73562b1f3560e84e85fce6cfcff649b0482cba951a7fe868f0",
+        "/admin/js/lib/field-identity.js": "a4ba0628d39eeccd984847220bc7b62193c49c19ce6ca4971b248c8e62e6d2cb",
+        "/admin/js/lib/field-cache.js": "59037117362527592d886a5e79863e59f4cf84200795641ce2117ce19bee44e8",
+        "/admin/js/lib/outbox-schema.js": "7fbdc7513dcc4fb00e1a8b082554468324fe6148407718d3ad66fcab7c198e26",
+        "/admin/js/lib/field-completion-api.js": "dd4679bc8ed9ce350b1125a3d290a157fb47bc3c512ad59d29e5840df129012b",
+        "/admin/js/lib/operations-availability.js": "f046a2fe7ffd61d651e897e0a34629f1e542d1eba16a2334cd67b6abb368c3e5",
+        "/admin/js/components/modifier-groups.js": "256c36097dc420e232e9ca3e20c33ba17262cfd9b6432f8d0800a975c2f24513",
+        "/admin/js/components/heating-wire-calculator.js": "619312594118ea51d6583ef1d8cddcc38f365c8c2961d239ac24c3c749c95689",
+        "/admin/js/components/siding-calculator.js": "ab3a422e25e26e134244d7cba4337dbe45fe388ad3973e517d48a63c5f7e3a2d",
+        "/admin/js/components/gutter-brightening-calculator.js": "fd670403ce595b38b4f1ce8d8b4715e1917486c35b0af0852506d64ab1a8d88e",
+        "/admin/js/components/window-cleaning-calculator.js": "a4864a2e2a386d027b59bd9f684d5475db7c77ab6e70b4fec2bd592558accdd7",
+        "/admin/js/components/concrete-cleaning-calculator.js": "e3f88ba13cd1a0c13adf7800f71b9844566c2b8994de16ba21bc55aa682fbcaa",
+        "/admin/js/components/roof-cleaning-calculator.js": "d2f02081cd2ca2f445bb913c4afe53c6883ea318c7d28963446d818a555f8dd7",
+        "/admin/js/components/deck-cleaning-calculator.js": "8e7383d68d76d5447e59feb16a62d3b9bb17112df047efa4d1c1145a480c45f5",
+        "/admin/js/components/fence-cleaning-calculator.js": "f0fa1fcce6a8c999b37971248d1ece09caa8c5260b1a8f2c62c0ffcab9e2b02c",
+        "/admin/js/components/moss-removal-calculator.js": "e397665966fe993607957a05c834abf86f5568e6103d73c8b9405acedb0a8508",
+        "/admin/js/components/graffiti-removal-calculator.js": "522fb5aedfe9dee103790975dc275d54d680e8c11e19d379095a34e455d52918",
+        "/admin/js/components/permanent-lighting-calculator.js": "0ae1bb62c5240532bb27d3945375b9909a6ae6c919ac540d0a31e7907566772a",
+        "/admin/js/components/christmas-lighting-calculator.js": "8df5ab962b1d7c4baedf9ebe9ceae716dd5db1c0290c21b5d18e861a2e496be4",
+        "/admin/js/components/winter-property-care-calculator.js": "77cf90730d5e1cfd49ba5de35d5e2207481fef1a97effc934e059017b709b02e",
+        "/admin/js/components/signature-pad.js": "635676dd74e5bffb570dfc861b3f56fbcfb5bc71143bbace266c66286c0e96b5",
+        "/admin/js/components/change-orders.js": "4a1bf43a5a5875264af61a5b82c8d3a43934bda12a54f32ed99bca002893c6b1",
+        "/admin/js/lib/field-storage.js": "c3b3880dcc919064c663de03db726daa86d00e7d399352aeff521b871a1eec66",
+        "/admin/js/components/dispatch-day.js": "fc9f4bf9c11eb4f8e51f7c15542c899272538d778ff895ac77ff3aedfc5dbd86"
+      }
+    }
+  ]
+}

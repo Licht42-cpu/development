@@ -1,0 +1,1386 @@
+
+> nova-shield@1.0.0 test
+> bash tests/run-regression.sh
+
+===== phase2 =====
+(node:223158) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - measurements.js: provisional-pricing badge shows for an unapproved service
+PASS - measurements.js: no badge for an approved service
+PASS - measurements.js: review-flag toggle calls updateMeasurement with review_required + reason
+PASS - review-flag.js: unchecking clears the reason and hides the input
+PASS - quote.js: unapproved line shows a badge, quote-level warning, and strengthens the send confirm
+PASS - signature-pad.js: unapproved-pricing override strengthens the admin accept confirm
+PASS - signature-pad.js: no override clause when every service is approved (default)
+PASS - site/js/pages/quote.js: unapproved line shows the customer-facing estimate note
+PASS - site/js/pages/quote.js: Accept is withheld (not just a failed click) when any line is unapproved; Decline still works
+PASS - site/js/pages/quote.js: Accept renders normally once every line is approved
+PASS - admin quote.js: option-group siblings render grouped under one heading, with a Send Option Group button and no per-option Send Email button
+PASS - admin quote.js: an ordinary (non-grouped) job with no measurements/services passed renders exactly as before, with no option-group builder
+PASS - admin quote.js: the option-group builder creates one create_option_quote call per checked column, skips empty columns
+PASS - admin quote.js: the option-group builder refuses to create a group from only 1 checked column
+PASS - site/js/pages/quote.js: an option-group link shows the sibling list, not the single-quote view
+PASS - site/js/pages/quote.js: viewing one option shows its full detail with a back link; accepting it updates the group and is reflected on return
+PASS - site/js/pages/quote.js: an option with unapproved pricing withholds Accept, same as an ordinary provisional quote
+PASS - site/js/pages/quote.js: an ordinary (non-grouped) quote still renders the single-quote view exactly as before -- no option-list regression
+
+18/18 passed
+
+===== phase3 =====
+(node:223414) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - Single eave run: grouped card, badge shows worst state (unpriced, from the empty-pricing baseline)
+PASS - Mixed elevations: two eave runs on different sections both render with their own elevation hint
+PASS - Section heading shows total footage per group, omitted when the group is empty
+PASS - Add eave section defaults to the last run's elevation instead of resetting to blank
+PASS - Add downspout drop: labeled with the Downspout prefix and routed through offline-aware createMeasurement
+PASS - Valley stepper: + creates with review_required, + again updates quantity, - to 0 deletes
+PASS - Gutter condition dropdown calls setMeasurementModifier with the real configured group
+PASS - Bracket authorization checkbox flags the primary run for review, no price attached
+PASS - No optional pre-winter prep toggle exists (no configured pricing for it)
+PASS - An unrelated service is unaffected by the grouping/specialized-calculator logic
+PASS - Add-a-service dropdown excludes child services entirely
+
+11/11 passed
+
+===== phase4 =====
+(node:223613) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. One 1-storey elevation renders with correct total
+PASS - 2. Front 1-storey + rear 2-storey: both render with their own elevation hint and a combined total
+PASS - 3. Three mixed areas (Front/Rear/Garage) all render as independent sections
+PASS - 4. Front=light/vinyl, Rear=heavy/painted -- each row keeps its own independent modifier selection
+PASS - 5. Minimum charge: card shows "minimum applied" without replacing the visible total
+PASS - 6. No manual-adjustment UI inside the calculator (that stays quote-level, per architecture)
+PASS - 7. Review flag toggles review_required without touching quantity/section
+PASS - 8a. Add section: creates a measurement and applies default modifiers
+PASS - 8b. Remove section: calls deleteMeasurement after confirm
+PASS - 8c. Duplicate section: copies section + quantity + modifier selections, not label/review/notes
+PASS - 9. Save and reopen: re-rendering from the same stored data reproduces identical state
+PASS - 10. Nothing siding-specific is called for quote creation (no bespoke RPC reference anywhere)
+PASS - 11. Siding and heating-wire coexist as two independent cards, each keeps its own data
+PASS - 12. No per-row dollar figure is invented in the DOM (only the card-level total, from pricedRows)
+PASS - 13. Offline add-section: createMeasurement returning null does not throw
+PASS - 14. Heating-wire calculator still renders correctly in the same session as siding
+PASS - 15. Child services still exclude from "Add a service" and group under their own parent, unaffected by siding
+
+17/17 passed
+
+===== phase5 =====
+(node:223843) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - Normal linear calc: total matches the spec example (42+55+24+18=139 ft across 4 sections)
+PASS - Mixed elevation: Front (1 storey) and Rear (2 storey) each show their own hint
+PASS - Oxidation (condition) is independent per row: Front=light, Rear=heavy, each keeps its own selection
+PASS - Scope renders as exactly one job-level control, not a per-row dropdown
+PASS - Changing the job-level Scope control fans out setMeasurementModifier to every existing row
+PASS - Minimum charge: card shows "minimum applied" without replacing the total
+PASS - Review flag toggles review_required without touching quantity/section/label
+PASS - Duplicate: copies section, footage, Oxidation AND Scope -- not review flag/reason/notes
+PASS - Add section: new row picks up the CURRENT visit-wide scope, not scope's own default
+PASS - No child-service behavior: gutter brightening never spawns a second card or extra service rows
+PASS - Multi-service: Gutter Brightening + Siding Washing coexist with correct independent totals
+PASS - Multi-service: Gutter Brightening + Heating Wire (with a valley child) coexist; child stays under its own parent
+PASS - Interaction model is distinct: no steppers, no bracket authorization, no per-row surface/scope duplication
+
+13/13 passed
+
+===== phase6 =====
+(node:224042) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - Count buckets: total matches sum across groups, "windows" not "each"
+PASS - Height is section-driven: Front (1 storey) and Rear (2 storey) each show their own hint
+PASS - Window type is independent per group: Front=standard, Rear=storm
+PASS - Scope renders as exactly one job-level control, not per-row
+PASS - Changing Scope fans out setMeasurementModifier to every existing group
+PASS - Stepper: + increases count via updateMeasurement, never creates/deletes the row
+PASS - Stepper: minus never goes below zero and never deletes the row
+PASS - Minimum charge: card shows "minimum applied" without replacing the total
+PASS - Review flag toggles review_required without touching quantity/section/label
+PASS - No duplicate button anywhere in this calculator (deliberate)
+PASS - Add window group: picks up current visit-wide Scope and Window-type default
+PASS - No child-service behavior: windows never spawns a second card or extra service rows
+PASS - Multi-service: Windows + Siding + Gutter Brightening + Heating Wire all coexist with correct independent totals
+PASS - Interaction model is distinct: uses steppers (unlike Siding/Gutter), has no bracket section or eave/downspout split (unlike Heating Wire)
+
+14/14 passed
+
+===== phase7 =====
+(node:224242) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Single concrete zone renders with correct total
+PASS - 2. Multiple zones: total sums correctly across zones
+PASS - 3. Zone-specific modifiers: each zone keeps its own Surface/Condition/Treatment independently
+PASS - 4. No job-wide control: concrete has no Scope-style single selector (real data has no job-wide group)
+PASS - 5. Mixed conditions: card total still comes from pricedRows, not recomputed client-side
+PASS - 6. Duplicate: copies section, sq ft, and every modifier (Surface/Condition/Treatment) -- not review/reason/notes
+PASS - 7. Remove zone: calls deleteMeasurement after confirm
+PASS - 8. Edit zone: renaming and changing square footage both persist via updateMeasurement
+PASS - 9. Minimum charge: card shows "minimum applied" without replacing the total
+PASS - 10. No manual-adjustment UI inside the calculator (quote-level concept, same as other calculators)
+PASS - 11. Review flag toggles review_required without touching quantity/section/label
+PASS - 12. No bespoke RPC/quote-pathway reference anywhere in the component source
+PASS - 13. No per-row dollar figure is invented in the DOM (only the card-level total, from pricedRows)
+PASS - 14. Multi-service: Concrete + Siding + Gutter + Windows + Heating Wire all coexist with correct independent totals
+PASS - 15. Offline add-zone: createMeasurement returning null does not throw
+PASS - 16. Design test: distinct from Siding -- 3 per-zone modifiers incl. a flat-priced one, no job-wide control, 'zones' not 'walls'
+
+16/16 passed
+
+===== phase8 =====
+(node:224474) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. One roof section renders with correct total
+PASS - 2. Multiple roof sections: total sums correctly
+PASS - 3. Mixed heights: Main roof (2 storey) and Garage (1 storey) each show their own hint
+PASS - 4. Mixed access: Main roof (easy) and Garage (difficult) reflected in their own hints
+PASS - 5. Mixed Coverage condition: each roof section keeps its own independent selection
+PASS - 6. No flat-addon/treatment control exists (real data has none for this service)
+PASS - 7. Duplicate: copies section, sq ft, Coverage + Roof type -- not review/reason/notes
+PASS - 8. Remove roof section: calls deleteMeasurement after confirm
+PASS - 9. Edit roof section: rename and area change both persist
+PASS - 10. Review flag toggles review_required without touching quantity/section/label
+PASS - 11. Minimum charge: card shows "minimum applied" without replacing the total
+PASS - 12. No manual-adjustment UI inside the calculator (quote-level concept)
+PASS - 13. No bespoke RPC/quote-pathway reference anywhere in the component source
+PASS - 14. No per-row dollar figure is invented in the DOM (only the card-level total, from pricedRows)
+PASS - 15. Multi-service: Roof + Siding + Concrete + Gutter + Windows + Heating Wire all coexist with correct independent totals
+PASS - 16. Offline add-section: createMeasurement returning null does not throw
+PASS - 17. Design test: roof-appropriate vocabulary -- 'Roof section'/'roof sections', grid--2 (not a fake 3rd modifier), no job-wide control
+
+17/17 passed
+
+===== phase9 =====
+(node:224670) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Basic deck: one section renders with correct total
+PASS - 2. Multiple deck sections: total sums correctly
+PASS - 3. Mixed Condition: each deck section keeps its own independent selection
+PASS - 4. Mixed access: Main deck (easy) and Upper deck (difficult) reflected via their own section hints
+PASS - 5. No fake stairs/railing/addon/job-wide controls exist (real data has none of these)
+PASS - 6. Duplicate: copies section, sq ft, Condition + Material -- not review/reason/notes
+PASS - 7a. Remove deck section: calls deleteMeasurement after confirm
+PASS - 7b. Edit deck section: rename and area change both persist
+PASS - 9. Minimum charge: card shows "minimum applied" without replacing the total
+PASS - 10. Review flag toggles review_required without touching quantity/section/label
+PASS - 11. No manual-adjustment UI inside the calculator (quote-level concept)
+PASS - 12. No bespoke RPC/quote-pathway reference anywhere in the component source
+PASS - 13. No per-row dollar figure is invented in the DOM (only the card-level total, from pricedRows)
+PASS - 14. Multi-service: Deck + Siding + Concrete + Gutter + Windows + Roof + Heating Wire all coexist with correct independent totals
+PASS - 15. Offline add-section: createMeasurement returning null does not throw
+
+15/15 passed
+
+===== phase10 =====
+(node:224868) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Basic fence: one section renders with correct total
+PASS - 2. Multiple fence sections: total sums correctly
+PASS - 3. Mixed Condition: each fence section keeps its own independent selection
+PASS - 4. No Access control exists (real data has no access group for fence)
+PASS - 5. Mixed Material: each fence section keeps its own independent selection
+PASS - 6a. Sides renders as exactly one job-level control, not per-row
+PASS - 6b. Changing Sides fans out setMeasurementModifier to every existing fence section
+PASS - 7. No flat-addon or gate control exists; Fence height renders as a real per-row control
+PASS - 8. Duplicate: copies section, footage, Condition + Material + Sides -- not review/reason/notes
+PASS - 9a. Remove fence section: calls deleteMeasurement after confirm
+PASS - 9b. Edit fence section: rename and footage change both persist
+PASS - 10. Minimum charge: card shows "minimum applied" without replacing the total
+PASS - 11. Review flag toggles review_required without touching quantity/section/label
+PASS - 12. No manual-adjustment UI inside the calculator (quote-level concept)
+PASS - 13. No bespoke RPC/quote-pathway reference anywhere in the component source
+PASS - 14. No per-row dollar figure is invented in the DOM (only the card-level total, from pricedRows)
+PASS - 15. Multi-service: Fence + Siding + Gutter + Concrete + Deck + Windows + Roof + Heating Wire all coexist with correct independent totals
+PASS - 16. Offline add-section: createMeasurement returning null does not throw
+
+18/18 passed
+
+===== phase10-5 =====
+(node:225067) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Fence height control renders with the overridden label, not the raw DB "Height" label
+PASS - 2. Fence height defaults to Standard and offers Standard/Tall/Very tall
+PASS - 3. Per-row modifier grid uses grid--3 (Condition + Fence height + Material)
+PASS - 4. Mixed Fence height: each row keeps its own independent selection, no bleed
+PASS - 5. Changing Fence height on one row updates only that measurement, not every row
+PASS - 6. Duplicate copies Fence height along with Condition/Material/Sides
+PASS - 7. + Add fence section seeds the new row with the default Fence height
+PASS - 8. Bottom hint no longer claims height is unpriced; mentions only gates
+PASS - 9. Sides remains the single job-wide control, separate from the per-row Fence height controls
+
+9/9 passed
+
+===== phase11 =====
+(node:225265) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Basic Moss: one affected area renders with correct total
+PASS - 2. Multiple affected areas: total sums correctly
+PASS - 3. Mixed Coverage: each affected area keeps its own independent selection
+PASS - 4. Access has no per-row control (section-driven); section hint names it correctly
+PASS - 5. Mixed Surface: each affected area keeps its own independent selection
+PASS - 6. No flat-addon control exists (no kind=flat modifiers configured for Moss)
+PASS - 7a. Follow-up renders as exactly one job-level control, not per-area
+PASS - 7b. Changing Follow-up fans out setMeasurementModifier to every existing affected area
+PASS - 8. Duplicate: copies section, sq ft, Coverage + Surface + Follow-up -- not review/reason/notes
+PASS - 9a. Remove affected area: calls deleteMeasurement after confirm
+PASS - 9b. Edit affected area: rename and area change both persist
+PASS - 10. Minimum charge: card shows "minimum applied" without replacing the total
+PASS - 11. Review flag toggles review_required without touching quantity/section/label
+PASS - 12. No manual-adjustment UI inside the calculator (quote-level concept)
+PASS - 13. No bespoke RPC/quote-pathway reference anywhere in the component source
+PASS - 14. No per-row dollar figure is invented in the DOM (only the card-level total, from pricedRows)
+PASS - 15. Multi-service: Moss + Siding + Gutter + Concrete + Deck + Fence + Windows + Roof + Heating Wire all coexist with correct independent totals
+PASS - 16. Offline add-area: createMeasurement returning null does not throw
+
+18/18 passed
+
+===== phase12 =====
+(node:225465) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Basic Graffiti: one affected area renders with correct total
+PASS - 2. Multiple affected areas: total sums correctly
+PASS - 3. Mixed Difficulty: each affected area keeps its own independent selection
+PASS - 4. Mixed Surface: each affected area keeps its own independent selection
+PASS - 5. Access has no per-row control (section-driven); no Height control anywhere (none configured)
+PASS - 6. No flat-addon control exists (no kind=flat modifiers configured for Graffiti)
+PASS - 7. Duplicate: copies section, sq ft, Difficulty + Surface -- not review/reason/notes
+PASS - 8a. Remove affected area: calls deleteMeasurement after confirm
+PASS - 8b. Edit affected area: rename and area change both persist
+PASS - 9. Minimum charge: card shows "minimum applied" without replacing the total
+PASS - 10. Review flag toggles review_required without touching quantity/section/label
+PASS - 11. No manual-adjustment UI inside the calculator (quote-level concept)
+PASS - 12. No bespoke RPC/quote-pathway reference anywhere in the component source
+PASS - 13. No per-row dollar figure is invented in the DOM (only the card-level total, from pricedRows)
+PASS - 14. Multi-service: Graffiti + Moss + Siding + Gutter + Concrete + Deck + Fence + Windows + Roof + Heating Wire all coexist with correct independent totals
+PASS - 15. Offline add-area: createMeasurement returning null does not throw
+PASS - 16. Design test: no job-wide control exists (real data has no scope group for Graffiti, unlike Moss)
+
+17/17 passed
+
+===== phase13 =====
+(node:225668) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Simple main run (no jump wire): renders with correct total, "+ Add jump wire" shown
+PASS - 2. Multiple main runs: total sums correctly
+PASS - 3. Mixed heights: Front (1 storey) and Rear (2 storeys) each show their own elevation hint
+PASS - 4. No per-row modifier dropdown exists on a main run (only the Elevation picker select)
+PASS - 5. Adding jump wire creates the single child row with quantity 0
+PASS - 6. Jump wire footage input persists via updateMeasurement and shows its own $ amount
+PASS - 7. Jump wire row is not auto-flagged for review (it has a real approved rate)
+PASS - 8. Removing jump wire calls deleteMeasurement, offers "+ Add jump wire" again
+PASS - 9. Card-level total combines main runs AND jump wire into one SERVICE TOTAL
+PASS - 10. Duplicate main run: copies section + footage -- not review/reason/notes
+PASS - 11a. Remove main run: calls deleteMeasurement after confirm
+PASS - 11b. Edit main run: rename and footage change both persist
+PASS - 12. No minimum-applied badge ever shows (real minimum is $0.00 for this service)
+PASS - 13. Review flag on a main run toggles review_required without touching quantity/section/label
+PASS - 14. No bespoke RPC/quote-pathway reference anywhere in the component source
+PASS - 15. Multi-service: Lighting+Jump, Siding, Gutter, Windows, Heating Wire+Valley all coexist -- each parent/child pair rolls up independently, no cross-contamination
+PASS - 16. Offline add-run: createMeasurement returning null does not throw
+
+17/17 passed
+
+===== phase14 =====
+(node:225875) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Basic Christmas Lighting: one run renders with correct total, correct service name
+PASS - 2. Multiple main runs: total sums correctly, pure measurement summary (no pricing in it)
+PASS - 3. Mixed heights: Front (1 storey) and Rear (2 storeys) each show their own elevation hint, no bleed
+PASS - 4. Adding jump wire creates the single child row (section_id=null, quantity 0)
+PASS - 5. Jump wire footage input accepts a combined/larger total and persists it
+PASS - 6. No minimum-applied badge ever shows (real minimum is $0.00 for Christmas Lighting)
+PASS - 7. Review flag on a main run toggles review_required without touching quantity/section/label
+PASS - 8. Duplicate main run: copies section + footage -- not review/reason/notes
+PASS - 9a. Remove main run: calls deleteMeasurement after confirm
+PASS - 9b. Edit main run: rename and footage change both persist
+PASS - 10. No bespoke RPC reference and no invented seasonal/takedown/recurring controls in the component source
+PASS - 11. Multi-service: Christmas Lighting(+jump) + Permanent Lighting(+jump) + Siding + Gutter + Windows all coexist independently
+PASS - 12. Offline add-run: createMeasurement returning null does not throw
+
+13/13 passed
+
+===== phase15 =====
+(node:226079) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Simplest quote: one service area, 4 visits, renders with correct total
+PASS - 2. Every real Scope option is offered with the real labels
+PASS - 3. Mixed Scope/Access: two service areas keep independent selections
+PASS - 4. Salting options show the flat-dollar suffix, same convention as Concrete's flat options
+PASS - 5. Access/Height have no per-row dropdown (section-driven); combined hint names both
+PASS - 6. Visit-count stepper: + increases via updateMeasurement, never creates/deletes the row
+PASS - 7. Provisional-pricing badge and hint show for this service (approval_status=provisional)
+PASS - 8. Minimum charge: card shows "minimum applied" without replacing the total
+PASS - 9. Review flag toggles review_required without touching quantity/section/label
+PASS - 10. Duplicate: copies section, visit count, Scope + Surface + Salting -- not review/reason/notes
+PASS - 11. No manual-adjustment UI; no bespoke RPC; no snow-event/recurring references in the component source
+PASS - 12a. Remove service area: calls deleteMeasurement after confirm
+PASS - 12b. Edit service area: rename persists
+PASS - 13. Multi-service: Winter Property Care + Heating Wire + Permanent Lighting + Siding + Concrete all coexist independently
+PASS - 14. Offline add-area: createMeasurement returning null does not throw
+
+15/15 passed
+
+===== phase16 =====
+(node:226279) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Mobile nav drawer stays on screen when the page is scrolled
+PASS - 2. Desktop nav is still a static horizontal bar, not a floating drawer
+PASS - 3. Admin dashboard has no horizontal overflow at 390px
+PASS - 3. Admin dashboard has no horizontal overflow at 430px
+PASS - 4. A long unbreakable customer email does not widen the page
+PASS - 5. Field console topbar does not overflow at 390px with a queue badge
+PASS - 5. Field console topbar does not overflow at 430px with a queue badge
+PASS - 6. Toast is not capped at half the viewport width
+PASS - 7. attachmentBucket() routes customer uploads and field photos to different buckets
+PASS - 8. trySave() reverts the control and reports the reason when a write fails
+PASS - 9. trySave() reports a refresh failure distinctly from a write failure
+PASS - 10. Concurrent flush() calls replay each queued item exactly once
+PASS - 11. syncState() distinguishes pending sync from a failed sync
+
+13/13 passed
+
+===== phase17 =====
+(node:227587) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Setting a date persists it as an ISO timestamp via scheduleJob
+PASS - 2. An invalid or empty date is rejected before any write
+PASS - 3. Double-clicking Save date fires exactly one write
+PASS - 4. A scheduled job states when it is booked for
+PASS - 5. Mark job complete persists completed_at
+PASS - 6. An already-complete job cannot be completed again
+PASS - 7. Adding a note persists body and visibility
+PASS - 8. An empty note is refused without a write
+PASS - 9. Notes render newest-first with their visibility and attribution
+PASS - 10. A note typed against a ticked inspection flag is persisted
+PASS - 11. No note input is offered for a flag that is not ticked
+PASS - 12. The job shows what the customer originally requested
+PASS - 13. A job with no originating request shows no requested-services card
+PASS - 14. Next-step guidance is derived only from real job data
+PASS - 15. The job page renders the current step as an action prompt
+PASS - 16. The customer page withholds Accept on a quote with no lines
+
+16/16 passed
+
+===== phase18 =====
+(node:229277) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:229277) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/nova-shield/admin/js/components/job-activity.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/nova-shield/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Activity rows are ordered newest-first regardless of input order
+PASS - 2. An event with no timestamp is dropped rather than placed arbitrarily
+PASS - 3. Known kinds get their real label and tone; a loss never reads as a win
+PASS - 4. An unrecognised kind is passed through, not relabelled or dropped
+PASS - 5. scheduled_for is marked as a target date, not as "when it was booked"
+PASS - 6. Supersession appears as context on the quote, not as a dated event
+PASS - 7. An actor uuid never becomes a name
+PASS - 8. Note visibility and body are carried through verbatim
+PASS - 9. Rows group by calendar day and keep the newest-first order
+PASS - 10. Dashboard loads in exactly one round trip
+PASS - 11. Every dashboard count comes from the summary and links to its records
+PASS - 12. Actionable non-zero tiles sort ahead of neutral ones
+PASS - 13. A failed dashboard load shows the error and NO counts
+PASS - 14. A genuinely idle business reads as idle, not as an error
+PASS - 15. Recent activity lists only recorded events, each openable
+PASS - 16. Searching sends the text to the server, debounced to one request
+PASS - 17. Status, schedule-bucket and review filters are all evaluated server-side
+PASS - 18. Sorting is a server-side parameter, not a client-side re-shuffle
+PASS - 19. A dashboard deep link pre-applies its filters on the first request
+PASS - 20. A job row shows its review rollup, and a declined quote is not styled as a win
+PASS - 21. Jobs list distinguishes "no matches" from "no jobs at all"
+PASS - 22. A failed jobs query shows the reason and a retry, never an empty list
+PASS - 23. The job timeline renders recorded events newest-first, grouped by day
+PASS - 24. Internal and customer-visible notes are unmistakably different on screen
+PASS - 25. A failed activity query degrades to an error inside the card, not a blank one
+PASS - 26. An empty timeline says so plainly
+PASS - 27. The review rollup lists every flagged item with its actual reason
+PASS - 28. No review card appears when nothing is flagged, and quoting is never blocked
+PASS - 29. Dashboard has no horizontal overflow at 390px
+PASS - 30. Jobs list has no horizontal overflow at 390px
+PASS - 31. Job timeline has no horizontal overflow at 390px
+PASS - 29. Dashboard has no horizontal overflow at 430px
+PASS - 30. Jobs list has no horizontal overflow at 430px
+PASS - 31. Job timeline has no horizontal overflow at 430px
+PASS - 32. Desktop dashboard lays its tiles out in more than one column
+
+35/35 passed
+
+===== phase19 =====
+(node:231927) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:231927) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/nova-shield/admin/js/lib/navigation.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/nova-shield/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Every inner admin screen has a parent; only the dashboard is root
+PASS - 2. A query string never changes which screen a path is
+PASS - 3. An unknown route falls back to the root rather than nowhere
+PASS - 4. A contextual parent overrides the static map but cannot invent one
+PASS - 5. The field console has its own root and parent graph
+PASS - 6. An open overlay wins over everything else
+PASS - 7. The nav drawer closes before the screen changes
+PASS - 8. The keyboard is dismissed before the screen changes
+PASS - 9. With app history, Back pops one entry
+PASS - 10. A deep-linked inner screen goes to its parent, NEVER exits
+PASS - 11. Only the root screen exits the app
+PASS - 12. The field console exits only from its schedule screen
+PASS - 13. Overlays dismiss newest-first and deregister cleanly
+PASS - 14. A dismiss that deregisters itself does not take the layer below with it
+PASS - 15. pushOverlay refuses a non-function
+PASS - 16. Keyboard detection needs BOTH a focused field and a shrunken viewport
+PASS - 17. installBackHandler is a no-op off-native and never touches the plugin
+PASS - 18. A missing plugin degrades silently instead of breaking startup
+PASS - 19. The native handler performs each decision against a plugin double
+PASS - 20. Each new route gets a history depth stamp; filters do not
+PASS - 21. Navigating to a real screen does increase the depth
+PASS - 22. Going back restores the earlier depth rather than inventing a new one
+PASS - 23. A deep-linked filtered URL still starts at depth 1
+PASS - 24. Escape closes a registered overlay in a real browser
+PASS - 25. External links are marked to open outside the WebView
+
+25/25 passed
+
+===== phase20 =====
+(node:232494) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - 1. Customer list renders real counts and links to each customer
+PASS - 2. Searching reaches the server, debounced, and covers addresses
+PASS - 3. Customer list: no-match, empty, and failure are three different screens
+PASS - 4. Customer detail shows only schema-backed fields, and invents no history
+PASS - 5. Customer edit validates before writing, and never writes on a bad value
+PASS - 6. A valid customer edit writes exactly the real columns, once
+PASS - 7. The dedup keys are stated, not silently changed
+PASS - 8. The Passport renders the field console’s existing structure
+PASS - 9. The admin never writes the passport jsonb
+PASS - 10. An empty passport says so rather than rendering blank rows
+PASS - 11. Every history row keeps the job and date it came from
+PASS - 12. Quote status tones: accepted is the only win
+PASS - 13. Empty history sections each say what is missing
+PASS - 14. Photos use signed URLs from the correct private bucket
+PASS - 15. Customer -> property -> job navigation is wired end to end
+PASS - 16. The job screen links to the customer and the passport without copying them
+PASS - 17. A property reached from a customer sets that customer as its Back target
+PASS - 18. A property whose customer was deleted says so instead of showing a blank
+PASS - 19. Customers list has no horizontal overflow at 390px
+PASS - 20. Customer detail has no horizontal overflow at 390px
+PASS - 21. Property Passport has no horizontal overflow at 390px
+PASS - 19. Customers list has no horizontal overflow at 430px
+PASS - 20. Customer detail has no horizontal overflow at 430px
+PASS - 21. Property Passport has no horizontal overflow at 430px
+
+24/24 passed
+
+===== phase21 =====
+(node:234935) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - every delivery path resolves to the same canonical customer-quote URL
+PASS - no delivery URL contains the production-404 "site/quote.html" path
+PASS - the quote id is URL-encoded, not interpolated raw
+PASS - with no configured website, the URL falls back to the dev repo-root layout
+PASS - a draft exposes an editable customer note + terms, prefilled from the quote
+PASS - saving customer content writes exactly customer_notes + terms, trimmed, empty -> null
+PASS - a SENT quote shows customer content read-only -- no textarea, no save button
+PASS - customer-facing content and internal notes are separate boxes with opposite warnings
+PASS - saving the internal note never writes a customer-facing field
+PASS - removing an adjustment confirms first, then deletes exactly once
+PASS - removing a manual line confirms first, then deletes
+PASS - a calculated line has no remove button -- only manual lines do
+PASS - a SENT quote offers no remove buttons at all
+PASS - declining the confirm removes nothing and sends nothing
+
+14/14 passed
+
+===== phase22 =====
+(node:235684) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - every pricing category renders, including winter
+PASS - both winter services are individually editable
+PASS - provisional rates are badged and say that saving does not approve them
+PASS - saving a rate sends only rate and minimum -- it cannot implicitly approve
+PASS - saving Tax preserves the note key the editor does not expose
+PASS - saving Company preserves an unexposed internal key
+PASS - tax.enabled=false keeps its warning and is never enabled automatically
+PASS - a tax rate typed as a percentage is rejected before any write
+PASS - a malformed admin base URL is rejected
+PASS - a required company field cannot be blanked
+PASS - validity days must be a whole number of at least 1
+PASS - a blanked rate is rejected rather than silently stored as zero
+PASS - currency offers only the supported values
+PASS - a successful save reports Saved only after the write resolves
+PASS - a failed save says so, keeps the typed value, and can be retried
+PASS - overlapping saves cannot leave the older value stored
+PASS - a rate save in flight does not let an older value win
+PASS - a quotable service with no rate is surfaced, not hidden
+
+18/18 passed
+
+===== phase23 =====
+(node:235885) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - A1 the default tab is Stock
+PASS - A2 ?tab= selects the tab, so the screen survives a reload
+PASS - A3 an unknown ?tab= falls back to Stock rather than rendering nothing
+PASS - A4 switching tab uses replaceQuery, so Back is not spent on a tab
+PASS - B1 an empty catalogue explains that nothing is pre-loaded, and links the supplier
+PASS - B2 a part with no cost says blank is not free
+PASS - B3 parts at or below the reorder point are called out
+PASS - C1 "Used on a job: 40" posts a MAGNITUDE plus the reason, never a signed number
+PASS - C2 a minus typed on a consumption is normalised to a magnitude
+PASS - C3 a CORRECTION keeps the sign typed, so stock can be taken off by hand
+PASS - C4 a zero quantity is refused without a write
+PASS - C5 "Received" is NOT offered by hand -- a receipt belongs to a purchase order
+PASS - C6 the ledger is presented as append-only
+PASS - D1 receiving 2 packs of 150 posts 300 UNITS and 2 PACKS, each once
+PASS - D2 the outstanding balance is shown in packs, not units
+PASS - D3 receiving MORE than outstanding asks before posting
+PASS - D4 marking an un-ordered draft "ordered" supplies ordered_at, which the CHECK demands
+PASS - D5 an order total excluding unpriced lines says so
+PASS - E1 a waste allowance typed as 8 is stored as 0.08
+PASS - E2 an existing 0.08 is shown as 8, not 0.08
+PASS - E3 a waste allowance above 100 is refused without a write
+PASS - E4 a service nothing is mapped to is reported as unmapped, not as needing nothing
+PASS - G1 the estimate is NOT fetched when the job screen renders
+PASS - G2 it is fetched once the operator asks, and reports shortfall in packs
+PASS - G3 the derivation is shown, so a quantity can be checked rather than trusted
+PASS - G4 a requirement from a review-flagged measurement says it is unconfirmed
+PASS - G5 unmapped services are named and explained, not omitted
+PASS - G6 the cost basis is labelled a purchasing cost and flags the parts it omits
+PASS - G7 "Take off stock" posts a NEGATIVE consumed movement against this job
+PASS - G8 an edited usage is what gets posted, not the estimate
+PASS - G9 a positive figure typed into "used" cannot add stock
+PASS - G10 taking stock off asks first, and says a correction is how it is undone
+PASS - G11 a failed estimate says so and can be retried
+PASS - G12 an empty job reports nothing to work out, not an empty success
+PASS - H1 a failed movement keeps the typed value and does not clear the form
+PASS - H2 the screen says plainly that nothing here affects pricing
+PASS - J1 per-location balances lead with AVAILABLE, not on hand
+PASS - J1b a balance an ESTIMATE touched says so
+PASS - J1c a level-tracked supply shows Empty/Low/Enough and NO number
+PASS - J1d setting a level records the observation
+PASS - J1e committing stock reserves it rather than moving it
+PASS - J1f committing more than is FREE is refused before the round trip
+PASS - J1g an existing commitment is listed and can be released
+PASS - J1h a movement can be posted as damaged or estimated
+PASS - J2 a movement names WHERE it happened
+PASS - J3 a transfer sends two location codes and the confirmation
+PASS - J3b the move panel is collapsed until asked for
+PASS - J4 an UNCONFIRMED transfer is not sent at all
+PASS - J5 transferring more than the SOURCE holds is refused before the round trip
+PASS - J6 the job panel asks for a stock basis and says which one it used
+PASS - J7 a vehicle basis takes the consumption off that vehicle
+PASS - I1 packsToUnits multiplies by the pack size, exactly once
+PASS - I2 a missing pack size falls back to 1, never NaN
+PASS - I3 packsForShortfall rounds UP and never returns a negative order
+PASS - I4 signedDelta overrides a typed sign except for a correction
+
+55/55 passed
+
+===== phase24 =====
+(node:236092) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - A1 the panel says it is loading before the first rows arrive
+PASS - A2 a failed load gives the reason and never an empty list
+PASS - A3 the list reads the availability view, not the sets table
+PASS - B1 a ready set is offered to a customer and says it is ready
+PASS - B2 an uninspected set is NOT offered to a customer, and says why
+PASS - B3 an assigned set offers install and cancel, not assign
+PASS - B4 a deployed set offers recovery and renewal, not install or assign
+PASS - B5 a lost set is offered nothing that assumes it exists
+PASS - B6 a retired set cannot be retired again or assigned
+PASS - B7 a set at the bench says so and is not offered to anybody
+PASS - C1 release is refused, with a reason, until an inspection exists
+PASS - C1b an inspected set is still NOT offerable until it is released
+PASS - C2 an inspected set can be released
+PASS - D1 the recovery form says it records what came back, not a verdict
+PASS - D2 recovery sends the condition chosen, and a blank location as null
+PASS - D3 "came back, not looked at yet" is the default, not "looks fine"
+PASS - D4 an inspection cannot conclude "uninspected"
+PASS - D5 the inspection result reaches the RPC as chosen
+PASS - E1 assigning without a customer writes nothing and says so
+PASS - E2 the season is a stated year, and it is what gets sent
+PASS - E3 cancelling an assignment confirms, and says it is kept as history
+PASS - E4 declining the confirm cancels nothing
+PASS - F1 non-renewal is shown as a decision that moved nothing
+PASS - F2 an owner-set cutoff is shown; none is invented when it is unset
+PASS - F3 the renewal form reaches the RPC with the chosen state
+PASS - G1 a set with no code writes nothing
+PASS - G2 registration trims, sends a build quantity, and omits blanks
+PASS - G3 the register card says a new set needs inspecting first
+PASS - H1 retiring confirms, keeps the record, and can strip to stock
+PASS - H2 retiring without stripping sends no quantity, not zero
+PASS - I1 a write in flight shows a busy state on the button pressed
+PASS - I2 a failed write says why and does not claim success
+PASS - I3 the button is usable again after a failure
+PASS - J1 a set's history is fetched only when it is opened
+PASS - J2 a set never assigned says so rather than showing an empty list
+PASS - K1 no horizontal overflow at 390px
+PASS - K2 no horizontal overflow at 430px
+
+37/37 passed
+
+===== phase25 =====
+(node:236295) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - A1 a draft sheet cannot open a kit, and says what is missing
+PASS - A2 a reviewed sheet offers opening, and lists what comes out
+PASS - A3 a missing quantity blocks review, and the screen explains why
+PASS - A4 a sheet with no source cannot be reviewed
+PASS - A5 separately-required parts are named as not in the box
+PASS - A6 opening confirms first and sends the count and location
+PASS - A7 declining the confirm opens nothing
+PASS - A8 a blank component quantity is sent as null, not zero
+PASS - B1 the pieces screen leads with the longest run, not the total
+PASS - B2 an unknown piece length reads as unknown
+PASS - B3 recording a piece sends the length and the chosen location
+PASS - B4 the screen says recording a piece adds no stock
+PASS - B5 scrapping confirms and keeps the record
+PASS - B6 a failed write says why instead of claiming success
+PASS - C1 with no sheet, the screen offers to start one
+PASS - C2 only ticked lines are described as committing stock
+PASS - C3 unticking a line sends selected=false, not a delete
+PASS - C4 a draft sheet cannot commit stock
+PASS - C5 a reviewed sheet can commit, and the call names the sheet
+PASS - C6 reviewing is refused while nothing is ticked
+PASS - C7 an unchecked specification is flagged on the line
+PASS - C8 a committed sheet says what holding stock does and does not do
+PASS - D1 heating candidates carry the rule, the measurements and no ranking
+PASS - E1 no horizontal overflow at 390px
+PASS - E2 no horizontal overflow at 430px
+
+25/25 passed
+
+===== phase26 =====
+(node:236500) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - A1 opening the screen reads a plan and never builds one
+PASS - A2 with no plan the screen offers to build one, and says it moves nothing
+PASS - A3 confirming warns that this is the step that moves stock
+PASS - A4 declining the confirm moves nothing
+PASS - A5 a confirmed plan offers no second confirmation
+PASS - A6 a stale-revision refusal reaches the operator intact
+PASS - B1 each quantity is labelled with what it means
+PASS - B2 stock promised elsewhere is named as such
+PASS - B3 damaged stock is shown separately from usable
+PASS - C1 a level supply shows the level and never a zero
+PASS - D1 "needs review" and "short" are shown as different problems
+PASS - D2 a known shortage names the amount
+PASS - D3 an estimated figure is badged as estimated
+PASS - E1 Keep, Add and Return are three labelled groups
+PASS - E2 a Christmas set is shown as a set, with no quantity
+PASS - E3 a set offers no manual-keep control, because it is not stock
+PASS - F1 keeping something back sends keep=true with the day and material
+PASS - F2 a kept item is badged, and the control reverses it
+PASS - F3 a confirmed plan offers no manual-keep changes
+PASS - G1 suggestions say plainly that they commit nothing
+PASS - H1 no horizontal overflow at 390px
+PASS - H2 no horizontal overflow at 430px
+PASS - L1 a crew facing an empty day is told who can build one, not shown a button
+PASS - L2 the owner still gets the build button, and it says it moves nothing
+PASS - M1 an unset operating timezone is said out loud, not assumed
+PASS - M2 a configured operating day says nothing at all
+PASS - M3 the empty state carries the same warning
+PASS - M4 an owner-authorised set-aside is on the screen, not just in the response
+PASS - M5 a refused confirmation re-reads, so the operator sees the new plan
+
+29/29 passed
+
+===== phase27 =====
+(node:236700) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - A1 a service with no rule reads as unsaid, not as satisfied
+PASS - A2 a proposed requirement is marked as a proposal, not a rule
+PASS - A3 a blocking shortfall is visible, and says it will refuse
+PASS - A4 the three readiness states read differently
+PASS - B1 one photograph can be registered against several scopes
+PASS - B2 the desk never invents a capture time or a location
+PASS - B3 the existing evidence is described by its states, not assumed
+PASS - B4 with no photographs the screen says where they come from
+PASS - C1 an exception without a reason is refused by the screen too
+PASS - C2 an exception carries its reason, requirement and scope
+PASS - D1 a proposed policy is badged as a proposal and counted
+PASS - D2 confirming a proposal sends the owner's values
+PASS - D3 withdrawing a requirement asks, and says what it means
+PASS - D4 an empty policy list says what that means for every job
+PASS - E1 no horizontal overflow at 390, 430 or desktop
+PASS - E2 every control is reachable and labelled for the keyboard
+
+16/16 passed
+
+===== phase28 =====
+(node:236901) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - A1 opening the screen reads the day and the conflicts, and writes nothing
+PASS - A2 the stops are numbered, and an unordered day says so
+PASS - A3 reordering is buttons, not a drag handle, and quotes the revision
+PASS - A4 every control is reachable and operable from the keyboard
+PASS - A5 a refused reorder re-reads, so the list is not left stale
+PASS - A6 a crew sees the day but gets no planning controls
+PASS - A7 work that belongs to neither car is listed as needing one
+PASS - A7b a CREW is offered the claim, not the owner’s car picker
+PASS - A7c an OWNER still gets the car picker and no claim
+PASS - A8 an invalidated load plan is announced with its reason
+PASS - B1 work finished and completion accepted are separate badges
+PASS - B2 a blocked stop shows the crew's reason
+PASS - B3 skipping asks why, and sends the reason with the version
+PASS - B4 a skip with no reason given is not sent
+PASS - C1 unknown stock prints "not recorded", never 0
+PASS - C2 a shared scarcity names both cars and what to do
+PASS - C3 a day with no conflicts shows no conflict section
+PASS - D1 the three audiences are three labelled groups
+PASS - D2 the existing entrance note is shown, not duplicated
+PASS - D3 missing coordinates are stated, not defaulted
+PASS - D4 a first save sends version 0 and every field
+PASS - D5 an existing record saves against its own version
+PASS - E1 a zone can be drawn with the keyboard alone
+PASS - E2 two points is a line, and the screen says so before sending
+PASS - E3 an image zone must name its image, and its points are 0-1
+PASS - E4 a zone is called a drawing, never a boundary
+PASS - E5 retiring a zone asks why and keeps it on record
+PASS - F390 no horizontal overflow at 390px
+PASS - F430 no horizontal overflow at 430px
+PASS - F1280 no horizontal overflow at 1280px
+
+30/30 passed
+
+===== phase29 =====
+(node:237106) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - A1 opening the panel reads and writes nothing
+PASS - A2 generating, publishing, linking and sending are four controls
+PASS - A3 undecided photographs are counted and offered, not assumed
+PASS - A4 withholding without a reason does nothing at all
+PASS - A5 publishing a photograph sends the customer caption, not the internal one
+PASS - B1 a review hold is printed, not swallowed
+PASS - B2 only a draft offers Publish
+PASS - B3 a superseding report says it replaces an earlier one, and the older one still shows its own state
+PASS - B4 a report with no accepted quote shows no total
+PASS - B5 the withheld count is shown beside the published one
+PASS - C1 the token is shown once, and nothing offers to show it again
+PASS - C2 the owner's explicit expiry is what is sent
+PASS - C3 a draft report has no link controls
+PASS - C4 withdrawing asks first and says what it does not do
+PASS - C5 a crew that cannot list links still sees the report
+PASS - D1 queued is never "sent"
+PASS - D2 unknown says we do not know, and blocks a second message
+PASS - D3 unavailable names the reason and does not pretend otherwise
+PASS - D4 delivered is the only state that reads as delivered
+PASS - D5 the recipient is never read back to the screen
+PASS - D6 the channel dropdown actually has options -- the bug a screenshot found
+PASS - D7 an evidence requirement is shown in words, not as an enum
+PASS - E1 agreed is not outstanding, and there is no Pay button
+PASS - E2 no provider is named as the reason
+PASS - E3 an established balance does show an outstanding figure
+PASS - F1 the customer sees the frozen document
+PASS - F2 the two times stay apart on the customer’s document
+PASS - F3 an unknown finish time does not borrow the acceptance time
+PASS - F4 a level reads as a level, never as a quantity
+PASS - F5 the page renders named fields only -- an injected private field is not printed
+PASS - F6 a corrected report says so and still shows what was sent
+PASS - F7 every refusal is a page state, in the customer’s words
+PASS - F8 a photograph is fetched by ticket, and an unbuilt download is not claimed as ready
+PASS - F9 a missing file is the customer’s plain answer
+PASS - F10 a collection link lists reports instead of opening one
+PASS - F11 the page is noindex -- a customer document is not a web page
+PASS - G390 nothing overflows at 390px
+PASS - G430 nothing overflows at 430px
+PASS - G3 every control is reachable by Tab and operable by Enter
+PASS - G4 Enter on a native button activates it
+
+40/40 passed
+
+===== geofence =====
+(node:237662) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+geofence.js: all assertions passed
+(node:237662) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/nova-shield/admin/js/lib/geofence.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/nova-shield/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+===== native-wrapper =====
+(node:237673) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - native.js: isNative() is false by default (plain browser)
+PASS - native.js: setStatusBarTheme() never touches StatusBar plugin off-native
+PASS - native.js: hapticLight() never throws off-native
+PASS - native.js: getDevicePosition() resolves real coords when the plugin succeeds
+PASS - native.js: getDevicePosition() resolves null (never throws) on permission denial
+PASS - native.js: shareOrFallback() runs fallbackFn when Share fails
+PASS - native.js: shareOrFallback() does not call fallbackFn when Share succeeds
+PASS - native.js: persistPhotoLocally() is a no-op (null) off-native
+PASS - photo-markup.js: Skip resolves the original File unchanged
+PASS - photo-markup.js: drawing a mark then "Use this photo" resolves a new PNG File
+PASS - field-photos.js: "+ Add photo" opens the file input on web, never the native camera
+PASS - quote.js: Download PDF / Preview Quote / Copy SMS keep their web behaviour off-native
+PASS - field-schedule.js: no arrival banner when the device position is unavailable
+PASS - field-schedule.js: arrival banner appears when the device is within 100m of the property
+PASS - native.js: isNative() reflects the mocked native platform
+PASS - field-photos.js: "+ Add photo" calls the native camera (not the file input) when native
+PASS - quote.js: Download PDF shares the absolute public URL when native
+PASS - native.js: shareCurrentPage() writes the rendered page to Filesystem then shares it
+PASS - native.js: shareCurrentPage() falls back to false when Share fails
+
+19/19 passed
+
+===== reload-offline =====
+(node:237869) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - field-workspace.js: offline passport save repaints instead of an unhandled rejection
+PASS - field-workspace.js: reload() still surfaces a genuine (non-network) error
+
+2/2 passed
+
+===== measurement-entry =====
+(node:238066) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - Rapid typing coalesces into one save and keeps the focused input mounted
+PASS - A second edit waits for the first write and persists the latest captured value
+PASS - An older failed write cannot revert a newer edit
+PASS - A failed latest save retains the intended quantity and supports explicit retry
+PASS - Blank input is not silently persisted as zero and blocks navigation until resolved
+PASS - An incomplete exponent remains unsaved
+PASS - Negative and fractional each quantities are rejected; explicit zero is saved
+PASS - Blur flushes the debounce immediately, then allows a fresh panel render
+PASS - An old refresh cannot overwrite an edit made after it started
+PASS - A later refresh wins when responses complete in reverse order
+PASS - A refresh started before commit is rejected even if its edit version was current
+PASS - Discarding a failed draft restores the confirmed value without retrying it
+PASS - Delete waits for the pending quantity before its original handler runs
+PASS - Build quote waits for the latest quantity and ignores duplicate clicks while saving
+PASS - A failed quantity prevents quote creation and leaves the draft recoverable
+PASS - Navigation flush waits for pending writes and restores the route for an invalid draft
+PASS - siding specialized footage uses the same ordered save and preserves focus
+PASS - permanent_lighting specialized footage uses the same ordered save and preserves focus
+PASS - windows stepper restores the confirmed count after a failed write
+PASS - winter_property_care stepper restores the confirmed count after a failed write
+PASS - Heating-wire child counts block quote creation while saving and restore failed counts
+PASS - desktop screen flushes quantity before its real Build quote handler
+PASS - desktop screen rejects reversed reload responses after separate saves
+PASS - field screen flushes quantity before its real Build quote handler
+PASS - field screen rejects reversed reload responses after separate saves
+PASS - desktop router waits for the quantity write before changing screens
+PASS - desktop router and sign-out retain invalid input on the current screen
+PASS - field router waits for the quantity write before changing screens
+PASS - field router and sign-out retain invalid input on the current screen
+
+29/29 passed
+
+===== mobile-reliability =====
+(node:240113) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+Browser: 151.0.7922.173
+Preview Quote popups before/after save: 1 1
+Download PDF popups before/after save: 1 1
+Real Chromium clipboard: [{"active":true,"success":true}]
+PASS - Preview Quote: pending edits do not delay the original activation
+PASS - Download PDF: pending edits do not delay the original activation
+PASS - Copy Link: copying the existing quote keeps user activation
+PASS - Copy SMS Text: copying the existing quote keeps user activation
+PASS - Copy Link uses the real Chromium clipboard without waiting for a quantity save
+PASS - A guarded successful save refreshes backend pricing even if the action does not reload
+PASS - Quote creation still waits for pending quantities
+PASS - Same-tab links still wait for quantities, even inside the quote panel
+PASS - Offline navigation offers a deliberate discard-and-leave choice
+PASS - Cancelling offline discard keeps the draft and allows retry after reconnecting
+PASS - A permission failure never offers the offline discard shortcut
+PASS - Android root Back waits for the save instead of exiting immediately
+PASS - Repeated Android Back presses share one save/exit attempt
+PASS - Android exit stays blocked for incomplete quantity input
+PASS - Android offline exit preserves the draft when cancelled
+PASS - Android offline exit requires explicit discard
+PASS - Android overlay dismissal keeps priority over save/exit
+PASS - Android keyboard dismissal keeps priority over save/exit
+PASS - admin 390px: small buttons have 44px targets without horizontal overflow
+PASS - admin 430px: small buttons have 44px targets without horizontal overflow
+PASS - field 390px: small buttons have 44px targets without horizontal overflow
+PASS - field 430px: small buttons have 44px targets without horizontal overflow
+
+22/22 passed
+
+===== field-resilience =====
+(node:242186) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+Browser: 151.0.7922.173
+500-visit mock render (ms): 515
+150-measurement mock render (ms): 552
+PASS - An access-check failure offers Retry rather than leaving a loading screen
+PASS - A late visit load cannot replace the newer route
+PASS - An initial failed visit-data read reports the connection error, not fabricated empty data
+PASS - An offline refresh labels the retained visit data and offers retry
+PASS - Passport save announces progress and prevents double submission
+PASS - A slow passport save preserves the next unsaved edit
+PASS - An untouched passport still receives fresh backend values after an unrelated refresh
+PASS - A passport draft survives an unrelated refresh and preserves newer unknown backend fields
+PASS - A permission-denied refresh does not misreport a successful passport write or throw unhandled
+PASS - Retrying notes does not rebuild the visit or lose an unsaved note
+PASS - A slow note save keeps text typed after the submitted note
+PASS - Outbox failures retain the failed item and reason across a page reload
+PASS - The outbox shows individual items and requires confirmation to discard one
+PASS - A discard cannot race with a replay that already owns the item
+PASS - Retry sync replays in order and removes actions only after success
+PASS - Replay waits for a discard that started first
+PASS - Offline Sync Now leaves all queued items intact without issuing writes
+PASS - Quantity updates remain outside the four-type outbox
+PASS - The schedule retains distinct successful-empty and failed-load states
+PASS - An outbox dialog can close with Escape without navigating away
+PASS - IndexedDB failure restores Sync Now and does not claim Synced
+PASS - Unavailable storage on startup is visible without an unhandled rejection
+PASS - 390px: long field customer/service labels fit with 150 measurements
+PASS - 430px: long field customer/service labels fit with 150 measurements
+PASS - A 500-visit schedule retains the last visit action without overflow
+PASS - Editing the last of 150 measurements keeps the draft and all controls mounted
+PASS - Primary-button progress text remains readable while hovered after a tap
+
+27/27 passed
+
+===== native-readiness =====
+(node:244935) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+Browser: 151.0.7922.173
+PASS - Quantity saving and failure already reach a polite live region
+PASS - A successful quantity save announces completion
+PASS - Quantity recovery restores focus to its input when the button disappears
+PASS - Successful keyboard retry restores quantity focus
+PASS - A failed keyboard quantity retry keeps the renewed recovery button focused
+PASS - A delayed quantity retry does not reclaim focus from the next field
+PASS - Passport save progress has its own live region and busy state
+PASS - Passport preferences have a programmatic label
+PASS - Outbox badge stays a keyboard button and changes have a separate live region
+PASS - Outbox refresh preserves keyboard focus on the next remaining action
+PASS - Notes errors update a persistent live region
+PASS - Keyboard notes retry restores a usable focus target on failure and success
+PASS - Stale visit warning already has a live region and working keyboard Retry
+PASS - At 390px Tab follows header controls and gives the badge a visible focus ring
+PASS - Outbox modal traps Tab, dismisses with Escape and restores badge focus
+PASS - At 390px keyboard traversal reaches the visit controls with visible focus and no unnamed controls
+PASS - Window and winter icon steppers already expose named buttons
+PASS - light: primary save text meets 4.5:1 contrast
+PASS - light: error toast text meets 4.5:1 contrast
+PASS - light: sync states, warning, quantity hint and error text meet 4.5:1
+PASS - dark: primary save text meets 4.5:1 contrast
+PASS - dark: error toast text meets 4.5:1 contrast
+PASS - dark: sync states, warning, quantity hint and error text meet 4.5:1
+PASS - Cold bundled start with external network blocked shows an honest unavailable screen
+
+24/24 passed
+
+===== native-bundle =====
+(node:247370) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+Synced admin/ + shared/ -> ../../tmp/nova-native-bundle-v6O78q/; checked 488 local references
+(node:247379) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - The synced admin/shared bundle resolves all literal local runtime references
+PASS - Deleting a required shared module makes the audit fail
+PASS - A literal dynamic import outside the bundle is rejected
+PASS - New local HTML assets and CSS URLs cannot disappear silently
+PASS - The old sync silently copies a broken runtime import; the new sync refuses it
+PASS - Native quote preview cannot fall back to the excluded site directory
+PASS - Core, Supabase and all seven lazy plugins are local audited dependencies
+PASS - Android declares foreground coarse and fine location used by high-accuracy GPS
+PASS - The generated Android plugin settings and dependencies include App for hardware Back
+PASS - HTTPS local scheme and cache sharing remain configured
+
+10/10 passed
+
+===== native-packaging =====
+(node:247398) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - Every vendor runtime file can be committed despite generic dist ignores
+PASS - Current source, staging and Android copy pass the production build guard
+PASS - A source edit after sync is rejected
+PASS - Stale staged JS is rejected by the actual CLI used by Gradle
+PASS - Stale Android assets cannot pass the build guard
+PASS - A copied bundle with extra obsolete files is rejected
+PASS - Changing packaging configuration requires a new sync
+PASS - Removing a lazy plugin is caught even before it is requested
+PASS - Corrupting a vendor file is rejected by its recorded hash
+PASS - Vendor version drift from the lockfile is rejected
+PASS - Floating runtime versions are rejected
+PASS - Stale native Capacitor configuration is rejected
+PASS - Missing native plugin registration is rejected
+PASS - Missing launcher density asset is rejected
+PASS - Missing splash variant is rejected
+PASS - Empty PNG resources are rejected
+PASS - Unresolved manifest icons are rejected
+PASS - Missing Android manifest is rejected
+PASS - Gradle preBuild depends on the production guard
+
+19/19 passed
+
+===== native-startup =====
+(node:247452) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - Cold /admin/field.html loads offline without any external request
+PASS - Cold /mobile/www/admin/field.html loads offline without any external request
+PASS - A plain desktop browser still reaches sign in using the real local SDK
+PASS - Source, staged and query alias paths share one actual Supabase client/auth instance
+PASS - Public-site API keeps its anonymous SDK query behavior
+PASS - The real SDK preserves authenticated getSession and admin RPC behavior
+PASS - A failed access RPC with a saved session shows Retry rather than an authorization verdict
+PASS - All seven local lazy plugin graphs import with network blocked
+PASS - Native platform detection uses the locally packaged bridge
+PASS - A missing module shows recovery; Retry reloads it and preserves full queued payloads
+PASS - Missing bootstrap itself has a working fallback Retry
+PASS - Real outbox storage-open failure is recoverable without deleting records
+PASS - A device module initialization exception is identified and recoverable
+PASS - Offline startup at 390px light fits and exposes keyboard outbox access
+PASS - Offline startup at 390px dark fits and exposes keyboard outbox access
+PASS - Offline startup at 430px light fits and exposes keyboard outbox access
+PASS - Offline startup at 430px dark fits and exposes keyboard outbox access
+PASS - Long section headers with a badge and action wrap at phone widths
+
+18/18 passed
+
+===== offline-work =====
+(node:251138) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - Prefetch, offline restart and visit navigation preserve addresses, passport and notes
+PASS - Passport and note drafts survive a closed page and are labeled unsent
+PASS - A note cannot be edited before its draft listener is ready
+PASS - Management handoff commits a newly typed note before changing documents
+PASS - Offline passport saves survive restart as pending property facts
+PASS - Offline new measurements are saved without invoking pricing or unsupported writes
+PASS - An uncached deep link reports unavailable rather than another job’s data
+PASS - Expired snapshots stop offline access without destroying pending actions
+PASS - Account switching hides another account’s visits, drafts and photo payloads
+PASS - Logout removes read snapshots and preserves owned unsent actions
+PASS - Offline or rejected logout never falsely announces successful sign-out
+PASS - Revoked online access never falls back to cached private work
+PASS - Replay revalidates revoked targets before sending and retains their payload
+PASS - Reconnecting replays supported writes in order and removes them only after success
+PASS - Denied replay immediately hides an already-open cached visit and retains its unsent work
+PASS - Denied work stays retired after reload even if its cache deletion failed
+PASS - Photo bytes commit before network I/O; a lost response is held for explicit review
+PASS - A signature resumes its saved upload path without uploading again after a rejected RPC
+PASS - A lost signature response reconciles the matching server signature after explicit review
+PASS - Different tabs share one replay lock and cannot execute the same head twice
+PASS - Offline passport replay preserves unrelated server fields
+PASS - A conflicting server passport edit stops replay rather than overwriting it
+PASS - Connection loss while the browser reports online uses the saved snapshot
+PASS - Changing accounts closes private outbox dialogs immediately
+PASS - A detached old-account action cannot be persisted as the new account’s action
+PASS - A pending quantity timer cannot save after its account’s screen is removed
+PASS - Storage failure refuses photo saving before any server upload
+PASS - An interrupted in-flight send survives page closure and does not replay automatically
+PASS - A failed preparation keeps the previous complete snapshot
+PASS - Prefetch is bounded to twenty visits and says when the schedule is truncated
+PASS - Storage failure never claims that work was saved
+PASS - Preparation caches job flags and pricing-rule metadata without invoking pricing
+PASS - Reference refresh is independent of visit facts and preparation reuses fresh references
+PASS - Expired references keep saved visit facts readable but stop new measurement entry
+PASS - The seven-day horizon excludes later visits and duplicate rows do not consume the bound
+PASS - The ten-megabyte bound counts references and visit facts together
+PASS - An aborted write transaction cannot announce that work was saved
+PASS - An empty work store degrades truthfully and retains separately stored photo bytes
+PASS - A blocked populated outbox upgrade has a retry screen and preserves full legacy bytes
+PASS - Upgrading the populated work store preserves its snapshot and note draft
+PASS - A blocked work-store upgrade reports failure and recovers when its old tab closes
+PASS - A temporary storage exception can be retried without erasing saved work
+PASS - Preparation never stores expiring signed URLs and online photo views re-sign
+PASS - A v1 upgrade preserves full legacy bytes and blocks unowned replay
+PASS - The real Supabase SDK can reopen saved work with an expired offline access token
+PASS - Saved work at 390px fits and exposes real local photo previews
+PASS - Saved work at 430px fits and exposes real local photo previews
+PASS - Saved work at 1200px fits and exposes real local photo previews
+PASS - Actual Chromium process restart retains the prepared snapshot and photo Blob
+
+49/49 passed
+
+===== load-prep =====
+(node:258594) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - v2 upgrade preserves all four payloads, Blob/File bytes, row keys and unknown fields
+PASS - upgraded queue drains every existing handler once; second flush produces no duplicate
+PASS - v1 ownerless payloads survive unchanged and stay quarantined, never claimed or replayed
+PASS - interrupted upgrade rolls back stores and bytes; retry upgrades the original queue
+PASS - unknown future database version fails closed and leaves unsent writes untouched
+PASS - downgrade cannot open v3 as v2 or discard an unsent row
+PASS - unknown schema marker 99/1 prevents replay without modifying rows
+PASS - unknown schema marker 3/99 prevents replay without modifying rows
+PASS - lifecycle states persist separately from legacy handlers; unsupported load actions still refuse
+PASS - schema/upgrade failures stay storage errors in airplane mode
+PASS - upgrade retains auto-increment sequence and concurrent flushes share one replay
+PASS - enabled load entry still waits for measurement persistence at 390px
+PASS - enabled load deep links open load work rather than falling into the cached schedule at 390px
+PASS - enabled load entry still waits for measurement persistence at 430px
+PASS - enabled load deep links open load work rather than falling into the cached schedule at 430px
+PASS - all ten scenario wrappers throw rather than invent a backend fixture
+16 PASS / 0 FAIL
+
+===== field-evidence =====
+(node:259656) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - original bytes and metadata commit before markup; Back saves a draft without uploading
+PASS - original survives reload and resumes; queue submission uses the existing photo handler
+PASS - marked upload preserves the unmodified original and selection-time tag
+PASS - route interruption closes markup and preserves the unfinished original
+PASS - capture storage rejects oversized originals without eviction or queued writes
+PASS - capture budget includes text metadata and frozen upload options
+PASS - removing a local original leaves separately queued photo bytes intact
+PASS - future capture-store version fails closed and retains the original bytes
+PASS - atomic handoff permits only one submission claim for a saved capture
+PASS - failed original commit prevents markup and upload rather than claiming local durability
+PASS - interrupted submission restores originals but offers no automatic fresh upload
+PASS - review location denied is explicit and never becomes a claimed capture geotag
+PASS - review location unavailable is explicit and never becomes a claimed capture geotag
+PASS - review location reported is explicit and never becomes a claimed capture geotag
+PASS - photos and speech buffers stay private to their account across switch and return
+PASS - same-account visits do not mix original photos or dictation buffers
+PASS - speech is review-only until explicit transfer; note sends only through Save note
+PASS - unsubmitted dictation survives reload without appearing as a saved note
+PASS - late final speech cannot overwrite a review edited after stopping
+PASS - older speech callbacks cannot overwrite a newer transcript
+PASS - failed note-draft commit retains dictation for recovery instead of clearing it
+PASS - microphone permission failure retains text and does not send a note
+PASS - identity read failure stops speech without an unhandled callback or note write
+PASS - unsupported speech engine has an honest typed review fallback
+PASS - backgrounding stops recognition and drops late results
+PASS - leaving a visit aborts recognition and ignores late speech results
+PASS - offline notes accept only reviewed text into a durable unsubmitted draft
+PASS - 390px touch/keyboard originals and dictation fit without overflow
+PASS - 430px touch/keyboard originals and dictation fit without overflow
+PASS - 1200px touch/keyboard originals and dictation fit without overflow
+PASS - actual Chromium restart preserves unsubmitted originals and dictation bytes
+31 PASS / 0 FAIL
+
+===== field-load =====
+(node:263589) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - fixture snapshot is byte-identical to b7f0a22 and contains 24 v2.1 scenarios
+PASS - siding: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - no_bleach_day: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - no_bleach_day_with_manual_keep: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - mixed_services: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - permanent_lighting_with_offcut: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - named_christmas_set: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - winter_replenishment: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - repeated_jobs: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - car_b_assigned: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - car_a_with_unassigned_job: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - shortage_and_incomplete: render backend actions once per line, null stays unknown and levels have no quantities
+PASS - frozen_read_envelope: none means no built plan, crew cannot build, closing still available
+PASS - closed_day_is_readable: closed plan shows lines without preparation mutations
+PASS - operating_day_timezone: report UTC warning and configured bounds without rebucketing visits
+PASS - confirm quotes the rendered plan’s six parameters without a pre-confirm read
+PASS - late_schedule_change: 23514 sentence remains visible after automatic re-read; no automatic retry
+PASS - recommendation_lock: 23514 sentence remains visible after automatic re-read; no automatic retry
+PASS - manual_keep_clear_restores_recommendation: set and clear from same card; reload current state
+PASS - keep_clear_whole_day: clearing does not turn a still-needed item into Return
+PASS - duplicate_retry: owner build is explicit, never a cold-open side effect, replay keeps its key
+PASS - exception_affects_confirmation: fourth skip group has owner reason and no crew override
+PASS - crew_permission_failures: visible exception attempt receives honest 42501 refusal
+PASS - per_operation_retries: lost response survives reload and exact key/payload replay has one effect
+PASS - 23505 changed-intent conflict is distinct from unknown response and accepted
+PASS - malformed acceptance response stays unknown and preserves original request
+PASS - per_operation_retries: late Keep replay receipt does not replace the current recommendation
+PASS - real browser process restart preserves the unanswered immutable request and recovers one receipt
+PASS - device commit failure prevents any mutation; account change hides saved request
+PASS - unknown saved journal format is retained and fails closed
+PASS - carry_extra accepts a catalogue item absent from the plan with a required operating quantity
+PASS - closing_without_confirmation: estimate and blank untouched items; no plan needed; receipt uses live basis
+PASS - damaged_variance_pools: positive damaged refusal preserved, no client variance calculation
+PASS - level closing has only Empty/Low/Enough, no number or quantity in request
+PASS - no signal: cached read is review-only and drafts remain separate per vehicle
+PASS - addresses/access notes remain in preparation; no client day re-bucketing
+PASS - Car B crew bootstrap asks backend permission rather than choosing first readable metadata
+PASS - airplane-mode transition disables new sends immediately; reconnect requires refresh
+PASS - touch and keyboard preparation, exception, closing and no horizontal overflow at 390px
+PASS - touch and keyboard preparation, exception, closing and no horizontal overflow at 430px
+PASS - touch and keyboard preparation, exception, closing and no horizontal overflow at 1200px
+41 PASS / 0 FAIL
+
+===== field-completion =====
+(node:268144) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - frozen fixture contains 14 scenarios and matches the reviewed upstream snapshot
+PASS - cleaning_before_and_after: requirements show confirmed blocking shortfalls and no status bypass
+PASS - Cancel, Escape and Android overlay Back never submit a reviewed declaration
+PASS - late route/account change during review cannot submit and preserves notes
+PASS - confirmation quotes rendered versions, null finish stays unknown and no fresh read precedes send
+PASS - policy changing between independent reads cannot produce a mixed reviewable snapshot
+PASS - quick_winter_proof remains advisory/proposed; one reviewed operation
+PASS - lighting_installation_and_component: proposed installation/component requirements stay visible and advisory
+PASS - unconfigured_is_not_satisfied: unknown required count is not zero; acceptance retains unconfigured state
+PASS - stale_policy_and_job/stale_job_version: conflict blocks automatic replay; original draft retained
+PASS - stale_policy_and_job/stale_policy_version: conflict blocks automatic replay; original draft retained
+PASS - missing_blocking_evidence: 23514 sentence remains visible; photos and original request retained
+PASS - denied_access: 42501 is refusal, not offline or accepted; stored work remains scoped
+PASS - same_key_retry_lost_response: original key/payload recovery has one effect and no duplicate debit
+PASS - malformed acceptance stays unknown; original receipt recovery does not post a second effect
+PASS - permission loss hides cached private acceptance but retains its immutable local record
+PASS - changed_intent_same_key: 23505 is conflict, not success or a new automatic retry
+PASS - leaving the visit closes the review overlay without declaring completion
+PASS - offline finish is provisional, saved queue survives reload, reconnect is server acceptance only
+PASS - active marker 2 blocks the old app validator without deleting pending completion or legacy bytes
+PASS - real Chromium process restart retains request bytes, explicit retry key and one acceptance effect
+PASS - legacy File/Blob actions retain bytes beside marker-2 completion and all five drain once
+PASS - an unanswered completion cannot be discarded or replaced by a second key
+PASS - storage failure before completion commit sends nothing and keeps the raw draft
+PASS - usage records explicit location/precision, level remains nonnumeric, additional work has no amount
+PASS - locked_history: accepted ledger and evidence are read-only; current reopening does not mutate receipt
+PASS - register uses attachment ID and purpose/scope, never a guessed path or review GPS
+PASS - evidence lost response retains immutable request for explicit same-key retry
+PASS - one_image_two_scopes: same attachment is registered deliberately twice without uploading twice
+PASS - job-scoped evidence on file remains visible when no per-service requirement counts it
+PASS - authorised_exception and reasoned_correction are read-only server facts, not crew approval controls
+PASS - accepted evidence photo removal is refused before the legacy delete API
+PASS - review, keyboard cancellation, notes/usage controls and overflow at 390px
+PASS - review, keyboard cancellation, notes/usage controls and overflow at 430px
+PASS - review, keyboard cancellation, notes/usage controls and overflow at 1200px
+35 PASS / 0 FAIL
+
+===== field-dispatch =====
+(node:272075) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - all nine authoritative scenarios are pinned byte-identically at b21d082
+PASS - ordered day uses one supported read and retains server stop order
+PASS - initial ordered list keeps panels folded and reads no private property details
+PASS - derived and stale positions stay distinct without client sorting
+PASS - UTC warning, configured day bounds and invalidated confirmed load stay visible
+PASS - two vehicles leave unassigned work outside both stop lists
+PASS - entrance hazards parking and customer/internal audience stay separate
+PASS - geographic and image zones have separate drawings and keyboard-readable vertices
+PASS - missing and invalid coordinates produce no navigation destination
+PASS - navigation is a deliberate external handoff with no provider capability claim
+PASS - arrival requires explicit crew confirmation and changes no backend state
+PASS - no GPS permission or coordinates are inferred by arrival control
+PASS - saved cache excludes access codes and private internal notes
+PASS - offline restart retains operational notes pins zones and ordered day without a basemap
+PASS - offline event removes revealed access code immediately
+PASS - property denial retires saved property cache and never echoes private error text
+PASS - job denial retires saved property cache and never echoes private error text
+PASS - another account cannot read saved dispatch instructions or local arrival
+PASS - cache expires after 24 hours and never substitutes another vehicle or work date
+PASS - offline different work date is refused rather than substituted
+PASS - blocked issue shows attribution and resolution without completion or commercial update
+PASS - breakdown keeps its unknown material and does not automatically block work
+PASS - pending is visible and duplicate taps make one immutable request
+PASS - lost response and restart recover identical original key and payload
+PASS - 23514 conflict/refusal is distinct from accepted and unknown
+PASS - 23505 conflict/refusal is distinct from accepted and unknown
+PASS - 42501 conflict/refusal is distinct from accepted and unknown
+PASS - message unavailable is a distinct provider-double outcome with no automatic sends
+PASS - message accepted is a distinct provider-double outcome with no automatic sends
+PASS - message delivered is a distinct provider-double outcome with no automatic sends
+PASS - message provider_failed is a distinct provider-double outcome with no automatic sends
+PASS - message unknown is a distinct provider-double outcome with no automatic sends
+PASS - route change discards late property response rather than replacing new screen
+PASS - activating second vehicle denial retires an earlier one-vehicle snapshot
+PASS - vehicle scope helper refusal also retires previously saved details
+PASS - unknown message prevents another same-kind tap while issues remain available
+PASS - device storage failure prevents sending any uncommitted request
+PASS - account change prevents late property details appearing for the next crew
+PASS - workspace launcher checks scoped access without replacing the completion path
+PASS - workspace refusal removes previously loaded passport and completion controls
+PASS - missing dispatch backend and malformed envelope do not fabricate an operating day
+PASS - unreachable server with navigator online uses only the scoped saved day
+PASS - visual and keyboard inspection at 390px
+PASS - visual and keyboard inspection at 430px
+PASS - visual and keyboard inspection at 1280px
+45 PASS / 0 FAIL / 0 SKIP
+
+===== core-journey =====
+(node:277157) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - dispatch-to-load preserves the selected operating date on a clean device
+PASS - car_a: same-context loading → visit → accepted completion → closing
+PASS - car_b: same-context loading → visit → accepted completion → closing
+PASS - confirmed load → offline reviewed finish → restart → replay retains original key
+PASS - lost completion response requires deliberate recovery with no second backend-double effect
+5 PASS / 0 FAIL / 0 SKIP
+
+===== operations-integration =====
+(node:277986) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("/workspace/nova-shield/codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - Inventory is reached by keyboard from the real admin nav
+PASS - An inventory tab rewrites the query without adding history and survives reload
+PASS - Dispatch preserves vehicle and day on reload and selector changes
+PASS - Invalid calendar dates do not probe or silently choose another day
+PASS - An existing vehicle code is data rather than an invented slug format
+PASS - Property access mounts on the passport and keeps the customer Back parent
+PASS - Handover uses an authoritative absent completion, beside evidence
+PASS - Handover uses an authoritative accepted completion, beside evidence
+PASS - Inventory: missing backend is reachable, named and offers no writes
+PASS - Dispatch: missing backend is reachable, named and offers no writes
+PASS - Property access and work zones: missing backend is reachable, named and offers no writes
+PASS - Customer handover: missing backend is reachable, named and offers no writes
+PASS - Partially applied inventory relations fail closed before the Stock actions mount
+PASS - Retry rechecks real availability and opens the original feature when reads succeed
+PASS - Availability keeps refused distinct from a missing backend
+PASS - Availability keeps offline distinct from a missing backend
+PASS - Availability keeps unknown distinct from a missing backend
+PASS - Availability keeps crew distinct from a missing backend
+PASS - Availability timeout resolves without leaving a permanent spinner
+PASS - The real dispatch route lets a freshly checked crew reach its own claim control
+PASS - Dispatch refuses an account whose fresh admin check fails
+PASS - A crew cannot mount another vehicle day after its scoped read refuses
+PASS - The copied crew API quotes the original claim key and revision without a vehicle override
+PASS - The unchanged real API preserves read parameters, rendered locks and movement precision
+PASS - An old availability read cannot replace a newer route
+PASS - Escape closes the existing overlay before changing a newly wired route
+PASS - A deep-linked dispatch uses its Jobs parent on the mocked Android Back binding
+PASS - Field-to-management navigation waits for the pending measurement save
+PASS - All inventory tabs remain reachable at 390px
+PASS - All inventory tabs remain reachable at 430px
+PASS - All inventory tabs remain reachable at 1280px
+PASS - New routes render at 390px with screenshot artifacts and no overflow
+PASS - New routes render at 430px with screenshot artifacts and no overflow
+PASS - New routes render at 1280px with screenshot artifacts and no overflow
+
+34/34 passed
+
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.0
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.0
+npm notice To update run: npm install -g npm@12.2.0
+npm notice

@@ -1,0 +1,23 @@
+(node:220799) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("./codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - measurements.js: provisional-pricing badge shows for an unapproved service
+PASS - measurements.js: no badge for an approved service
+PASS - measurements.js: review-flag toggle calls updateMeasurement with review_required + reason
+PASS - review-flag.js: unchecking clears the reason and hides the input
+PASS - quote.js: unapproved line shows a badge, quote-level warning, and strengthens the send confirm
+PASS - signature-pad.js: unapproved-pricing override strengthens the admin accept confirm
+PASS - signature-pad.js: no override clause when every service is approved (default)
+PASS - site/js/pages/quote.js: unapproved line shows the customer-facing estimate note
+PASS - site/js/pages/quote.js: Accept is withheld (not just a failed click) when any line is unapproved; Decline still works
+PASS - site/js/pages/quote.js: Accept renders normally once every line is approved
+PASS - admin quote.js: option-group siblings render grouped under one heading, with a Send Option Group button and no per-option Send Email button
+PASS - admin quote.js: an ordinary (non-grouped) job with no measurements/services passed renders exactly as before, with no option-group builder
+PASS - admin quote.js: the option-group builder creates one create_option_quote call per checked column, skips empty columns
+PASS - admin quote.js: the option-group builder refuses to create a group from only 1 checked column
+PASS - site/js/pages/quote.js: an option-group link shows the sibling list, not the single-quote view
+PASS - site/js/pages/quote.js: viewing one option shows its full detail with a back link; accepting it updates the group and is reflected on return
+PASS - site/js/pages/quote.js: an option with unapproved pricing withholds Accept, same as an ordinary provisional quote
+PASS - site/js/pages/quote.js: an ordinary (non-grouped) quote still renders the single-quote view exactly as before -- no option-list regression
+
+18/18 passed

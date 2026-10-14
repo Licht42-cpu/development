@@ -1,0 +1,31 @@
+(node:150465) ExperimentalWarning: `--experimental-loader` may be removed in the future; instead use `register()`:
+--import 'data:text/javascript,import { register } from "node:module"; import { pathToFileURL } from "node:url"; register("./codex-files/tooling/test-loader.mjs", pathToFileURL("./"));'
+(Use `node --trace-warnings ...` to show where the warning was created)
+PASS - Packaged inventory: missing backend remains named and write-free
+PASS - Packaged dispatch: missing backend remains named and write-free
+PASS - Packaged property: missing backend remains named and write-free
+PASS - Packaged handover: missing backend remains named and write-free
+PASS - Packaged inventory at 390: keyboard, names, layout and measured targets
+PASS - Packaged dispatch at 390: keyboard, names, layout and measured targets
+PASS - Packaged property at 390: keyboard, names, layout and measured targets
+PASS - Packaged handover at 390: keyboard, names, layout and measured targets
+PASS - Packaged inventory at 430: keyboard, names, layout and measured targets
+PASS - Packaged dispatch at 430: keyboard, names, layout and measured targets
+PASS - Packaged property at 430: keyboard, names, layout and measured targets
+PASS - Packaged handover at 430: keyboard, names, layout and measured targets
+PASS - Packaged inventory at 1280: keyboard, names, layout and measured targets
+PASS - Packaged dispatch at 1280: keyboard, names, layout and measured targets
+PASS - Packaged property at 1280: keyboard, names, layout and measured targets
+PASS - Packaged handover at 1280: keyboard, names, layout and measured targets
+FAIL - An empty device queue cannot claim confirmed server sync
+locator.waitFor: Error: strict mode violation: getByText('No queued actions', { exact: true }) resolved to 2 elements:
+    1) <span tabindex="0" role="button" id="syncBadge" aria-haspopup="dialog" class="sync-badge sync-badge--ok" title="Tap to see what is waiting to sync">No queued actions</span> aka getByRole('button', { name: 'No queued actions' })
+    2) <span role="status" class="sr-only" aria-live="polite" aria-atomic="true" data-sync-status="">No queued actions</span> aka getByRole('status').filter({ hasText: 'No queued actions' })
+
+Call log:
+[2m  - waiting for getByText('No queued actions', { exact: true }) to be visible[22m
+
+    at /workspace/nova-shield/tests/final-candidate-qa.mjs:97:64
+    at async check (/workspace/nova-shield/tests/final-candidate-qa.mjs:23:9)
+    at async file:///workspace/nova-shield/tests/final-candidate-qa.mjs:94:1
+16/17 passed

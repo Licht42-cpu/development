@@ -1,0 +1,85 @@
+- main:
+  - heading "FIXTURE 100 Example Road" [level=1]
+  - paragraph: Example City
+  - link "← FIXTURE Customer":
+    - /url: "#/customers/33333333-3333-4333-8333-333333333333"
+  - text: "null"
+  - heading "Property Passport" [level=2]
+  - paragraph: Recorded on site by the field console, and kept for every future visit and quote.
+  - text: Not filled in yet Nothing recorded yet. The passport is filled in from the field console during a visit.
+  - heading "Property details" [level=2]
+  - paragraph: Standing facts about the building itself.
+  - text: Address
+  - textbox "Address line 1": FIXTURE 100 Example Road
+  - text: Address line 2
+  - textbox "Address line 2"
+  - text: City
+  - textbox "City": Example City
+  - text: Province
+  - textbox "Province"
+  - text: Postal code
+  - textbox "Postal code"
+  - text: Property type
+  - combobox "Property type":
+    - option "Not stated" [selected]
+    - option "Residential"
+    - option "Commercial"
+    - option "Strata"
+    - option "Industrial"
+  - text: Storeys
+  - textbox "Storeys note":
+    - /placeholder: e.g. Front 1-storey, rear 2-storey
+  - text: Permanent access notes
+  - textbox "Access note":
+    - /placeholder: "Permanent access facts: gate codes, parking, restrictions"
+  - text: Property notes
+  - textbox "Property notes"
+  - paragraph: The address is how a new website request is matched to this property. Changing it means a future request using the old address will create a separate property.
+  - button "Save property"
+  - button "Cancel"
+  - heading "Service history" [level=2]
+  - paragraph: Every job carried out at this property.
+  - text: 0 No jobs recorded at this property yet.
+  - heading "Quotes" [level=2]
+  - paragraph: Every quote raised for this property, through its jobs.
+  - text: 0 No quotes for this property yet.
+  - heading "Measurements" [level=2]
+  - paragraph: What has been measured here before — each one as recorded on that job, not a running total.
+  - text: 0 Nothing measured at this property yet.
+  - heading "Inspection history" [level=2]
+  - paragraph: Findings flagged on site, with the job they came from.
+  - text: 0 No inspection findings recorded at this property.
+  - heading "Photos" [level=2]
+  - paragraph: From previous jobs at this property. Each still belongs to the job it was taken on.
+  - text: 0 No photos taken at this property yet.
+  - paragraph: Measurements, photos, inspections and quotes belong to the job they were recorded on. They are shown here as history — a measurement is what was true on that visit, not a standing figure for the property.
+  - heading "Access and work zones" [level=2]
+  - paragraph: What the crew needs to get in and work safely, kept apart from what a customer may see.
+  - paragraph: This property
+  - paragraph: No coordinates on file for this property. A geographic zone needs its own points; nothing is guessed from the address.
+  - heading "The crew sees these" [level=3]
+  - text: Entrance
+  - textbox "Entrance": Use the front gate
+  - paragraph: Where to go in.
+  - text: Hazard
+  - textbox "Hazard"
+  - paragraph: The dog, the loose step, the low cable. Its own line so it is not buried in a paragraph.
+  - text: Parking
+  - textbox "Parking"
+  - paragraph: Where the van goes.
+  - heading "Ours, never the customer’s" [level=3]
+  - text: Internal note
+  - textbox "Internal note"
+  - paragraph: For the office and the assigned crew.
+  - text: Access code
+  - textbox "Access code": FIXTURE-MEMORY-ONLY
+  - paragraph: A key. Readable only by the owner and a crew with work here, and never echoed in a receipt or a message.
+  - heading "The customer may see this" [level=3]
+  - text: Customer-facing note
+  - textbox "Customer-facing note"
+  - paragraph: The only field on this screen that may appear on a customer surface. Nothing else here is ever sent.
+  - button "Save details"
+  - text: Version 0, saved —
+  - heading "Work zones (0)" [level=3]
+  - paragraph: No zones drawn. Nothing is assumed about where the work is.
+  - button "Add a zone"

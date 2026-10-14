@@ -1,0 +1,16 @@
+{
+  "java_major": 21,
+  "javac_major": 21,
+  "selected_java_home": "/workspace/.nova-shield/jdk/jdk-21.0.12.1+1",
+  "java_home_has_compiler": true,
+  "sdk_root": "/workspace/.nova-shield/android-sdk",
+  "missing_sdk_files": [],
+  "staged_assets_current": true,
+  "asset_guard_result": "Verified 177 fresh assets, Android copy and resources",
+  "build_prerequisites_ready": true,
+  "adb_configuration_directory": "/home/agent/.android",
+  "adb_configuration_writable": false,
+  "adb_blocker": "adb requires a writable .android directory in the real home; HOME is preserved",
+  "emulator_available": false,
+  "device_validation": "unrun; diagnostics do not install or launch an app"
+}
