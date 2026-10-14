@@ -2190,3 +2190,39 @@ export async function createPaymentRequest({
     p_expected_amount: expectedAmount ?? null
   }));
 }
+
+/* ==========================================================================
+   BATCH 15.1 -- the reconciled crew-scope rule and the crew's claim.
+   Contract effect: completion-evidence v1.1, dispatch v1.1. See
+   docs/batch15-1-findings.md for why the stricter rule won and why it comes
+   with a claim rather than a refusal.
+   ========================================================================== */
+
+/** Whose job this is, and what a screen should therefore offer:
+ *  `scope`, `is_mine`, `claimable`, `active_vehicles` and a message for the
+ *  one case a person has to act on. Read-only. */
+export async function jobCrewScope({ jobId }) {
+  return unwrap(await supabase.rpc('job_crew_scope', { p_job_id: jobId }));
+}
+
+/** "This one is on my car."
+ *
+ *  With two cars running and a job on neither, the backend says the job is
+ *  nobody's -- and this is how the crew that is actually doing it says which
+ *  car is going, without waiting for the owner. It is an assignment with the
+ *  crew as the actor, so load invalidation, day revisions and the key ledger
+ *  behave exactly as an owner's assignment does.
+ *
+ *  It cannot take a job off another car, cannot claim for another car and
+ *  moves no stock. Claiming what is already yours answers `no_op: true`
+ *  without moving the day's revision. */
+export async function claimJobForVehicle({
+  clientOperationId, jobId, reason, expectedRevision
+}) {
+  return unwrap(await supabase.rpc('claim_job_for_vehicle', {
+    p_client_operation_id: clientOperationId || newOperationId('claim'),
+    p_job_id: jobId,
+    p_reason: reason ?? null,
+    p_expected_revision: expectedRevision ?? null
+  }));
+}

@@ -1,7 +1,7 @@
 {
-  "source_sha": "f08edfd2a52064a090e3bede50253e9027eb75fe",
+  "source_sha": "5169d7bf18e99e10855b47da2d12308d886f0fc9",
   "codex_base_sha": "ae6fb6b8175d822388f9c3f5ef54bbaaf0166450",
-  "authorization": "Owner explicitly allowed bringing across unchanged Claude files; no branch merge or rebase.",
+  "authorization": "Batch 15.2 owner assignment authorizes refreshing unchanged Claude source to 5169d7b; no merge, rebase or cherry-pick.",
   "preserved_conflicts": [
     "admin/js/views/job.js",
     "tests/native-wrapper.test.mjs",
@@ -21,8 +21,8 @@
     },
     {
       "path": "admin/js/components/dispatch-day.js",
-      "sha256": "25cffa18a91a6cb49174c5a416bfdb5308a65aba17882653b9d96dbf96514617",
-      "source_git_blob": "a551fcd66af0050dbc3f5ee4331d39391bac0fb0"
+      "sha256": "fc9f4bf9c11eb4f8e51f7c15542c899272538d778ff895ac77ff3aedfc5dbd86",
+      "source_git_blob": "0a7e162b5c3635608476f619e9770b4a199c3c34"
     },
     {
       "path": "admin/js/components/evidence-policy.js",
@@ -71,8 +71,8 @@
     },
     {
       "path": "admin/js/lib/api.js",
-      "sha256": "9854eecd11994e78c7d4ce045b225b3ae3a79d8e5d7cc0295c739e079a70bab8",
-      "source_git_blob": "a5e0d9bd6cbc85b7615c46d810b76eaf8da9ffd1"
+      "sha256": "306c4031fab696f6e365178bfd8baf4ab1053fcfd163a6ed5459889774d7ef2e",
+      "source_git_blob": "244e8e4403ff73dfd3a9cd323b3a435023017cbc"
     },
     {
       "path": "admin/js/lib/inventory-math.js",
@@ -130,6 +130,11 @@
       "source_git_blob": "b517136a5576c66bf6a3efe50596d922f3e18b7d"
     },
     {
+      "path": "docs/batch15-1-findings.md",
+      "sha256": "418f80b5af7bfb2d154920f26001e6ba04c655e32c4b91a056956787cf60a75a",
+      "source_git_blob": "ced41aefc6adc591e6f61ac394aec1461bc61d7e"
+    },
+    {
       "path": "docs/batch7-1-findings.md",
       "sha256": "8da2e8ebe3c1b9783b3f257e1661c9e90d67f6264fe10263014f20f7ea412490",
       "source_git_blob": "fffe90b9158238e5821f66a5bbb7af64f99cc9b7"
@@ -151,8 +156,8 @@
     },
     {
       "path": "docs/completion-evidence-contract-v1.md",
-      "sha256": "8cc6f19575b9eb968cdb0810772dcb5e190dcf657d6c46bedd275723c546564f",
-      "source_git_blob": "e0248491e2b2d21784ed6cca139f4836a298fa69"
+      "sha256": "4ec14039d2c380933f1d9e69f683bbf9f3a3e14f59d798c1a0428065f9d2593d",
+      "source_git_blob": "7315c64723c323b5f109318e55cbd44edecdfca6"
     },
     {
       "path": "docs/customer-handover-contract-v1.md",
@@ -166,8 +171,8 @@
     },
     {
       "path": "docs/dispatch-contract-v1.md",
-      "sha256": "14d3cc42958667ddb952ef03ad4da29c63ef64a1ddd3d3d5332a4801a891e59d",
-      "source_git_blob": "a37675f50324bf369e3bf14c15c668a9606c6022"
+      "sha256": "bc8f602b09fb49cbab9d3fa5418f7a0728df3cfa963aa04c5ada8e3677ebd6d3",
+      "source_git_blob": "9df0e5c9bf63b2e2f44c3f6bdfc92373d512bc4f"
     },
     {
       "path": "docs/operations-contract-v1.md",
@@ -193,6 +198,21 @@
       "path": "docs/prompts/codex-batch-12-2.md",
       "sha256": "74789f92a63bcf16a6cde06264926f7c9b2c2f30c1d57a955104eac946527347",
       "source_git_blob": "32093c454ccf2e9c54ec71573976f59c73c786fc"
+    },
+    {
+      "path": "docs/prompts/codex-integration-candidate.md",
+      "sha256": "aeb4864eeb69963279d74e5143b14d33bd4954d5495f1a7a027304a11c3fb288",
+      "source_git_blob": "447494a12c9d18134aebf309674323f9110cb694"
+    },
+    {
+      "path": "docs/release-runbook-v1.md",
+      "sha256": "f3da93084149ee208a2eece11147600e018fec91991999d3a3ac2e51653be241",
+      "source_git_blob": "b6f12347e8b886453223004b116df0e72e3e7ffd"
+    },
+    {
+      "path": "docs/release/pending-migration-audit.md",
+      "sha256": "5e40aed22e15185d8535aa2acb7517d139a5a30a47b0d00b2892e039dc7e21e8",
+      "source_git_blob": "4255cd27c425b1bf4d773dc2b9a95ce6f1a1d853"
     },
     {
       "path": "docs/reviews/seasonal-abedf0f-dispositions.md",
@@ -385,6 +405,26 @@
       "source_git_blob": "fd234d86866ba46230a5b79da5e4e37856c5d2cb"
     },
     {
+      "path": "supabase/migrations/20261018090000_batch15_1_crew_scope_reconciliation.sql",
+      "sha256": "ba223abf2b606f9043ccfb24fe4ef78a7844d1cb855e1ba873e56fda7e078429",
+      "source_git_blob": "33578baaea058feec22d733f3dd335a8b89a6e75"
+    },
+    {
+      "path": "supabase/migrations/20261018100000_batch15_1_revoke_public_execute_on_trigger_functions.sql",
+      "sha256": "ef153252c5c7d85f485e70ca2b63f38d7033073e083f11fd01c013057f9c06a0",
+      "source_git_blob": "9fba455eb641ee837264265d261ed0c0639e91d1"
+    },
+    {
+      "path": "supabase/migrations/20261018110000_batch15_1_rls_on_handover_tables.sql",
+      "sha256": "3bd2d5b7824c3c113a0a105e4eed300b7f4591d5175d6421c9d05b5a03761976",
+      "source_git_blob": "bf9408b9d41be9f1a6c6a8b9a06e8837f3cc2d82"
+    },
+    {
+      "path": "tests/db/audit-pending.mjs",
+      "sha256": "c5d0eda9e4aa8650c55894b293185c2d3b93907d9d374407922654fc47cd262b",
+      "source_git_blob": "27770115e3ed030b563ea093207c6de5d38456ac"
+    },
+    {
       "path": "tests/db/batch10-1.test.mjs",
       "sha256": "dbe32230abbcaa9d19730ffb7b332dc904f214d9cb2e14aeb63e2c309543d817",
       "source_git_blob": "5ae6ef0bbce0f607c05c95c460afddf0b62a1813"
@@ -403,6 +443,11 @@
       "path": "tests/db/batch13-1.test.mjs",
       "sha256": "7958702e120c1a0bb4424294d88c453b8068abc33218ff52e6c9a646e40fb04b",
       "source_git_blob": "73ba94b9e103c6292216ae134ed7f382cef2d93f"
+    },
+    {
+      "path": "tests/db/batch15-1.test.mjs",
+      "sha256": "adda51529e7936c4679305cf452c1544ae58334caced38de6d23ddfa1bd4fff1",
+      "source_git_blob": "160caf84329e6838c4158bc70f9ab18abd13a522"
     },
     {
       "path": "tests/db/batch7-1.test.mjs",
@@ -471,8 +516,8 @@
     },
     {
       "path": "tests/db/run-db-tests.sh",
-      "sha256": "424f2a8e25687183f5e67f26cb93e3c8ff424413dfea222a8042b4dfdbb8d2e6",
-      "source_git_blob": "4ac9e92a62c00fd9c553c0815de7b37af74e9e3a"
+      "sha256": "c32bb5263943bd765744f501147416aec631dbd9b765d0ae780276814fb0f9db",
+      "source_git_blob": "9039bfcce7c787bb9648a8d2a4cbe8f994505a94"
     },
     {
       "path": "tests/db/setup-test-db.mjs",
@@ -556,8 +601,8 @@
     },
     {
       "path": "tests/phase28.test.mjs",
-      "sha256": "160bc4b5204248bcf62762c7ed30ceda8d1adb2cfd0d8bf0feb5d87e2887b6e4",
-      "source_git_blob": "83126d3c698af79d408c39e1c21df7707883d59d"
+      "sha256": "f462f87de5e840e624065b7002fccf2e5913e1e2de9b9c05413f17f4e70efbff",
+      "source_git_blob": "65a0b700e712e1a3850e116bdf8ad09b4ccf90ea"
     },
     {
       "path": "tests/phase29.test.mjs",
@@ -589,5 +634,7 @@
       "sha256": "b0abb8541c17a5152b10a23367f14be09610e7ebec6b0a3fb277ab446dd765fe",
       "source_git_blob": "a18867c38b8f6fea1295906717f76f73aa639cc4"
     }
-  ]
+  ],
+  "previous_source_sha": "f08edfd2a52064a090e3bede50253e9027eb75fe",
+  "codex_candidate_base_sha": "52510c3d49cdffa71a0f607c676b82bde1c48416"
 }

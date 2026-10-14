@@ -314,9 +314,12 @@ export function dispatchDayPanel({ locationCode = 'car_a', workDate } = {}) {
          belongs to NEITHER plan. The backend reports it rather than
          guessing, and so does this screen: guessing a car is how a crew
          arrives without the kit. */
-      el('p', { class: 'hint', style: 'margin:0 0 6px', text:
-        'Two cars are active, so work with no car named belongs to neither '
-        + 'day. Nothing is guessed.' }),
+      el('p', { class: 'hint', style: 'margin:0 0 6px', text: read.can_plan
+        ? 'Two cars are active, so work with no car named belongs to neither '
+          + 'day. Nothing is guessed.'
+        : 'Two cars are active, so work with no car named belongs to neither '
+          + 'day. If you are the one doing it, say so \u2014 that is how the '
+          + 'load plan and the paperwork know which car was there.' }),
       el('div', {}, list.map((u) => el('div', { class: 'row-item' }, [
         el('strong', { text: u.customer_name || 'Customer' }),
         el('p', { class: 'hint', style: 'margin:0', text:
@@ -332,7 +335,24 @@ export function dispatchDayPanel({ locationCode = 'car_a', workDate } = {}) {
                   reason: 'Assigned on the dispatch screen'
                 }), `Assigned to ${v.name}. That car’s load plan needs rebuilding.`)
               })))
-          : null
+          /* THE CREW'S OWN DOOR (15.1). An owner assigns; a crew says "this
+             one is on my car". Before 15.1 a crew could complete an
+             unassigned job that dispatch and the load plan both excluded,
+             which is the mismatch the release review closed -- and closing
+             it would have stranded a crew holding work it had already done
+             if this control did not exist. It appears only for a crew,
+             because `can_plan` is false for one and an owner has no car of
+             their own to claim onto. */
+          : el('div', { class: 'btn-row' }, [
+              el('button', {
+                class: 'btn', type: 'button', text: 'This one is on my car',
+                disabled: busy ? true : undefined,
+                onClick: (e) => act(e.currentTarget, () => api.claimJobForVehicle({
+                  jobId: u.job_id,
+                  reason: 'Claimed on the dispatch screen by the crew working it'
+                }), 'Claimed. Your load plan needs rebuilding.')
+              })
+            ])
       ].filter(Boolean))))
     ]);
   }

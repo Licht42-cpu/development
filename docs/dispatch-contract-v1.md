@@ -1,7 +1,37 @@
-# Nova Shield dispatch contract v1
+# Nova Shield dispatch contract v1.1
 
-**Status: frozen at v1.** A change to this document is a new version, agreed
-before either side implements against it.
+**Status: frozen at v1.1.** A change to this document is a new version,
+agreed before either side implements against it.
+
+> **v1.1 (Batch 15.1) — additive, plus one rule given a name.**
+>
+> **§2a The crew-scope rule, once.** `ns_can_work_job(uuid)` is unchanged in
+> behaviour, but it and 11.1's `can_work_job(uuid)` now both read
+> `ns_job_is_mine(uuid)`, so they cannot drift again. The reason is readable
+> as text through `ns_job_crew_scope(uuid)` → `owner`,
+> `assigned_to_my_vehicle`, `unassigned_single_vehicle`,
+> `unassigned_needs_a_claim`, `assigned_elsewhere`, `not_admin`,
+> `no_such_job`, and through the admin read `job_crew_scope(uuid)` which
+> adds `is_mine`, `claimable`, `active_vehicles` and a message.
+>
+> **§2b The crew's claim.**
+> `claim_job_for_vehicle(p_client_operation_id text, p_job_id uuid,
+> p_reason text default null, p_expected_revision integer default null)`
+> — admin, crew-callable. "This job is on MY car." It cannot take a job off
+> another car (`42501`), cannot claim for another car (the vehicle is
+> resolved from the caller's crew record and is not a parameter), cannot
+> unassign, and moves no stock. Claiming what is already yours answers
+> `{no_op: true}` and does **not** move the day's revision. Otherwise it is
+> an assignment: same invalidation, same revisions, same key ledger
+> (`kind = 'assignment'`), with `how: 'claimed'` on the receipt.
+>
+> **`assign_job_to_vehicle` is unchanged** — same signature, same owner-only
+> gate. Both doors now call one internal core, so they cannot drift. Its
+> receipt gains one additive field, `how: 'assigned' | 'claimed'`.
+>
+> **`ns_can_see_property(uuid)`** now reads the same rule through the job.
+> Scope is unchanged for one vehicle; with two, a property whose job is on no
+> car is not readable until somebody claims or assigns it.
 
 This is the contract Batch 12.2 implements the field map, navigation handoff
 and crew issue reporting against. It is a **companion to**, not a revision
