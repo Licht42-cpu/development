@@ -45,8 +45,17 @@ def audit():
     version_name = re.search(r'versionName\s+"([^"]+)"', gradle)[1]
     require('packaged app ID and version match project', identity is not None and identity.groups() == (config['appId'], version_code, version_name))
     permissions = sorted(set(re.findall(r"uses-permission(?:-sdk-\d+)?: name='([^']+)'", text)))
-    approved = sorted('android.permission.' + name for name in ['INTERNET', 'ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION', 'VIBRATE'])
+    # Reviewed against manifest-merger provenance and the pinned Gradle inputs:
+    # iongeolocation 2.2.2 adds network-state; AndroidX Core 1.17.0 declares
+    # its app-scoped signature permission for non-exported dynamic receivers.
+    receiver_permission = config['appId'] + '.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'
+    approved = sorted(['android.permission.' + name for name in
+                       ['INTERNET', 'ACCESS_COARSE_LOCATION', 'ACCESS_FINE_LOCATION', 'VIBRATE', 'ACCESS_NETWORK_STATE']]
+                      + [receiver_permission])
     require('compiled permission set matches reviewed foreground-only set', permissions == approved)
+    compiled_xml = subprocess.run([str(sdk / 'build-tools/35.0.0/aapt'), 'dump', 'xmltree', str(apk), 'AndroidManifest.xml'], capture_output=True, text=True)
+    signature = re.search(r'E: permission .*?' + re.escape(receiver_permission) + r'.*?protectionLevel[^\n]*0x2\n', compiled_xml.stdout, re.S)
+    require('compiled dynamic receiver permission is signature protected', compiled_xml.returncode == 0 and signature is not None)
     with zipfile.ZipFile(apk) as archive:
         staged = {p.relative_to(ROOT / 'mobile/www').as_posix() for p in (ROOT / 'mobile/www').rglob('*') if p.is_file()}
         packaged = {p.removeprefix('assets/public/') for p in archive.namelist() if p.startswith('assets/public/') and not p.endswith('/')}
@@ -57,7 +66,10 @@ def audit():
             'candidate': inventory['candidate'], 'checks': checks, 'dependency_versions': versions,
             'version': {'application_id': config['appId'], 'version_code': version_code, 'version_name': version_name,
                         'npm_version': package['version'], 'min_sdk': re.findall(r"sdkVersion:'([^']+)'", text), 'target_sdk': re.findall(r"targetSdkVersion:'([^']+)'", text)},
-            'permissions': permissions, 'staged_file_count': len(staged), 'packaged_web_file_count': len(packaged),
+            'permissions': permissions,
+            'transitive_permission_origins': {'android.permission.ACCESS_NETWORK_STATE': 'io.ionic.libs:iongeolocation-android:2.2.2',
+                                              receiver_permission: 'androidx.core:core:1.17.0; signature protection'},
+            'staged_file_count': len(staged), 'packaged_web_file_count': len(packaged),
             'apk_sha256': hashlib.sha256(apk.read_bytes()).hexdigest(), 'apk_bytes': apk.stat().st_size,
             'asset_binding': inventory['apk']['asset_binding'], 'publication': 'none'}
 
