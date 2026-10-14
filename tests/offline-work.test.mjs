@@ -233,6 +233,9 @@ await check('Prefetch is bounded to twenty visits and says when the schedule is 
   assert.match(await f.page.locator('#view').innerText(),/first 20 visits/);
 },{jobs:21}));
 await check('Storage failure never claims that work was saved',()=>fixture(async f=>{
+  // This is an operational quota failure, not failure of startup's outbox
+  // check. Wait for that real prerequisite before installing the fault.
+  await f.page.evaluate(async()=>await(await import('/admin/js/field.js')).startupReady);
   await f.page.evaluate(()=>indexedDB.open=()=>{throw new DOMException('Quota exceeded','QuotaExceededError');});
   await f.page.getByRole('button',{name:'Save work for offline',exact:true}).click();await f.page.getByText('Work not saved: Quota exceeded',{exact:true}).waitFor();
   assert.equal(await f.page.getByText(/visits saved for offline/).count(),0);

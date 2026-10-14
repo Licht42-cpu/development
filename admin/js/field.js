@@ -331,7 +331,7 @@ let outboxDialog;
 function openOutbox() {
   if (outboxDialog) return outboxDialog.focus();
   const state = offlineQueue.syncState();
-  if (!state.count && !state.storageError) return toast(state.online ? 'Everything is synced' : 'Offline — nothing waiting to sync');
+  if (!state.count && !state.storageError) return toast(state.online ? 'No queued actions on this device' : 'Offline — nothing waiting to sync');
   const list = el('div', { class: 'outbox-items' }, [el('p', { class: 'hint', text: 'Loading saved actions…' })]);
   const summary = el('p', { class: 'hint', role: 'status' });
   const retry = el('button', { class: 'btn', text: 'Retry sync', onClick: () => syncNowBtn.click() });

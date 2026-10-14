@@ -122,6 +122,8 @@ await check('An empty device queue cannot claim confirmed server sync', async ()
     }
     await page.getByRole('button', { name: 'No queued actions', exact: true }).waitFor();
     assert.equal(await page.locator('#syncBadge').innerText(), 'No queued actions');
+    await page.locator('#syncBadge').click();
+    await page.getByText('No queued actions on this device', { exact: true }).waitFor();
     assert.deepEqual(await page.evaluate(() => __writes), []);
   } finally { await context.close(); }
 });
