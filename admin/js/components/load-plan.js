@@ -76,10 +76,65 @@ function quantityText(line) {
   return bits.join(' · ') + (line.unit ? ` (${line.unit})` : '');
 }
 
-export function loadPlanPanel({ locationCode = 'car_a', workDate } = {}) {
+/** A calendar date, or null. The `type=date` input yields '' when the
+ *  operator clears it and a browser that falls back to a text input can
+ *  yield anything at all, so a selection is only reported once it is a date
+ *  the backend could be asked about. No timezone arithmetic happens here on
+ *  purpose: `work_date` is a bare calendar date and the OPERATING DAY it
+ *  stands for is resolved server-side from the owner's timezone setting
+ *  (see timezoneNotice below and docs/daily-load-contract-v1.md v2.1 §2a).
+ *  Normalising it against the device clock is precisely the bug that
+ *  notice exists to report. */
+function validDay(value) {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+  const parsed = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) return null;
+  // Rejects 2026-02-31, which the regex accepts and Date rolls forward.
+  return parsed.toISOString().slice(0, 10) === value ? value : null;
+}
+
+/* THE SELECTION INTERFACE (integration hooks).
+ *
+ *   loadPlanPanel({ locationCode, workDate, onSelectionChange })
+ *
+ *   locationCode       which vehicle to open on. Default 'car_a'. An unknown
+ *                      or absent code is kept and shown as itself rather than
+ *                      silently swapped for a real one: the panel must not
+ *                      invent a vehicle, and Car B is optional data that may
+ *                      not exist -- nothing here seeds or activates it.
+ *   workDate           the calendar date to open on, 'YYYY-MM-DD'. Anything
+ *                      that is not a valid date is ignored in favour of
+ *                      today, which is the pre-existing default.
+ *   onSelectionChange  optional. Called as ({ locationCode, workDate }) each
+ *                      time the operator makes a VALID change -- after the
+ *                      panel has adopted it and before the reload settles.
+ *                      Not called on mount, so a caller cannot mistake the
+ *                      defaults for a choice somebody made, and not called
+ *                      for an invalid or unchanged selection. A throwing
+ *                      caller cannot take the panel down with it.
+ *
+ * Existing callers that pass nothing keep today's behaviour exactly: Car A,
+ * today, and no notification. The caller decides what to do with a change
+ * (the Inventory view puts it in the query string so a reload keeps it);
+ * this panel deliberately does not touch the router itself, because it is
+ * also mounted on screens that own their own URL. */
+export function loadPlanPanel({ locationCode = 'car_a', workDate, onSelectionChange } = {}) {
   const host = el('div', {});
   let code = locationCode;
-  let day = workDate || todayISO();
+  let day = validDay(workDate) || todayISO();
+
+  /** Reports a selection the panel has actually adopted. Swallows a caller's
+   *  error on purpose: a router that throws must not leave the operator
+   *  looking at a half-painted load plan. */
+  function announce() {
+    if (typeof onSelectionChange !== 'function') return;
+    try {
+      onSelectionChange({ locationCode: code, workDate: day });
+    } catch (err) {
+      console.warn('loadPlanPanel: onSelectionChange threw', err);
+    }
+  }
+
   let dayRead = null;
   let plan = null;
   let locations = [];
@@ -124,6 +179,25 @@ export function loadPlanPanel({ locationCode = 'car_a', workDate } = {}) {
     }
   }
 
+  /* THE SELECTED CODE IS ALWAYS ONE OF THE OPTIONS. A <select> given a
+     value none of its options carries falls back to the FIRST option, so a
+     URL naming a vehicle the backend has never heard of used to request the
+     right van (`code` keeps its value, and the plan read is correct) while
+     the control displayed a different one -- Car A's name over Car B's
+     plan. Car B is optional data: it may not exist, and this panel may
+     neither seed it nor quietly substitute a van that does. So an unknown
+     code is listed as itself, marked as unknown, and stays selected. */
+  function vehicleOptions() {
+    const opts = locations.map((l) => ({ value: l.code, label: l.name }));
+    if (!opts.some((o) => o.value === code)) {
+      opts.unshift({
+        value: code,
+        label: locations.length ? `${code} (not a known vehicle)` : code
+      });
+    }
+    return opts;
+  }
+
   function paint() {
     fill(host, [
       el('div', { class: 'card' }, [
@@ -137,14 +211,28 @@ export function loadPlanPanel({ locationCode = 'car_a', workDate } = {}) {
           ]),
           el('div', { class: 'btn-row', style: 'flex-wrap:wrap' }, [
             labelled('Vehicle', select(
-              locations.length
-                ? locations.map((l) => ({ value: l.code, label: l.name }))
-                : [{ value: code, label: code }],
+              vehicleOptions(),
               code,
-              async (e) => { code = e.target.value; await load(); })),
+              async (e) => {
+                if (e.target.value === code) return;
+                code = e.target.value;
+                announce();
+                await load();
+              })),
             labelled('Day', el('input', {
               class: 'input', type: 'date', value: day,
-              onChange: async (e) => { day = e.target.value; await load(); }
+              onChange: async (e) => {
+                const picked = validDay(e.target.value);
+                // A cleared or unparseable date leaves the panel on the day
+                // it was already showing, and the input is put back to it --
+                // the alternative is a plan screen with no day, which asks
+                // the backend a question it cannot answer.
+                if (!picked) { e.target.value = day; return; }
+                if (picked === day) return;
+                day = picked;
+                announce();
+                await load();
+              }
             }))
           ])
         ]),

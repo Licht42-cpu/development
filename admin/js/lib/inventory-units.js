@@ -43,6 +43,55 @@ export function materialUnitLabel(unit) {
   return sharedUnitLabel(unit);
 }
 
+/* ------------------------------------------------- choosing a unit --- */
+
+/* WHY THERE IS A SECOND SET OF LABELS. materialUnitLabel() is the SHORT
+   form, for a figure that already carries its number: "40 L" reads
+   correctly, "40 Litres" does not. In a <select> there is no number beside
+   it, so "L" on its own is a riddle. These are the long forms, and they
+   include the short form in brackets where the two differ so the operator
+   can see which abbreviation the rest of the screen will use.
+
+   'level' is NOT in this list on purpose. unit='level' is not a unit the
+   operator picks; it is implied by choosing level tracking, and the
+   database enforces that the two agree:
+
+     ns_materials_level_unit_agrees check ((tracking_mode = 'level') = (unit = 'level'))
+
+   Offering 'level' here as well would let a form produce the one
+   combination that constraint exists to refuse. The order matches the
+   constraint's own list, with the counted units first and the measured
+   ones after, because that is how the catalogue divides in practice. */
+export const MATERIAL_UNIT_CHOICES = [
+  { value: 'each',      label: 'Each' },
+  { value: 'linear_ft', label: 'Linear feet (ft)' },
+  { value: 'box',       label: 'Boxes' },
+  { value: 'roll',      label: 'Rolls' },
+  { value: 'kit',       label: 'Kits' },
+  { value: 'set',       label: 'Sets' },
+  { value: 'litre',     label: 'Litres (L)' },
+  { value: 'kilogram',  label: 'Kilograms (kg)' },
+  { value: 'stick',     label: 'Channel sticks' }
+];
+
+/** The unit a level-tracked material must carry, named once so a form does
+ *  not have to know the string. */
+export const LEVEL_UNIT = 'level';
+
+/** The two tracking modes, with the words that say what each one means
+ *  rather than the column value. "Quantity" alone does not tell an operator
+ *  that picking it commits them to counting the thing. */
+export const TRACKING_MODES = [
+  { value: 'quantity',
+    label: 'Counted',
+    hint: 'A number on the shelf, in a unit you choose, with a movement ledger behind it.' },
+  { value: 'level',
+    label: 'Checked as a level',
+    hint: 'Empty / Low / Enough, recorded per location. No count, no pack '
+        + 'conversion, no reorder point and nothing to reserve — a level is '
+        + 'somebody’s observation, not a number to do arithmetic on.' }
+];
+
 /** "40 L", "3 sticks", "1 stick". Takes the number so it can get the plural
  *  right, which "3 stick" does not. A level-tracked supply has no unit, so
  *  this returns the bare quantity for it. */

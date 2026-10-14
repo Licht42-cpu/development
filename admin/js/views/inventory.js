@@ -9,7 +9,8 @@ import { kitsAndPiecesPanel } from '../components/kit-sheets.js';
 import { loadPlanPanel } from '../components/load-plan.js';
 import {
   materialUnitLabel, quantityWithUnit, LEVEL_STATES, levelLabel,
-  levelBadgeClass, precisionNote, MOVEMENT_CONDITIONS, COUNT_PRECISIONS
+  levelBadgeClass, precisionNote, MOVEMENT_CONDITIONS, COUNT_PRECISIONS,
+  MATERIAL_UNIT_CHOICES, TRACKING_MODES, LEVEL_UNIT
 } from '../lib/inventory-units.js';
 
 /* Batch 8.1 -- Inventory.
@@ -58,7 +59,13 @@ const TABS = [
 
 const CATEGORIES = ['track', 'light', 'controller', 'power_supply', 'connector',
                     'clip', 'wire', 'rental_set', 'consumable', 'tool', 'other'];
-const UNITS = ['each', 'linear_ft', 'box', 'roll', 'kit', 'set'];
+/* The unit list is NOT here. It lives in inventory-units.js, beside the
+   labels and beside the level-tracking rule, because this file having its
+   own copy of it is exactly how the creation form came to offer six of the
+   nine units the database accepts -- bulk chemicals (litre), de-icer
+   (kilogram) and lighting channel (stick) existed in the constraint, in
+   the labels and on every screen that READ a material, and could not be
+   typed in on the one screen that creates them. */
 const PO_STATUSES = ['draft', 'ordered', 'partial', 'received', 'cancelled'];
 
 /* Which movement reasons an operator may post by hand, and the sign each
@@ -661,15 +668,102 @@ function movementList(material) {
   return host;
 }
 
+/* ADDING A PART, AND THE TWO TRACKING MODES.
+ *
+ * A material is either COUNTED (a number in a unit, with a movement ledger
+ * and a pack size and a reorder point behind it) or CHECKED AS A LEVEL
+ * (Empty / Low / Enough per location, and nothing numeric at all). The
+ * database states that as one constraint:
+ *
+ *   ns_materials_level_unit_agrees check ((tracking_mode='level') = (unit='level'))
+ *
+ * so the two halves cannot be chosen independently. This form therefore
+ * asks ONE question -- counted or level -- and derives the unit from it,
+ * rather than offering 'level' as a tenth unit beside the nine real ones
+ * and leaving the operator to discover that eight of the ten combinations
+ * are refused.
+ *
+ * WHAT CHANGES WHEN THE MODE CHANGES. Pack size, reorder point and the
+ * unit are repainted away, and their values are reset -- not merely
+ * hidden. A hidden control that keeps its value is how "reorder at 100"
+ * survives onto a supply that has no quantity to compare it to: the
+ * database would accept reorder_point = 100 on a level material (nothing
+ * checks it), the Stock tab correctly declines to show it, and the figure
+ * sits in the row forever meaning nothing. Resetting is the honest half of
+ * the switch.
+ *
+ * WHAT THE FORM DOES NOT DO. It does not record an opening level. A level
+ * is an observation with a time and a person on it; creating the catalogue
+ * row is not that observation, so the new supply reads "Not checked" until
+ * somebody actually looks at a shelf and says. Same reason a counted part
+ * is created with no opening count: that is an 'opening' movement, posted
+ * from the part's own row.
+ */
 function newMaterialCard(suppliers, reload, { bare = false } = {}) {
   const name = el('input', { placeholder: 'e.g. 150 ft channel', 'aria-label': 'Part name' });
   const sku = el('input', { placeholder: 'Supplier code (optional)', 'aria-label': 'SKU' });
-  const packQty = numberInput(1, null, { step: '1', min: '1', 'aria-label': 'Pack size' });
   const cost = numberInput('', null, { step: '0.01', min: '0', 'aria-label': 'Unit cost' });
-  const reorder = numberInput(0, null, { step: '1', min: '0', 'aria-label': 'Reorder point' });
   let category = 'track';
+  let tracking = 'quantity';
   let unit = 'linear_ft';
   let supplierId = suppliers[0]?.id || '';
+
+  /* Rebuilt on every mode change, so each one starts from the default
+     rather than from whatever the previous mode left behind. */
+  let packQty = null;
+  let reorder = null;
+  const countedHost = el('div', {});
+
+  const isLevel = () => tracking === 'level';
+
+  function paintCounted() {
+    if (isLevel()) {
+      packQty = null;
+      reorder = null;
+      fill(countedHost, [
+        el('div', { class: 'grid grid--2', style: 'margin-top:8px' }, [
+          labelled('Unit cost', cost, 'Leave blank if unknown — blank is not zero.')
+        ]),
+        el('p', { class: 'hint', style: 'margin:8px 0 0', text:
+          'A level-tracked supply has no count, so there is no pack size and '
+          + 'no reorder point to set. Its state is recorded per location from '
+          + 'the part’s own row, and reads “Not checked” until somebody does.' })
+      ]);
+      return;
+    }
+    packQty = numberInput(1, null, { step: '1', min: '1', 'aria-label': 'Pack size' });
+    reorder = numberInput(0, null, { step: '1', min: '0', 'aria-label': 'Reorder point' });
+    fill(countedHost, [
+      el('div', { class: 'grid grid--3', style: 'margin-top:8px' }, [
+        labelled('Counted in', select(
+          MATERIAL_UNIT_CHOICES, unit, (e) => { unit = e.target.value; })),
+        labelled('Pack size', packQty, 'How many of the unit above come in one pack.'),
+        labelled('Unit cost', cost, 'Leave blank if unknown — blank is not zero.')
+      ]),
+      el('div', { class: 'grid grid--3', style: 'margin-top:8px' }, [
+        labelled('Reorder at', reorder,
+          'Counted in the same unit. Zero means never flag it.')
+      ])
+    ]);
+  }
+
+  const trackingSelect = select(
+    TRACKING_MODES.map((m) => ({ value: m.value, label: m.label })), tracking,
+    (e) => {
+      tracking = e.target.value;
+      // The unit is derived, never typed, for a level supply -- and goes
+      // back to a real unit, not to 'level', when the mode goes back.
+      unit = isLevel() ? LEVEL_UNIT : 'linear_ft';
+      paintCounted();
+      fill(trackingHint, [el('span', { text: trackingHintText() })]);
+    });
+
+  const trackingHintText = () =>
+    (TRACKING_MODES.find((m) => m.value === tracking) || {}).hint || '';
+  const trackingHint = el('p', { class: 'hint', style: 'margin:4px 0 0' },
+    [el('span', { text: trackingHintText() })]);
+
+  paintCounted();
 
   const form = el('div', {}, [
     el('div', { class: 'grid grid--2' }, [
@@ -680,40 +774,49 @@ function newMaterialCard(suppliers, reload, { bare = false } = {}) {
       labelled('Category', select(
         CATEGORIES.map((c) => ({ value: c, label: humanise(c) })), category,
         (e) => { category = e.target.value; })),
-      labelled('Counted in', select(
-        UNITS.map((u) => ({ value: u, label: unitLabel(u) })), unit,
-        (e) => { unit = e.target.value; })),
+      el('div', { style: 'margin:0' }, [
+        el('label', { class: 'field', style: 'margin:0' }, [
+          el('span', { text: 'Tracked by' }),
+          trackingSelect
+        ]),
+        trackingHint
+      ]),
       labelled('Supplier', select(
         [{ value: '', label: 'No supplier' },
          ...suppliers.map((s) => ({ value: s.id, label: s.name }))],
         supplierId, (e) => { supplierId = e.target.value; }))
     ]),
-    el('div', { class: 'grid grid--3', style: 'margin-top:8px' }, [
-      labelled('Pack size', packQty, 'How many of the unit above come in one pack.'),
-      labelled('Unit cost', cost, 'Leave blank if unknown — blank is not zero.'),
-      labelled('Reorder at', reorder)
-    ]),
+    countedHost,
     el('div', { class: 'btn-row', style: 'margin-top:10px' }, [
       el('button', {
         class: 'btn btn--primary', type: 'button', text: 'Add part',
         onClick: async () => {
           if (!name.value.trim()) { toast('A part needs a name.', 'error'); return; }
-          const pack = num(packQty.value, 1);
+
+          /* A level supply is sent with pack_quantity 1 and reorder_point 0
+             because the columns are NOT NULL with a `pack_quantity > 0`
+             check -- 1 is the identity for a conversion that never runs,
+             which is the nearest thing to "not applicable" the schema can
+             hold. Nothing on any screen converts or compares them for a
+             level material. */
+          const pack = isLevel() ? 1 : num(packQty.value, 1);
           if (!(pack > 0)) { toast('A pack size must be more than zero.', 'error'); return; }
 
           const ok = await trySave(() => api.createMaterial({
             name: name.value.trim(),
             sku: sku.value.trim() || null,
-            category, unit,
+            category,
+            unit: isLevel() ? LEVEL_UNIT : unit,
+            tracking_mode: tracking,
             supplier_id: supplierId || null,
             pack_quantity: pack,
             unit_cost: cost.value.trim() === '' ? null : num(cost.value, 0),
-            reorder_point: num(reorder.value, 0)
+            reorder_point: isLevel() ? 0 : num(reorder.value, 0)
           }), { success: 'Part added' });
 
           if (ok) {
             name.value = ''; sku.value = ''; cost.value = '';
-            packQty.value = 1; reorder.value = 0;
+            paintCounted();
             await reload();
           }
         }
@@ -1148,6 +1251,30 @@ export async function renderInventory(ctx) {
   const requested = params?.get('tab');
   let tab = TABS.some(([key]) => key === requested) ? requested : 'stock';
 
+  /* THE DAILY LOAD TAB'S SELECTION RIDES IN THE QUERY STRING, like the tab
+     itself. Before this it did not: the panel owned the vehicle and the day
+     privately, so reloading the page -- which is the ordinary way back to a
+     screen on a phone -- put the operator back on Car A and today while
+     they were looking at tomorrow's Car B plan.
+
+     `car` is passed through UNVALIDATED on purpose. Which vehicles exist is
+     the backend's answer, not this view's; the panel shows an unknown code
+     as itself rather than substituting one, and Car B is optional data that
+     nothing here may seed or activate. The DAY is validated inside the
+     panel, against the same rule it uses for the date input. */
+  let loadCar = params?.get('car') || undefined;
+  let loadDay = params?.get('day') || undefined;
+
+  /** The whole query string for a tab, since replaceQuery replaces it. */
+  function queryFor(key) {
+    const parts = [`tab=${key}`];
+    if (key === 'load') {
+      if (loadCar) parts.push(`car=${encodeURIComponent(loadCar)}`);
+      if (loadDay) parts.push(`day=${encodeURIComponent(loadDay)}`);
+    }
+    return parts.join('&');
+  }
+
   const body = el('div', {});
 
   function paintTabs() {
@@ -1162,7 +1289,7 @@ export async function renderInventory(ctx) {
           tab = key;
           // replaceQuery, not a hash assignment: switching tab must not put
           // an entry between the operator and Android Back.
-          replaceQuery?.(`tab=${key}`);
+          replaceQuery?.(queryFor(key));
           render();
         }
       })));
@@ -1187,7 +1314,19 @@ export async function renderInventory(ctx) {
       : tab === 'purchasing' ? purchasingTab()
       : tab === 'mapping'    ? mappingTab()
       : tab === 'kits'       ? kitsAndPiecesPanel()
-      : tab === 'load'       ? loadPlanPanel()
+      : tab === 'load'       ? loadPlanPanel({
+          locationCode: loadCar,
+          workDate: loadDay,
+          /* The panel reports a change it has already adopted; this records
+             it in the URL with replaceQuery, so a reload comes back to the
+             same van and day without spending an Android Back entry on
+             every selection. No re-render: the panel repaints itself. */
+          onSelectionChange: ({ locationCode, workDate }) => {
+            loadCar = locationCode;
+            loadDay = workDate;
+            replaceQuery?.(queryFor('load'));
+          }
+        })
       : setsTab()
     ]);
   }

@@ -436,7 +436,13 @@ export async function renderProperty({ mount, setContextParent }, propertyId) {
 
   renderDetails();
 
-  clear(mount).append(
+  /* WHY THIS IS AN ARRAY AND NOT A LIST OF ARGUMENTS. Element.append() is
+     the DOM's own method, not el()'s children handling: el() skips a null
+     child, append() stringifies it, so `customer ? null : el(...)` printed
+     the word "null" on the screen of every property that HAS a customer --
+     which is almost all of them. Filtering here keeps the conditional
+     sections readable and keeps the shared helper untouched. */
+  clear(mount).append(...[
     el('div', { class: 'page-head' }, [
       el('h1', { text: addressOf(property) || 'Property' }),
       el('p', { text: regionOf(property) || 'No city or postcode on file' })
@@ -479,7 +485,7 @@ export async function renderProperty({ mount, setContextParent }, propertyId) {
               text: 'Measurements, photos, inspections and quotes belong to the job they ' +
                     'were recorded on. They are shown here as history — a measurement is ' +
                     'what was true on that visit, not a standing figure for the property.' })
-  );
+  ].filter(Boolean));
 
   await renderPhotos();
 }
